@@ -1,12 +1,12 @@
-import React from 'react';
+
 import { MainLayout } from './components/layout/MainLayout';
+import { PromptEditor } from './components/editor/PromptEditor';
 
 function App() {
   return (
     <MainLayout>
-      <div style={{ flex: 1, padding: '1rem' }}>
-        <h2>Main Editor Area</h2>
-        <p style={{ color: '#888', marginTop: '1rem' }}>Select a file from the explorer to begin editing.</p>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
+        <PromptEditor />
       </div>
     </MainLayout>
   );
