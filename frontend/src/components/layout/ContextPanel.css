@@ -1,0 +1,33 @@
+.context-panel {
+  width: 300px;
+  background-color: var(--vscode-sidebar-bg);
+  border-left: 1px solid var(--vscode-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.context-panel-header {
+  height: 35px;
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  border-bottom: 1px solid var(--vscode-border);
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.context-panel-content {
+  flex: 1;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.context-placeholder {
+  color: #888;
+  font-size: 13px;
+  text-align: center;
+  margin-top: 50px;
+}

@@ -1,0 +1,83 @@
+.sidebar-container {
+  display: flex;
+  height: 100%;
+}
+
+.activity-bar {
+  width: 48px;
+  background-color: var(--vscode-activityBar-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 0;
+  gap: 15px;
+}
+
+.activity-item {
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 8px 0;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.activity-item:hover, .activity-item.active {
+  color: var(--vscode-activityBar-fg);
+}
+
+.activity-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--vscode-activityBar-fg);
+}
+
+.spacer {
+  flex-grow: 1;
+}
+
+.sidebar {
+  width: 250px;
+  background-color: var(--vscode-sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--vscode-border);
+}
+
+.sidebar-header {
+  padding: 10px 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--vscode-titleBar-fg);
+}
+
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.sidebar-tree-item {
+  display: flex;
+  align-items: center;
+  padding: 4px 20px;
+  cursor: pointer;
+  color: var(--vscode-fg);
+  font-size: 13px;
+}
+
+.sidebar-tree-item:hover {
+  background-color: var(--vscode-hover-bg);
+}
+
+.tree-icon {
+  margin-right: 6px;
+  color: #dcb67a;
+}

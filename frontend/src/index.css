@@ -1,0 +1,51 @@
+:root {
+  --vscode-bg: #1e1e1e;
+  --vscode-fg: #d4d4d4;
+  --vscode-sidebar-bg: #252526;
+  --vscode-activityBar-bg: #333333;
+  --vscode-activityBar-fg: #ffffff;
+  --vscode-titleBar-bg: #323233;
+  --vscode-titleBar-fg: #cccccc;
+  --vscode-border: #454545;
+  --vscode-hover-bg: #2a2d2e;
+  --vscode-accent: #007acc;
+  --vscode-accent-hover: #005f9e;
+  --vscode-font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --vscode-font-size: 13px;
+  --vscode-icon-size: 24px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  background-color: var(--vscode-bg);
+  color: var(--vscode-fg);
+  overflow: hidden; /* App takes full height */
+}
+
+/* Base styles for scrollbars to match modern IDEs */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #424242;
+  border: 1px solid var(--vscode-bg);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4f4f4f;
+}
