@@ -3,3 +3,4 @@ from app.models.prompt import Prompt
 from app.models.wildcard import Wildcard
 from app.models.tag import Tag
 from app.models.image import Image
+from app.models.knowledge import KnowledgeDocument
