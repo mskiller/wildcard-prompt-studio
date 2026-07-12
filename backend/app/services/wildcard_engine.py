@@ -1,5 +1,7 @@
 import random
 import re
+import os
+import yaml
 from typing import Dict, List
 
 class WildcardEngine:
@@ -9,6 +11,35 @@ class WildcardEngine:
         For example: {"character": ["elf", "knight"], "color": ["red", "blue"]}
         """
         self.wildcards = wildcards or {}
+
+    def load_from_directory(self, directory_path: str):
+        """Scan a directory for .txt and .yaml/.yml files to load wildcards."""
+        if not os.path.exists(directory_path):
+            return
+        
+        for root, _, files in os.walk(directory_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                filename_without_ext = os.path.splitext(file)[0]
+                
+                if file.endswith('.txt'):
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        lines = [line.strip() for line in f if line.strip()]
+                        if lines:
+                            self.wildcards[filename_without_ext] = lines
+                            
+                elif file.endswith('.yaml') or file.endswith('.yml'):
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        try:
+                            data = yaml.safe_load(f)
+                            if isinstance(data, dict):
+                                for key, value in data.items():
+                                    if isinstance(value, list):
+                                        self.wildcards[key] = [str(v) for v in value]
+                            elif isinstance(data, list):
+                                self.wildcards[filename_without_ext] = [str(v) for v in data]
+                        except yaml.YAMLError:
+                            pass
 
     def expand_prompt(self, prompt_text: str, max_depth: int = 10) -> str:
         """

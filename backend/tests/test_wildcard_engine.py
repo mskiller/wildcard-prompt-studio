@@ -1,5 +1,8 @@
 import pytest
 import random
+import os
+import tempfile
+import yaml
 from app.services.wildcard_engine import WildcardEngine
 
 def test_basic_wildcard_replacement():
@@ -57,3 +60,26 @@ def test_infinite_recursion_safeguard():
     # Should not crash/hang, and will stop at max_depth
     res = engine.expand_prompt("Test __loop1__", max_depth=5)
     assert "Test __loop1__" in res or "Test __loop2__" in res
+
+def test_load_from_directory():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        with open(os.path.join(temp_dir, "character.txt"), "w") as f:
+            f.write("elf\nknight\n\norc\n")
+            
+        with open(os.path.join(temp_dir, "colors.yaml"), "w") as f:
+            yaml.dump({"color": ["red", "blue"]}, f)
+            
+        with open(os.path.join(temp_dir, "animals.yml"), "w") as f:
+            yaml.dump(["cat", "dog"], f)
+            
+        engine = WildcardEngine()
+        engine.load_from_directory(temp_dir)
+        
+        assert "character" in engine.wildcards
+        assert set(engine.wildcards["character"]) == {"elf", "knight", "orc"}
+        
+        assert "color" in engine.wildcards
+        assert set(engine.wildcards["color"]) == {"red", "blue"}
+        
+        assert "animals" in engine.wildcards
+        assert set(engine.wildcards["animals"]) == {"cat", "dog"}
