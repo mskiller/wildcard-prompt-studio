@@ -4,3 +4,5 @@ sqlalchemy
 alembic
 psycopg2-binary
 pgvector
+pytest
+httpx==0.27.2
