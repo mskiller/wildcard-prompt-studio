@@ -1,0 +1,61 @@
+.importer-container {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.importer-container h2 {
+  font-size: 18px;
+  color: var(--fg-primary);
+  margin: 0;
+}
+
+.importer-desc {
+  font-size: 13px;
+  color: var(--fg-secondary);
+  margin: 0;
+}
+
+.dropzone {
+  border: 2px dashed var(--glass-border);
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.dropzone:hover, .dropzone.dragging {
+  border-color: var(--accent-primary);
+  background-color: rgba(14, 99, 156, 0.1);
+}
+
+.dropzone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: var(--fg-muted);
+}
+
+.dropzone-content.success {
+  color: var(--accent-success);
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255,255,255,0.1);
+  border-radius: 50%;
+  border-top-color: var(--accent-primary);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

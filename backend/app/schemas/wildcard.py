@@ -1,9 +1,12 @@
 from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from typing import Optional, List, Any
 from datetime import datetime
 
 class WildcardBase(BaseModel):
     filename: str
+    file_path: Optional[str] = None
+    type: str = "txt"
+    entries: List[Any] = []
     content: str
 
 class WildcardCreate(WildcardBase):
@@ -11,6 +14,9 @@ class WildcardCreate(WildcardBase):
 
 class WildcardUpdate(BaseModel):
     filename: Optional[str] = None
+    file_path: Optional[str] = None
+    type: Optional[str] = None
+    entries: Optional[List[Any]] = None
     content: Optional[str] = None
 
 class WildcardResponse(WildcardBase):

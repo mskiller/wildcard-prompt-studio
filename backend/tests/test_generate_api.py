@@ -35,7 +35,7 @@ def test_submit_workflow(mock_queue_prompt):
     
     assert response.status_code == 200
     assert response.json() == {"prompt_id": "12345"}
-    mock_queue_prompt.assert_called_once_with(workflow_data)
+    mock_queue_prompt.assert_called_once_with(workflow_data, base_url=None)
 
 @patch("app.api.routers.generate.ComfyUIConnector.queue_prompt", new_callable=AsyncMock)
 def test_submit_workflow_error(mock_queue_prompt):
@@ -48,4 +48,4 @@ def test_submit_workflow_error(mock_queue_prompt):
     )
     
     assert response.status_code == 502
-    assert response.json() == {"detail": "ComfyUI server error"}
+    assert response.json() == {"detail": "ComfyUI server error: Error"}

@@ -1,0 +1,61 @@
+.tags-view-container {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.tags-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.tags-header h2 {
+  font-size: 20px;
+  color: var(--fg-primary);
+  margin: 0;
+}
+
+.tags-description {
+  color: var(--fg-secondary);
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.tags-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.tag-card {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 8px 16px;
+  transition: all 0.2s ease;
+}
+
+.tag-card:hover {
+  background-color: rgba(14, 99, 156, 0.2);
+  border-color: var(--accent-primary);
+  transform: translateY(-2px);
+}
+
+.tag-name {
+  color: var(--fg-primary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.empty-state {
+  color: var(--fg-muted);
+  font-size: 14px;
+  text-align: center;
+  padding: 40px;
+}

@@ -2,48 +2,72 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh;
   width: 100vw;
-  background-color: var(--vscode-bg);
-  color: var(--vscode-fg);
+  background-color: var(--bg-app);
+  overflow: hidden;
 }
 
 .titlebar {
-  height: 30px;
-  background-color: var(--vscode-titleBar-bg);
-  color: var(--vscode-titleBar-fg);
+  height: 36px;
+  background-color: var(--bg-surface);
+  color: var(--fg-primary);
   display: flex;
   align-items: center;
-  padding: 0 10px;
-  font-size: 12px;
+  padding: 0 16px;
+  font-size: var(--text-sm);
+  font-family: var(--font-display);
+  font-weight: 500;
   user-select: none;
+  border-bottom: 1px solid var(--glass-border);
+  backdrop-filter: var(--backdrop-blur);
+  z-index: 50;
 }
 
 .titlebar-title {
   text-align: center;
   flex-grow: 1;
+  letter-spacing: 0.05em;
+  opacity: 0.9;
 }
 
 .layout-body {
   display: flex;
   flex: 1;
   overflow: hidden;
+  padding: 8px;
+  gap: 8px;
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .layout-body {
+    padding: 4px;
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
 }
 
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background-color: var(--vscode-bg);
+  background-color: var(--bg-panel);
   position: relative;
-  overflow: auto;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: var(--backdrop-blur);
 }
 
 .statusbar {
-  height: 22px;
-  background-color: var(--vscode-accent);
-  color: #fff;
+  height: 28px;
+  background-color: var(--bg-surface);
+  color: var(--fg-secondary);
   display: flex;
   align-items: center;
-  padding: 0 10px;
-  font-size: 12px;
+  padding: 0 16px;
+  font-size: var(--text-xs);
+  border-top: 1px solid var(--glass-border);
+  backdrop-filter: var(--backdrop-blur);
 }

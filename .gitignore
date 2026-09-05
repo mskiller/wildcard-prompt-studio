@@ -1,2 +1,51 @@
+# Python
 __pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+venv/
+.venv/
+env/
+.env
+*.env
+
+# pytest
 .pytest_cache/
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+dist/
+.pnpm-store/
+
+# Build artifacts
+frontend/dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.log
+
+# Alembic
+# (alembic/versions is tracked intentionally)
+
+# Temp files
+color.txt
+diff_output.txt
+final_diff.txt
+project1.txt
+project.pdf

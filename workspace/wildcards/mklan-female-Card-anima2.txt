@@ -1,0 +1,105 @@
+smurfette (the smurfs), blue skin, petite body, blond hair, long hair, white phrygian hat
+tara, American woman, long face, medium nose, big luscious lips, {1::tied-up, ponytail, medium blond hair|1::tied-up, updo, medium blond hair|1::untied medium blond hair, bangs}, muscular woman, light tanned skin
+Aadhya, idian woman, bindi on front, makeup, long face, medium nose, small luscious lips, {1::tied-up, singlebraid, very long black hair|1::untied , very long black hair, curly}, thin woman, dark-tanned skin
+freya, round face, small nose, large eyes, big luscious lips, {1::long single braid|1::untied loose} blond white hair, viking woman, pale skin, muscular woman
+grace, long face, long curly black hair, long nose, small luscious lips, middle-east woman, tanned skin, brown-skinned female, thin slim body
+tanaka, Dark skinned female, long curly {1::brown|1::black|1::red} hair, ovale face, long nose, {1::big|1::enormous|1::gigantic} luscious lips, dark african woman, muscular woman
+wu, chinese woman, slanting eyes, pale skin, long black hair, thin body, wide hips
+aylin, round face, long wavy curly red hair{10::|1::, tied-up hair, twin braids|1::, tied-up hair, twintails}, big nose, big luscious lips, freckles, irish woman, light-skinned female, curvy body
+betty boop, pale skin, round face, black curly hair, short hair, hoops earings, red puckered lips
+princess leia
+moana waialiki (moana_(movie))
+ahsoka_tano
+gwen tennyson{1::, mature, aged up|1::}
+Cinderella (disney)
+snow white (disney)
+jessica rabbit
+harley quinn
+daphne blake
+velma dinkley, square eyewear glasses
+kido saori (saint seiya), purple long hair
+rapunzel (disney)
+belle (disney)
+jasmine (disney)
+poison ivy (dc comics)
+wednesday addams
+violet parr (the incredibles), purple streaked long black hair
+supergirl
+she-hulk
+elsa (frozen)
+anna (frozen)
+tinker bell (disney), fairy wings
+aurora (disney)
+vampirella
+ariel (Disney){1::|1::, merfolk, mermaid}
+vanellope von schweetz, aged up, mature
+chi-chi (dragon ball){1::|1::, aged up, mature}
+android 18 (dragon ball)
+android 21 (dragon ball)
+bulma (dragon ball)
+lunch (good) (dragon ball), blue hair, red tied hairband
+lunch (bad) (dragon ball), blond hair, red tied hairband
+raven (dc)
+wonder woman
+chun-li
+emma frost
+sue storm
+psylocke
+gwen stacy (marvel)
+spider-gwen
+roll (mega man){1::|4::, aged up, mature}
+aile (mega man zx){1::|4::, aged up, mature}
+x-23 (marvel)
+minnie mouse (disney), furry anthro mouse
+daisy duck (disney), furry anthro duck
+april o'neil
+creamy mami
+morisawa yuu (mahou no tenshi creamy mami){4::, aged up, mature|1::|1::, loli}, short hair, blue hair
+minky momo (mahou no tenshi creamy mami){4::, aged up, mature|1::|1::, loli}, pink hair
+lum (urusei yatsura)
+miyake shinobu (urusei yatsura), brown hair, short hair
+kinomoto sakura{4::, aged up, mature|1::}
+kero (cardcaptor sakura){4::, aged up, mature|1::}
+sakura miko{4::, aged up, mature|1::}
+hoshimachi suisei{4::, aged up, mature|1::}
+cammy white (street fighter)
+rainbow mika (street fighter)
+han juri (street fighter)
+kasugano sakura (street fighter){4::, aged up, mature|1::}
+princess peach
+princess king boo{1::|1::, white hair}
+princess daisy
+princess zelda
+midna
+vivian_(paper_mario)
+bowsette
+toadette, aged up, mature
+rosalina
+jinx, blue hair
+ahri
+caitlyn
+korra
+tifa_lockhart
+aerith_gainsborough
+yuffie_kisaragi (final_fantasy)
+nami_(one_piece)
+tsunade_(naruto)
+nico_robin (one_piece)
+hyuuga_hinata (naruto_(series))
+haruno_sakura (naruto_(series))
+classic_d.va (overwatch)
+d.va_(overwatch)
+mercy_(overwatch)
+tracer_(overwatch)
+mei_(overwatch)
+widowmaker_(overwatch)
+pharah_(overwatch)
+matsumoto_rangiku
+shihouin_yoruichi
+shiranui_mai
+shampoo_(ranma_1/2)
+jill_valentine (resident_evil)
+ada_wong (resident_evil)
+morrigan_aensland
+alice in wonderland (disney)
+megara (disney)

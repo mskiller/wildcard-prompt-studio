@@ -1,0 +1,408 @@
+/* VisualASTCanvas.css - Dark Glassmorphism Node Canvas */
+
+/* Container & Grid Background */
+.visual-ast-canvas-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 520px;
+  overflow: hidden;
+  background-color: #0b0f19;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  user-select: none;
+  cursor: default;
+}
+
+.visual-ast-canvas-container:active {
+  cursor: grab;
+}
+
+/* Floating Toolbar */
+.canvas-control-toolbar {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(18, 22, 34, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.canvas-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #cdd6f4;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.canvas-tool-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.canvas-tool-btn.primary {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: rgba(99, 102, 241, 0.45);
+  color: #a5b4fc;
+}
+
+.canvas-tool-btn.primary:hover {
+  background: rgba(99, 102, 241, 0.4);
+  border-color: rgba(99, 102, 241, 0.7);
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.35);
+}
+
+.canvas-zoom-badge {
+  font-size: 11px;
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  color: #94a3b8;
+  min-width: 44px;
+  text-align: center;
+}
+
+.canvas-cycle-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 6px;
+  color: #ef4444;
+  font-size: 11px;
+  font-weight: 600;
+  animation: pulse-badge 2s infinite ease-in-out;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+/* Cycle Warning Banner */
+.canvas-cycle-warning-banner {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: rgba(239, 68, 68, 0.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  font-size: 12px;
+  animation: pulse-banner 2s infinite ease-in-out;
+}
+
+@keyframes pulse-banner {
+  0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); }
+  50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
+}
+
+.cycle-banner-icon {
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+.cycle-banner-text strong {
+  color: #ffffff;
+  margin-right: 4px;
+}
+
+/* Stage Layer */
+.canvas-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* SVG Connection Lines Layer */
+.canvas-svg-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.canvas-bezier-cable {
+  fill: none;
+  stroke: #818cf8;
+  stroke-width: 3px;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px rgba(129, 140, 248, 0.5));
+  transition: stroke 0.2s ease, filter 0.2s ease;
+}
+
+.canvas-bezier-cable.cable-cycle-warning {
+  stroke: #ef4444 !important;
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.8)) !important;
+  animation: pulse-cable 1.5s infinite alternate ease-in-out;
+}
+
+@keyframes pulse-cable {
+  0% {
+    stroke-dasharray: 8 4;
+    stroke-dashoffset: 0;
+    filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.4));
+  }
+  100% {
+    stroke-dasharray: 8 4;
+    stroke-dashoffset: 24;
+    filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.95));
+  }
+}
+
+/* Draggable Node Cards (Dark glassmorphic) */
+.canvas-node {
+  position: absolute;
+  width: 240px;
+  min-height: 86px;
+  background: rgba(18, 22, 34, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+  cursor: grab;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.canvas-node.is-dragging {
+  cursor: grabbing;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.2);
+  z-index: 20;
+}
+
+.canvas-node.selected {
+  border-color: var(--node-accent, #818cf8);
+  box-shadow: 0 0 0 2px var(--node-accent, #818cf8), 0 10px 30px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+}
+
+/* Distinct color accents per node type */
+.canvas-node-text {
+  --node-accent: #38bdf8;
+  border-top: 3px solid #38bdf8;
+}
+
+.canvas-node-wildcard {
+  --node-accent: #c084fc;
+  border-top: 3px solid #c084fc;
+}
+
+.canvas-node-choice {
+  --node-accent: #fbbf24;
+  border-top: 3px solid #fbbf24;
+}
+
+.canvas-node-variable {
+  --node-accent: #34d399;
+  border-top: 3px solid #34d399;
+}
+
+.canvas-node-root {
+  --node-accent: #f43f5e;
+  border-top: 3px solid #f43f5e;
+}
+
+/* Ports */
+.canvas-node-port {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #121622;
+  border: 2px solid var(--node-accent, #818cf8);
+  top: 48px;
+  transform: translateY(-50%);
+  z-index: 5;
+  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.canvas-node-port.port-in {
+  left: -6px;
+}
+
+.canvas-node-port.port-out {
+  right: -6px;
+}
+
+.canvas-node-port:hover {
+  transform: translateY(-50%) scale(1.35);
+  background: var(--node-accent, #818cf8);
+  box-shadow: 0 0 8px var(--node-accent, #818cf8);
+}
+
+/* Node Header */
+.canvas-node-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.node-type-pill {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.canvas-node-text .node-type-pill {
+  background: rgba(56, 189, 248, 0.18);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.canvas-node-wildcard .node-type-pill {
+  background: rgba(192, 132, 252, 0.18);
+  color: #c084fc;
+  border: 1px solid rgba(192, 132, 252, 0.35);
+}
+
+.canvas-node-choice .node-type-pill {
+  background: rgba(251, 191, 36, 0.18);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+
+.canvas-node-variable .node-type-pill {
+  background: rgba(52, 211, 153, 0.18);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+}
+
+.canvas-node-root .node-type-pill {
+  background: rgba(244, 63, 94, 0.18);
+  color: #f43f5e;
+  border: 1px solid rgba(244, 63, 94, 0.35);
+}
+
+.node-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f5f9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+/* Node Body & Value Previews */
+.canvas-node-body {
+  min-width: 0;
+}
+
+.node-value-preview {
+  font-size: 12px;
+  color: #cbd5e1;
+  font-family: var(--font-mono, monospace);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.node-value-empty {
+  color: #64748b;
+  font-style: italic;
+}
+
+/* Choice Options Summary */
+.choice-options-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-height: 82px;
+  overflow-y: auto;
+}
+
+.choice-summary-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  font-size: 11px;
+  max-width: 100%;
+}
+
+.choice-summary-pill.has-wildcard {
+  border-color: rgba(192, 132, 252, 0.45);
+  background: rgba(192, 132, 252, 0.12);
+}
+
+.choice-summary-pill.has-wildcard .opt-text {
+  color: #e9d5ff;
+}
+
+.opt-weight {
+  color: #fbbf24;
+  font-weight: 700;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.opt-text {
+  color: #e2e8f0;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 140px;
+}
+
+/* Empty State */
+.canvas-empty-state {
+  position: absolute;
+  top: 120px;
+  left: 60px;
+  padding: 16px 20px;
+  background: rgba(18, 22, 34, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 13px;
+  pointer-events: auto;
+}

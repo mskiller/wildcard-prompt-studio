@@ -1,0 +1,62 @@
+.graph-viewer-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: var(--bg-card, #1e1e2e);
+  border-radius: 12px;
+  color: var(--text-color, #cdd6f4);
+}
+
+.graph-tree-container {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1.5rem;
+  overflow-x: auto;
+}
+
+.tree-node-box {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  margin: 0.25rem;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.tree-node-box.root {
+  background: #cba6f7;
+  color: #11111b;
+}
+
+.tree-node-box.choice {
+  background: #f9e2af;
+  color: #11111b;
+}
+
+.tree-node-box.wildcard {
+  background: #fab387;
+  color: #11111b;
+}
+
+.tree-node-box.text {
+  background: #89b4fa;
+  color: #11111b;
+}
+
+.recommendations-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.tag-chip {
+  padding: 0.3rem 0.75rem;
+  background: rgba(166, 227, 161, 0.2);
+  color: #a6e3a1;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}

@@ -1,8 +1,23 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from contextlib import asynccontextmanager
 from app.api.routers import router as api_router
+from app.services.watchdog_service import watchdog_service
 
-app = FastAPI(title="Wildcard Management Studio API")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_IMAGES_DIR = os.path.join(BASE_DIR, "app", "static", "images")
+os.makedirs(STATIC_IMAGES_DIR, exist_ok=True)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    os.makedirs(STATIC_IMAGES_DIR, exist_ok=True)
+    watchdog_service.start()
+    yield
+    watchdog_service.stop()
+
+app = FastAPI(title="Wildcard Management Studio API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -11,6 +26,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.mount("/static/images", StaticFiles(directory=STATIC_IMAGES_DIR), name="images")
 
 app.include_router(api_router, prefix="/api/v1")
 

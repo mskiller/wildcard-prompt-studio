@@ -1,0 +1,81 @@
+.visual-builder-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  overflow-y: auto;
+  gap: 20px;
+  background-color: var(--bg-panel);
+}
+
+.blocks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.prompt-block {
+  display: flex;
+  padding: 16px;
+  gap: 12px;
+  transition: box-shadow 0.2s ease;
+}
+
+.prompt-block:hover {
+  box-shadow: var(--glass-shadow), 0 0 0 1px var(--accent-glow);
+}
+
+.block-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg-muted);
+  cursor: grab;
+  padding: 4px;
+}
+
+.block-drag-handle:active {
+  cursor: grabbing;
+}
+
+.block-content {
+  flex: 1;
+  display: flex;
+}
+
+.block-content textarea {
+  width: 100%;
+  min-height: 80px;
+  background: transparent;
+  border: none;
+  resize: vertical;
+  color: var(--fg-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  box-shadow: none !important;
+}
+
+.block-content textarea:focus {
+  outline: none;
+}
+
+.add-block-btn {
+  padding: 16px;
+  background-color: rgba(255, 255, 255, 0.03);
+  color: var(--fg-secondary);
+  border: 1px dashed var(--glass-border);
+  border-radius: 12px;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-block-btn:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--fg-primary);
+  border-color: var(--accent-primary);
+}

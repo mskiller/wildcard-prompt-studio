@@ -1,0 +1,121 @@
+naked, nude, nipples, {1::erect|1::dark|1::inverted|1::small|1::puffy}_nipples, navel, groin, pubic_hair, partially_visible_vulva, skindentation, cleft_of_venus{1::|1::, gyaru, puckered_lips, makeup, eyeshadow, lipstick, red_lipstick, mascara, eyeliner}
+{1::|1::feather_boa, }lingerie, lace_trim, underwear_only, lace-trimmed_corset, lace-trimmed_bra, lace-trimmed_thighhighs, lace-trimmed_panties, lace-trimmed_gloves, lace-trimmed_choker, lace-trimmed_hairband, lace-trimmed_garter_belt{4::|1::, gyaru, puckered_lips, makeup, eyeshadow, lipstick, red_lipstick, mascara, eyeliner}
+midriff{1::, topless|1::, tube_top|1::, camisole|1::}, shorts, drawstring, black_shoes{4::|1::, gyaru, puckered_lips, makeup, eyeshadow, lipstick, red_lipstick, mascara, eyeliner}
+trench coat, lace-trimmed bra, navel, abs, cleft of venus, garter belt, garter straps, thighhighs, lace-trimmed panties
+hard hat{1::|1::, cleavage|1::, sideboob|1::, shirt}, denim suspenders, denim pants
+hospital_gown, {1::pubic_hair, partially_visible_vulva|10::{1::thong|1::g-string}}, bandages{1::, cleavage|1::, bandaged_chest}
+pajamas{1::, sleepwear|1::, {1::see-through_clothes, see-through_pajamas|1::open_pajamas}, nipples, pubic_hair, partially_visible_vulva}
+lace-trimmed_babydoll, see-through_clothes{1::, lace-trimmed_bra, {1::thong|1::g-string}|1::, no_bra, erect_nipples, no_panties, see-through_babydoll, pubic_hair, partially_visible_vulva}{4::|1::, gyaru, puckered_lips, makeup, eyeshadow, lipstick, red_lipstick, mascara, eyeliner}
+gown, evening_gown, cocktail_dress, plunging_neckline{1::|1::, full_cleavage, navel}{2::|1::, wardrobe_malfunction, strap_slip, armpits, armpit_hair, nipple_slip, {1::small|1::inverted|1::dark|1::erect}_nipple}{4::|1::, gyaru, puckered_lips, makeup, eyeshadow, lipstick, red_lipstick, mascara, eyeliner}
+victorian, aristocratic_clothes
+topless, {1::thong|1::g-string}{4::|1::, gyaru, puckered_lips, makeup, eyeshadow, lipstick, red_lipstick, mascara, eyeliner}
+harem_outfit, see-through_clothes, veil, see-through_veil, lace-trimmed_veil, mouth_veil, pelvic_curtain{1::|1::, see-through_pelvic_curtain, pubic_hair, partially_visible_vulva}{4::|1::, gyaru, puckered_lips, makeup, eyeshadow, lipstick, red_lipstick, mascara, eyeliner}
+profanity, clothes writing, "FUCK-ME" clothes, tape on nipples{4::|1::, gyaru, puckered_lips, makeup, eyeshadow, lipstick, red_lipstick, mascara, eyeliner}
+fishnet, fishnet_leotard, see-through_clothes, fishnet_pantyhose{1::, pasties, see-through_leotard, pasties_under_clothes, pubic_hair, micro_panties|1::, no_bra, erect_nipples, no_panties, see-through_leotard, pubic_hair, partially_visible_vulva}{4::|1::, gyaru, puckered_lips, makeup, eyeshadow, lipstick, red_lipstick, mascara, eyeliner}
+streetwear, hoodie, hood_{1::down|1::up}{1::|1::, cropped_hoodie, underboob, navel}, {1::{1::leather|1::pleated|1::denim}_{1::|1::micro_|1::short_}shorts|1::{1::leather|1::pleated|1::denim}_{1::micro|1::|1::mini}skirt|bottomless}, sneakers
+{1::leather_jacket, black_jacket, |1::}midriff, cleavage, {1::white_|1::|1::red_|1::torn_}{1::tank|1::crop}_top, navel, {1::leather|1::pleated|1::denim}_{1::{1::|1::micro_|1::short_}shorts|1::{1::micro|1::|1::mini}skirt}{2::|1::, thong|1::, string_panties}, {1::thighhighs|1::kneehighs|1::socks|1::pantyhose}, stiletto_heels, strappy_heels, high_heels, black_shoes{2::|1::, gyaru, puckered_lips, makeup, eyeshadow, lipstick, red_lipstick, mascara, eyeliner}
+cheerleader, pom_pom_(cheerleading), crop_top, skirt
+armored_dress, chainmail
+american football helmet, shoulder pads, american football uniform
+bound, tied_up_(nonsexual)
+tank_top, rainbow_shirt, denim_shorts{2::|3::, open_shorts, unbuttoned, open_fly, {1::bow|1::shorts_pull, pubic_hair, partially_visible_vulva, no|1::pubic_hair, string|1::lace-trimmed|1::pubic_hair, thong|1::stripped}_panties}
+dominatrix, femdom, sadism
+biker_clothes, unzipped, bikesuit
+nun, nun_headdress, veil, black_veil
+gold_choker, toga, himation, ancient_greek_clothes, greco-roman_clothes, thighlet
+priestess, veil, white_veil
+lolita_fashion, sweet_lolita, strawberry_print{1::|1::, yume_kawaii}
+straw_hat, sundress, frilled_dress, sleeveless_dress{3::|1::, see-through_dress, nipples, pubic_hair, partially_visible_vulva}
+goth_fashion, black_eyeshadow, black_lips, gothic_{1::punk, punk|1::lolita}
+armored, bikini, chainmail
+wizard, wizard_hat, robe
+bdsm, masochism, bondage_outfit, latex_panties, open_panties, pubic_hair, partially_visible_vulva, topless, restrained, bondage{1::|1::, shibari}
+gladiator, roman_empire, gladiator_sandals
+paladin, cleric, knight, glowing_armor
+thief, black_bodysuit, balaclava, studded_gloves
+choker, {1::|1::lace-trimmed_}bodysuit, impossible_bodysuit, skin_tight{4::|1::, see-through_clothes, see-through_bodysuit}, cameltoe
+bodysuit, superhero_costume, mask, cape
+shiny_clothes, latex_bodysuit, latex, skin_tight, cameltoe
+armored_leotard
+pilot, pilot_helmet, pilot_suit
+school_uniform, neckerchief, collared_shirt, pleated_skirt, kneehighs
+bikini_armor, chainmail, veil, cape
+denim_jacket, open_jacket, {1::no_bra|1::crop_top, underboob}, denim_shorts, {1::short_|1::micro_}shorts{3::|2::, open_shorts, open_fly, unzipped, {1::string|1::polka_dot|1::lowleg|1::highleg|1::frilled|1::thong|1::g-string|1::pubic_hair, partially_visible_vulva, no|1::bow|1::lace-trimmed}_panties}
+leather_jacket, shirt, denim_skirt, leather_gloves, brown_leather_boots
+armored_corset, {1::thong|1::g-string}
+{1::revealing_clothes, slingshot_swimsuit, micro_|1::|1::frilled_|1::side-tie_|1::string_|1::striped_|1::{1::flag|1::cow|1::floral}_print, print_|1::front-tie_}bikini{4::|1::, gyaru, puckered_lips, makeup, eyeshadow, lipstick, red_lipstick, mascara, eyeliner}
+wedding_dress, bridal_veil, thighhighs, garter_belt, lace_trim
+nurse_cap, nurse
+revealing_clothes, {1::crop|1::tube}_top, underboob, {1::micro|1::mini|1::pleated_|1::plaid_|1::frilled_}skirt, {1::thong|1::g-string}, thighhighs{1::|1::, garter_straps, garter_belt}{1::|1::, gyaru, puckered_lips, makeup, eyeshadow, lipstick, red_lipstick, mascara, eyeliner}
+enmaided, maid, maid_headdress, maid_apron
+no_bra, suspenders, suspender_skirt, {1::micro|1::mini|1::pleated_|1::plaid_|1::frilled_}skirt, thighhighs{1::|1::, garter_straps, garter_belt}, {1::string|1::polka_dot|1::lowleg|1::highleg|1::frilled|1::thong|1::g-string|1::pubic_hair, partially_visible_vulva, no|1::bow|1::lace-trimmed}_panties
+denim_jacket, open_jacket, no_bra, suspenders, suspender_shorts, denim_shorts{3::|2::, (open_shorts, open_fly, unzipped, {1::string|1::polka_dot|1::lowleg|1::highleg|1::frilled|1::thong|1::g-string|1::pubic_hair, partially_visible_vulva, no|1::bow|1::lace-trimmed}_panties}
+steampunk, corset, underbust, brown_gloves, high-waist_pants{3::|2::, open_fly, unzipped, {1::string|1::polka_dot|1::lowleg|1::highleg|1::frilled|1::thong|1::g-string|1::pubic_hair, partially_visible_vulva, no|1::bow|1::lace-trimmed}_panties}, cape, brown_boots, leather_boots, thigh_boots
+cyberpunk, cyborg, artificial_eye, bodysuit, neon_bodysuit, robot_joints, mechanical_arm
+cyberpunk, bodysuit, skin_tight, cameltoe, neon_bodysuit, multicolored_bodysuit, latex_bodysuit, fingerless_gloves, neon_light, neon_palette{1::|1::, pastel_colors}
+prehistoric, cavewoman, {1::fur_dress, no_bra|1::coconut_bra, fur_skirt}, no_panties, barefoot
+sombrero, mexican_clothes, mexican_dress
+chinese_clothes, china_dress
+japanese_clothes, kimono, obi, sash, hakama
+gym_uniform, midriff, sports_bra, buruma{1::|1::, cameltoe}
+revealing_clothes, frontless_outfit, hiphighs, {1::string|1::polka_dot|1::lowleg|1::highleg|1::frilled|1::thong|1::g-string|1::pubic_hair, partially_visible_vulva, no|1::bow|1::lace-trimmed}_panties{1::|1::, gyaru, puckered_lips, makeup, eyeshadow, lipstick, red_lipstick, mascara, eyeliner}
+office_lady, formal_clothes, business_suit, skirt_suit
+defeat, torn_clothes, torn_bodysuit, torn_bra, {1::erect|1::dark|1::inverted|1::small|1::puffy}_nipple, torn_skirt, torn_panties, pubic_hair, partially_visible_vulva, torn_thighhighs
+see-through_clothes, translucent_bunnysuit, see-through_cleavage{2::|1::, see-through_veil}, see-through_leotard{3::|1::, areolae}{3::|1::, nipples}{3::|2::, cameltoe|1::, pubic_hair}
+playboy_bunny, fake_animal_ears, rabbit_ears, strapless_leotard, {1::translucent_bunnysuit{3::|1::, areolae}{3::|1::, {1::erect|1::dark|1::inverted|1::small|1::puffy}_nipples}{3::|1::, pubic_hair}|1::black_leotard}{3::|2::, cameltoe}, rabbit_tail
+{2::|1::monster_girl, slime_girl, }nude, glowing_skin, see-through_body{3::|1::, areolae}{3::|1::, {1::erect|1::dark|1::inverted|1::small|1::puffy}_nipples}{1::|1::, pubic_hair}
+nude, glowing_eyes, glowing_skin, gold_lotus, spirit_evolution, evolution, sparks, fire, convenient_censoring, censored_nipples, censored{1::|1::, pubic_hair}
+wet_clothes, wet_swimsuit, see-through_clothes, one-piece_swimsuit{3::|1::, areolae}{3::|1::, {1::erect|1::dark|1::inverted|1::small|1::puffy}_nipples}{3::|2::, cameltoe}{1::|1::, pubic_hair}
+mermaid, merfolk, shell_bikini, kneeless_merfolk{1::|1::, pubic_hair}{1::|1::, partially_visible_vulva}
+virgin_killer_outfit, center_frills, pantyhose, shoes, high_heels, pumps
+virgin_killer_sweater, naked_sweater, sideboob, backless_dress, short_dress{1::|100::, {1::lace_trimmed|1::thong|1::string|1::striped|100::dimples_of_venus, anus, groin, pubic_hair, no}_panties}, stiletto_heels
+sportswear, cycling_uniform, jersey, bike_jersey, biker_clothes{1::|1::, bodysuit, cameltoe}, sneakers
+sportswear, basketball_uniform, baseball_jersey, basketball_jersey, basketball_shorts, socks, sneakers
+sportswear, helmet, motorcycle_helmet, holding_unworn_helmet, racing_suit, bikesuit, bodysuit{1::|1::, cameltoe}, sneakers
+sportswear, baseball_uniform{1::|1::, baseball_helmet|1::, baseball_cap}, jersey{1::|1::, baseball_mitt|1::, baseball_bat, holding_baseball_bat}, buruma{1::|1::, cameltoe}, socks, sneakers
+sportswear, soccer_uniform{4::|1::, raimon}, jersey, shorts, socks, sneakers
+sportswear, tennis_uniform, shirt, skirt, socks, sneakers
+sportswear, volleyball_uniform, jersey, elbow_pads, knee_pads, buruma{1::|1::, cameltoe}, socks, sneakers
+official_alternate_costume, official_alternate_hairstyle
+virtual_youtuber, animal_ear_headphones, crop_top, skirt, thighhighs, garter_straps, fishnet, kneehighs, sneakers
+underwear, gloves, thong, {1::cameltoe|1::partially_visible_vulva, pubic_hair{10::|1::, wedgie}}, garter_straps, thighhighs, barefoot
+policewoman, police_uniform, female_service_cap{1::|1::, jacket}{1::|1::, shirt}, pencil_skirt{1::|1::, garter_straps}, {1::socks|1::thighighs|1::kneehighs}{1::|1::, zettai_ryouiki}, shoes
+military_dress_uniform, japan_self-defense_force{1::|1::, jacket}{1::|1::, partially_unbuttoned, cleavage}, skirt{1::|1::, garter_straps}, {1::socks|1::thighighs|1::kneehighs}{1::|1::, zettai_ryouiki}, shoes
+heterochromia, skirt, zettai_ryouiki, thighhighs
+science_fiction, robot_girl{1::|1::, biomechanical}{1::|1::, humanoid_robot}{1::|1::, exposed_internal_machinery|1::, mechabare}{1::|1::, android}{1::|1::, cyborg}{1::|1::, metal_skin}{1::|1::, mechanical_eyes, single_mechanical_eye}{4::|1::, mechanical_wings}{1::|1::, joints, robot_joints}{1::|1::, mechanical_arms}{1::|1::, mechanical_hands}{1::|1::, mechanical_legs{1::|1::, high-heeled_mechanical_legs}}{3::|1::, damaged, broken, cable, sparks}
+bikini, side-tie_bikini, see-through_clothes, see-through_dress, sundress
+furry_female, {1::fox_girl, fox_ears, fox_tail|1::cat_girl, cat_ears, cat_tail|1::dog_girl, dog_ears, dog_tail|1::monkey_girl, monkey_ears, monkey_tail}
+see-through_clothes, see-through_dress, sundress, white_dress, no_bra, {1::cross_pasties|1::nipples}, no_panties{4::, pubic_hair|1::}
+{1::{1::short_|1::micro|1::sun|1::lace-trimmed_|1::{1::lace-trimmed_|1::bow_|1::frilled_|1::nipples, no_|1::{1::cross|1::heart|1::star}_pasties, no_}bra, see-through_clothes, see-through_}dress|1::{1::{1::|1::sideboob, }tank|1::{1::|1::underboob, }crop}_top, {1::mini|1::micro|1::high-waist_|1::frilled_|1::plaid_|1::pleated_|1::pencil_|1::suspender_|1::leather_|1::denim_}skirt}, zettai_ryouiki, thighhighs
+ballerina, tutu, leotard{1::|1::, see-through_clothes, see-through_leotard{1::|1::, nipples, pubic_hair}}, ballet_slippers
+{1::|1::priestess, }{1::|1::veil, }leather_choker, short_dress, sleeveless_dress, white_dress, ancient_greek_clothes, greco-roman_clothes{1::|1::, see-through_clothes, see-through_dress{1::|1::, nipples, pubic_hair}}, sandals
+fur_trim{1::|2::, fur-trimmed_{1::jacket|2::coat}}{4::|1::, fur-trimmed_hood|1::, fur-trimmed_headwear}{1::|1::, fur-trimmed_capelet}{1::|2::, fur-trimmed_cloak|1::, fur-trimmed_cape}{1::|2::, fur-trimmed_collar}{1::|2::, fur-trimmed_sleeves}{1::|3::, fur-trimmed_gloves}{1::, fur-trimmed_dress|1::, fur-trimmed_bra, fur-trimmed_pants|1::, fur-trimmed_{1::shorts|3::skirt}, zettai_ryouiki, thighhighs{1::|1::, panty_peek, fur-trimmed_panties}}{1::|1::, fur-trimmed_boots}
+o-ring{1::|2::, o-ring_choker}{2::, o-ring_top, lace-trimmed_bra, o-ring_bottom, lace-trimmed_panties|100::, o-ring_bikini, micro_bikini|2::, chest_harness, o-ring_harness}{1::|2::, o-ring_thigh_strap{1::|1::, heart_o-ring}}{1::|1::, thighhighs}
+strapless, strapless_{1::leotard{1::|1::, see-through_clothes, see-through_leotard}|1::dress, cleavage|1::bikini{1::, {1::denim|1::leather|1::latex}_{1::shorts|1::skirt}|1::, no_bottom{1::, thong|1::, side-tie_bikini_bottom|, no_panties, pubic_hair, groin}}|1::shirt{1::, {1::denim|1::leather|1::latex}_{1::shorts|1::skirt}|1::, no_bottom{1::, thong|1::, lace-trimmed_panties|, no_panties, pubic_hair, groin}}}{1::|1::, thighhighs}
+oversized_clothes, {1::sweater|1::hoodie}, long_sleeves{1::|1::, puffy_long_sleeves}{1::|1::, sleeves_past_wrists}{1::|1::, sleeves_past_fingers}, no_bottom{3::, thong|4::, bow_panties|2::, chastity_belt|1::, strap-on|4::, g-string_panties|4::, lace-trimmed_panties|4::, no_panties, pubic_hair, groin}
+choker, chastity_bra, wrist_cuffs, chastity_belt, thigh_cuffs{5::|1::, latex_bodysuit}, lock
+tattoo, full-body_tattoo, facial_tattoo, neck_tattoo, shoulder_tattoo, chest_tattoo, breast_tattoo, stomach_tattoo, arm_tattoo, hand_tattoo, nude, nipples, {1::erect|1::dark|1::inverted|1::small|1::puffy}_nipples, navel, groin{1::|1::, pubic_hair}, pubic_tattoo, partially_visible_vulva, skindentation, cleft_of_venus, leg_tattoo, feet_tattoo
+ribbon, ribbon_choker, ribbon_bondage, ribbon_around_body
+plaid_clothes{4::|1::, plaid_scarf}{2::|1::, plaid_vest}, plaid_shirt, plaid_skirt, {1::socks|1::thighhighs|1::kneehighs}, uwabaki
+beret, collared_shirt, pleated_skirt, {1::socks|1::thighhighs|1::kneehighs}, uwabaki
+cross-laced_clothes, cross-laced_top, cross-laced_skirt, belted_leg_warmers
+lingerie, satin, satin clothes, lace-trimmed tank top, sideboob, satin shorts{3::|2::, pussy peek, partially_visible_vulva}, thighhighs
+lingerie, satin, satin clothes, satin underwear, satin bra, satin panties, satin gloves{3::|2::, pussy peek, partially_visible_vulva}, thighhighs
+pirate costume, pirate hat, skull and crossbones{1:: bikini|1:: panties|10::}
+little_red_riding_hood_(fairy_tale_character)_(cosplay)
+gold_cloth, gold lace-trimmed bra, gold lace-trimmed veil, gold lace-trimmed breasts curtain, gold lace-trimmed pelvic curtain, gold lace-trimmed panties
+white print crop top "Blacked", white print thong panties Ace of spades
+eyewear, {1::round|1::square|1::rectangle} glasses, partially unbuttoned shirt, cleavage, name tag "character name"{1::|1::, areola slip|1::, nipple slip, dark nipple|1::, lace-trimmed bra}, {1::micro|1::mini|1::leather |1::tube |1::plaid |1::}skirt, thighhighs, sneakers
+tied shirt{1::, areola slip|1::|1::, bra}, cleavage, navel, open denim shorts{1::, pubic hair, partially visible vulva|1::|1::, bow panties}, kneehigh socks, sneakers
+widow outfit, black veil, short black dress front-tied lace and long sleeves, cleavage, black garter straps, black thighhighs, black footwear
+slavekini, breast veil curtains, gold chain, bikini veil slave harem outfit, pelvic veil see-through curtain
+bodysuit, choker, gloves, belt
+lipstick, makeup, Egyptian queen costume with gold headdress, collar, breasts curtain, and flowing skirt, pelvic curtain
+front-tied bikini top, round breasts, cleavage, daisy dukes high waist large hips denim shorts, cowboy boots
+straw sunhat with ribbon and with straps tied to her neck, crop top, see-through long red dress above white microskirt and black thong panies
+hair tied with a ruban matching her dress, frilly sleeveless short colored sundress, sandals
+frilly sleeves yellow satin silk golden microsundress, cleavage, polka-dot print
+white print microsundress, cherry_blossoms floral print
+sleeveless green print microsundress, sunflower floral print
+sleeveless strapless red lace-trimmed see-through mini sundress, cleavage
+strapless patterned microbikini top, front-tied bikini, navel piercing, see-through sarong, pubic hair peek, thong bikini bottom, thighs dragon tattoo

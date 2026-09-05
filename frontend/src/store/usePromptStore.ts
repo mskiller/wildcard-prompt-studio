@@ -3,6 +3,7 @@ import { create } from 'zustand';
 interface PromptStore {
   promptText: string;
   expandedPromptText: string;
+  currentPrompt?: any;
   setPromptText: (text: string) => void;
   setExpandedPromptText: (text: string) => void;
 }

@@ -1,0 +1,32 @@
+Alicia, chinese east asian woman, thin face, black hair, tied-up hair bun with left single bang, pale white skin slim, thin
+tara, American woman, long face, medium nose, big luscious lips, {1::tied-up, ponytail, medium blond hair|1::tied-up, updo, medium blond hair|1::untied medium blond hair, bangs}, muscular woman, light tanned skin
+freya, round face, small nose, large eyes, big luscious lips, {1::long single braid|1::untied loose} blond white hair, viking woman, pale skin, muscular woman
+grace, long face, long curly black hair, long nose, small luscious lips, middle-east woman, tanned skin, brown-skinned female, thin slim body
+tanaka, Dark skinned female, long curly {1::brown|1::black|1::red} hair, ovale face, long nose, {1::big|1::enormous|1::gigantic} luscious lips, dark african woman, muscular woman
+wu, chinese woman, slanting eyes, pale skin, long black hair, thin body, wide hips
+aylin, round face, long wavy curly red hair{10::|1::, tied-up hair, twin braids|1::, tied-up hair, twintails}, big nose, big luscious lips, freckles, irish woman, light-skinned female, curvy body
+Aadhya, idian woman, bindi on front, makeup, long face, medium nose, small luscious lips, {1::tied-up, singlebraid, very long black hair|1::untied , very long black hair, curly}, thin woman, dark-tanned skin
+mai_pgr_netiya_wg,long_hair,mature_female,aged_up,blunt_bangs,gradient_hair,red_eyes,large_breasts,headgear,single_mechanical_arm,mechanical_legs
+mature_female, aged_up, Pouty lips, OWSMika, short_hair, brown_hair, bob_cut, brown_eyes, swept_bangs, parted_bangs, MikaShirtA
+furry, anthro, dog_girl, anubis_jackal
+aurora_sya_lis_kaymin
+lizkkkb, orange_hair, streaked_hair, colored_inner_hair, yellow_hair, medium_hair, green_eyes, asymmetrical_bangs, asymmetrical_hair
+mature_female, aged_up, short_hair, curly_hair, bob_cut, {2::black|1::red}_hair, big_eyes, round_eyes, black_eyeliner, hoop_earrings, red_lips, small_lips, puckered_lips, mole, round_face, petite, curvy, white_skin, pale_skin
+mature_female, aged_up, brown_hair, curly_hair, medium_hair, drill_ponytail, bangs, blunt_bangs, long_face, small_eyes, glasses, square_eyewear, stud_earrings, long_nose, small_lips, makeup, mascara, eyeshadow, eyeliner, necklace, cross_necklace, tall_woman, curvy, narrow_waist
+mature_female, bimbo, muscular_female, blonde_hair, very_long_hair, american, {pale|white}_skin
+mature_female, petite, short_girl, black_hair, bob_cut, italian, tan
+long_hair, two-tone_hair, purple_hair, black_hair, hair_highlights, dark_eyes, black_eyes, purple_lipstick, makeup, eyeshadow, eyeliner, mascara, tan
+milf, mature, obese, body_freckles, wrinkled_skin, red_hair, short_hair, fat, curvy, {huge|large|medium|small}_breasts, thick_thighs, huge_ass
+asian, dark-skinned_female, black_hair, long_hair, petite, mature_female, bimbofication, puckered_lips, pursed_lips, black_lips, skinny, makeup, eyeshadow, black_eyeshadow, goth_fashion{1::|3::, gothic_lolita}, eyeliner, black_eyeliner, mascara
+black woman, dark_skin, puckered_lips, afro, thin, large_ass
+skinny, narrow_waist, hip_bones, ribs, very_dark_skin, dark-skinned_female, tan, big_hair, long_hair, twin_braids, multicolored_hair, gradient_hair, black_hair, purple_hair, slit_pupils, purple_eyes{1::, sunglasses, heart-shaped_eyewear, purple-framed_eyewear|1::, glasses, round_eyewear, purple-framed_eyewear}, thick_lips, black_lips, neck_tattoo, chest_tattoo, arm_tattoo
+skinny, narrow_waist, pale_skin, mole, freckles, big_hair, long_hair, twintails, red_hair, bright_pupils, brown_eyes, mole_under_eye, puckered_lips, red_lips, makeup, eyeshadow, eyeliner, mascara
+curvy, narrow_waist, thick_thighs, square_face, big_eyes, small_pupils, small_nosepiercing, face_piercing, eyebrow_piercing, jewelry, ear_piercing, short_hair, messy_hair, pixie_cut, multicolored_hair, gradient_hair, blue_hair, pink_hair, hair_ornament_flower, hairclip, parallel_hairclips, blue_lips, thick_lips, makeup, eyeshadow, eyeliner, mascara
+mature_female, indian, skinny, narrow_waist, dark_skin, dark-skinned_female, freckles, feather_headband, ovale_face, black_hair, long_hair, very_long_hair, multi-tied_hair, braid, single_braid, slit_pupils, small_pupils, black_eyes
+mature_female, tall_female, skinny, narrow_waist, muscular, muscular_female, wrinkled_skin, cowgirl, cowboy_hat, round_face, long_hair, low_ponytail, multicolored_hair, two-tone_hair, grey_hair, blond_hair, fringe, bangs, parted_bangs
+Seccotine, pale_skin, tall_female, skinny, narrow_waist, brown_eyes, bright_blonde_hair, long_hair, high_side_ponytail, red_bow, short_straight_bangs
+Melle_Jeanne, mature_female, pale_skin, freckles, wrinkled_skin, tall_female, skinny, narrow_waist, hip_bones, brown_eyes, red_hair, very_long_hair, low_ponytail, round_glasses, long_nose, red_lips
+elf, dark_elf, mature_female, dark_skin, very_dark_skin, dark-skinned_female, narrow_waist, thick_thighs, curvy, very_long_hair, dreadlocks, two-tone_hair, pink_hair, hair_ornament, hair_ribbon, brown_eyes, pointy_nose, pursed_lips, pointy_ears
+mature_female, asian, pointy_nose, hip_bones, narrow_waist, ribs, dark_skin, very_dark_skin, dark-skinned_female, slit_pupils, brown_eyes, long_hair, bangs, swept_bangs, multicolored_hair, streaked_hair, two-tone_hair, black_hair, red_streaks, red_hair, red_hairband, thick_lips, makeup, eyeshadow, eyeliner, mascara
+goblin, female_goblin, green_skin{1::|1::, bald, bald_female}, long_pointy_ears, petite, skinny, narrow_waist, curvy, thick_thighs
+prima (autobot), mechanical eyes, blue sclera, lips, no hair, metallic textures, robotic joints, panties, armor, robot, mecha, science fiction, insignia, autobot

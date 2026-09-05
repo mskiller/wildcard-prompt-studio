@@ -1,0 +1,4 @@
+rpg tile, 2D, from above, __rpg/rpg-tiles/urban__, {__rpg/rpg-tiles/special-locations__|}, {__rpg/rpg-tiles/items__|}
+rpg tile, 2D, from above, __rpg/rpg-tiles/special-locations__, {__rpg/rpg-tiles/structures/buildings__|__rpg/rpg-tiles/structures/dungeons__|__rpg/rpg-tiles/structures/interiors__|}, {__rpg/rpg-tiles/items__|}
+rpg tile, 2D, from above, __rpg/rpg-tiles/natural-features__, {__rpg/rpg-tiles/items__|}
+rpg tile, 2D, from above, __rpg/rpg-tiles/terrain__, {__rpg/paths/crossings__|__rpg/paths/road-types__|__rpg/paths/corners-turns__|__rpg/rpg-tiles/environmental__|}

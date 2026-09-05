@@ -1,19 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+
 :root {
-  --vscode-bg: #1e1e1e;
-  --vscode-fg: #d4d4d4;
-  --vscode-sidebar-bg: #252526;
-  --vscode-activityBar-bg: #333333;
-  --vscode-activityBar-fg: #ffffff;
-  --vscode-titleBar-bg: #323233;
-  --vscode-titleBar-fg: #cccccc;
-  --vscode-border: #454545;
-  --vscode-hover-bg: #2a2d2e;
-  --vscode-accent: #007acc;
-  --vscode-accent-hover: #005f9e;
-  --vscode-font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  --vscode-font-size: 13px;
-  --vscode-icon-size: 24px;
+  /* Premium Dark Mode Colors */
+  --bg-app: #070a12;
+  --bg-base: #070a12;
+  --bg-surface: rgba(15, 23, 42, 0.75);
+  --bg-panel: rgba(18, 26, 46, 0.65);
+  --bg-glass-card: rgba(255, 255, 255, 0.04);
+  --bg-hover: rgba(45, 51, 68, 0.8);
+  
+  --fg-primary: #f0f2f5;
+  --fg-secondary: #9ba1b0;
+  --fg-muted: #6b7280;
+  
+  /* Vibrant Accents */
+  --accent-primary: #6366f1; /* Indigo */
+  --accent-hover: #4f46e5;
+  --accent-glow: rgba(99, 102, 241, 0.5);
+  
+  --accent-cyan: #06b6d4;
+  --accent-purple: #a855f7;
+  --accent-pink: #ec4899;
+  --accent-amber: #f59e0b;
+
+  --accent-success: #10b981;
+  --accent-warning: #f59e0b;
+  --accent-danger: #ef4444;
+
+  /* Glassmorphism Utilities */
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-glow: rgba(6, 182, 212, 0.3);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+  --backdrop-blur: blur(16px) saturate(180%);
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Outfit', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 24px;
 }
+
+[data-theme="light"] {
+  --bg-app: #f8fafc;
+  --bg-base: #f8fafc;
+  --bg-surface: rgba(255, 255, 255, 0.85);
+  --bg-panel: rgba(241, 245, 249, 0.9);
+  --bg-hover: rgba(226, 232, 240, 0.9);
+  
+  --fg-primary: #0f172a;
+  --fg-secondary: #475569;
+  --fg-muted: #94a3b8;
+  
+  --glass-border: rgba(0, 0, 0, 0.12);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
+}
+
 
 * {
   box-sizing: border-box;
@@ -24,17 +70,49 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: var(--vscode-font-family);
-  font-size: var(--vscode-font-size);
-  background-color: var(--vscode-bg);
-  color: var(--vscode-fg);
-  overflow: hidden; /* App takes full height */
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  background-color: var(--bg-app);
+  color: var(--fg-primary);
+  overflow: hidden;
+  /* subtle radial gradient for depth */
+  background-image: radial-gradient(circle at top right, rgba(99, 102, 241, 0.08) 0%, transparent 40%);
 }
 
-/* Base styles for scrollbars to match modern IDEs */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Touch micro-interactions */
+@media (pointer: coarse) {
+  button, .clickable, .activity-item, .sidebar-tree-item {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+  }
+}
+
+button:active, .activity-item:active, .touch-shrink:active {
+  transform: scale(0.96);
+  transition: transform 0.1s ease;
+}
+
+/* Glassmorphic Panel Class */
+.glass-panel {
+  background: var(--bg-surface);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 12px;
+}
+
+/* Scrollbar refinement */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -42,10 +120,56 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #424242;
-  border: 1px solid var(--vscode-bg);
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #4f4f4f;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Base button styles */
+button {
+  font-family: var(--font-sans);
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+input, textarea, select {
+  font-family: var(--font-sans);
+  background: var(--bg-panel);
+  border: 1px solid var(--glass-border);
+  color: var(--fg-primary);
+  border-radius: 6px;
+  padding: 8px 12px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.primary-button {
+  background-color: var(--accent-primary);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.primary-button:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.primary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
