@@ -96,3 +96,29 @@ def test_matrix_execute_indices_and_prompts():
     assert data_prompts["total_generated"] == 2
     assert data_prompts["prompts"] == ["custom 1", "custom 2"]
 
+def test_matrix_execute_view_mode():
+    res = client.post("/generate/matrix/execute", json={
+        "prompt": "{a|b|c} {1|2|3}",
+        "mode": "view",
+        "offset": 2,
+        "limit": 2
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "queued"
+    assert data["total_generated"] == 2
+    assert data["prompts"] == ["a 3", "b 1"]
+
+def test_matrix_slice_default_limit():
+    res = client.post("/generate/matrix/slice", json={
+        "prompt": "{" + "|".join(f"item{i}" for i in range(300)) + "}",
+        "offset": 0,
+        "expand_wildcards": True
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["total_count"] == 300
+    assert data["limit"] == 250
+    assert len(data["items"]) == 250
+
+

@@ -32,7 +32,7 @@ class MatrixPermutationItem(BaseModel):
 class MatrixSliceRequest(BaseModel):
     prompt: str
     offset: Optional[int] = 0
-    limit: Optional[int] = 50
+    limit: Optional[int] = 250
     expand_wildcards: Optional[bool] = True
     sample_size: Optional[int] = None
     seed: Optional[int] = None
@@ -109,7 +109,7 @@ async def get_matrix_slice(
             )
         else:
             offset = request.offset if request.offset is not None else 0
-            limit = request.limit if request.limit is not None else 50
+            limit = request.limit if request.limit is not None else 250
             data = matrix_engine.get_matrix_slice(
                 request.prompt,
                 offset=offset,
@@ -139,6 +139,16 @@ async def execute_matrix_sweep(
             prompts = list(request.prompts)
             if request.limit and request.limit > 0 and len(prompts) > request.limit:
                 prompts = prompts[:request.limit]
+        elif (request.indices is not None and len(request.indices) > 0) or request.mode == "indices":
+            if request.indices:
+                data = matrix_engine.get_matrix_indices(
+                    request.prompt,
+                    indices=request.indices,
+                    expand_wildcards=expand_wc
+                )
+                prompts = [item["prompt"] for item in data.get("items", [])]
+            else:
+                prompts = []
         elif request.mode == "sample":
             sample_size = request.sample_size if request.sample_size is not None else (request.limit or 25)
             data = matrix_engine.get_matrix_sample(
@@ -148,20 +158,13 @@ async def execute_matrix_sweep(
                 expand_wildcards=expand_wc
             )
             prompts = [item["prompt"] for item in data.get("items", [])]
-        elif request.mode == "range":
+        elif request.mode in ("range", "view"):
             offset = request.offset if request.offset is not None else 0
-            limit = request.limit if request.limit is not None else 50
+            limit = request.limit if request.limit is not None else 250
             data = matrix_engine.get_matrix_slice(
                 request.prompt,
                 offset=offset,
                 limit=limit,
-                expand_wildcards=expand_wc
-            )
-            prompts = [item["prompt"] for item in data.get("items", [])]
-        elif request.mode == "indices" and request.indices is not None:
-            data = matrix_engine.get_matrix_indices(
-                request.prompt,
-                indices=request.indices,
                 expand_wildcards=expand_wc
             )
             prompts = [item["prompt"] for item in data.get("items", [])]
