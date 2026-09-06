@@ -12,6 +12,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_IMAGES_DIR = os.path.join(BASE_DIR, "app", "static", "images")
 os.makedirs(STATIC_IMAGES_DIR, exist_ok=True)
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     os.makedirs(STATIC_IMAGES_DIR, exist_ok=True)
@@ -19,10 +23,13 @@ async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         await unified_rag_service.seed_default_knowledge_if_empty(db)
+    except Exception as e:
+        logger.warning(f"RAG pre-seeding deferred during startup: {e}")
     finally:
         db.close()
     yield
     watchdog_service.stop()
+    unified_rag_service.close()
 
 app = FastAPI(title="Wildcard Management Studio API", lifespan=lifespan)
 

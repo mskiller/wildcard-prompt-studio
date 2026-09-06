@@ -2,12 +2,16 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
+import logging
 import random
+import threading
 from typing import Any, Dict, List, Optional
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.knowledge import KnowledgeDocument
+
+logger = logging.getLogger(__name__)
 
 
 def _parse_tags(tags_val: Any) -> List[str]:
@@ -95,38 +99,50 @@ DEFAULT_KNOWLEDGE_DOCUMENTS = [
 
 
 class UnifiedRAGService:
+    """Unified persistent RAG service backed by pgvector and sentence-transformers."""
+
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
         self.model_name = model_name
         self._model = None
         self._executor = ThreadPoolExecutor(max_workers=2)
-        self._lock = asyncio.Lock()
+        self._model_lock = threading.Lock()
 
     def _get_model(self):
+        """Thread-safe lazy initialization of SentenceTransformer model with fallback."""
         if self._model is None:
-            try:
-                from sentence_transformers import SentenceTransformer
-                self._model = SentenceTransformer(self.model_name)
-            except Exception:
-                self._model = "MOCK"
+            with self._model_lock:
+                if self._model is None:
+                    try:
+                        from sentence_transformers import SentenceTransformer
+                        self._model = SentenceTransformer(self.model_name)
+                    except Exception as e:
+                        logger.warning(f"SentenceTransformer load failed ({e}), using deterministic fallback.")
+                        self._model = "MOCK"
         return self._model
 
     def _compute_sync(self, text: str) -> List[float]:
+        """Synchronously computes a 384-dimensional embedding vector."""
         model = self._get_model()
-        if model == "MOCK":
-            seed = int(hashlib.md5(text.encode("utf-8")).hexdigest(), 16)
-            rng = random.Random(seed)
-            return [rng.uniform(-1.0, 1.0) for _ in range(384)]
-        else:
-            vec = model.encode(text)
-            if hasattr(vec, "tolist"):
-                return vec.tolist()
-            return list(vec)
+        if model != "MOCK":
+            try:
+                vec = model.encode(text)
+                if hasattr(vec, "tolist"):
+                    return vec.tolist()
+                return list(vec)
+            except Exception as e:
+                logger.warning(f"SentenceTransformer inference error: {e}. Falling back to pseudo-embedding.")
+
+        seed = int(hashlib.md5(text.encode("utf-8")).hexdigest(), 16)
+        rng = random.Random(seed)
+        return [rng.uniform(-1.0, 1.0) for _ in range(384)]
 
     async def compute_embedding_async(self, text: str) -> List[float]:
+        """Computes text embedding asynchronously in the thread pool."""
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(self._executor, self._compute_sync, text)
 
     async def seed_default_knowledge_if_empty(self, db: Session) -> None:
+        """Seeds curated prompt engineering guidelines into the database if not present."""
         starter_titles = [d["title"] for d in DEFAULT_KNOWLEDGE_DOCUMENTS]
         existing_starter = db.query(KnowledgeDocument).filter(
             KnowledgeDocument.title.in_(starter_titles)
@@ -146,7 +162,11 @@ class UnifiedRAGService:
                     embedding=vec
                 )
                 db.add(doc)
-            db.commit()
+            try:
+                db.commit()
+            except Exception:
+                db.rollback()
+                raise
 
     async def search_knowledge_async(
         self,
@@ -156,6 +176,7 @@ class UnifiedRAGService:
         category: Optional[str] = None,
         tag: Optional[str] = None
     ) -> List[dict]:
+        """Searches knowledge documents using pgvector cosine similarity."""
         query_vec = await self.compute_embedding_async(query)
         distance_expr = KnowledgeDocument.embedding.cosine_distance(query_vec)
 
@@ -166,15 +187,13 @@ class UnifiedRAGService:
             q = q.filter(KnowledgeDocument.category.ilike(category))
 
         if tag:
-            q = q.filter(KnowledgeDocument.tags.ilike(f"%{tag}%"))
+            q = q.filter(KnowledgeDocument.tags.ilike(f'%"{tag}"%'))
 
         q = q.order_by(distance_expr).limit(top_k)
         rows = q.all()
 
         results = []
         for doc, dist in rows:
-            # Cosine distance in pgvector: 0 is identical, 2 is opposite.
-            # Convert to similarity percentage: (1.0 - dist) * 100.0
             distance_val = float(dist) if dist is not None else 1.0
             sim_score = max(0.0, min(100.0, (1.0 - distance_val) * 100.0))
             results.append({
@@ -196,6 +215,7 @@ class UnifiedRAGService:
         category: str = "general",
         tags: Optional[List[str]] = None
     ) -> dict:
+        """Embeds and indexes a new knowledge document."""
         content_to_embed = f"{title}\n{content}".strip()
         vec = await self.compute_embedding_async(content_to_embed)
         doc = KnowledgeDocument(
@@ -206,8 +226,13 @@ class UnifiedRAGService:
             embedding=vec
         )
         db.add(doc)
-        db.commit()
-        db.refresh(doc)
+        try:
+            db.commit()
+            db.refresh(doc)
+        except Exception:
+            db.rollback()
+            raise
+
         return {
             "id": doc.id,
             "title": doc.title,
@@ -217,11 +242,16 @@ class UnifiedRAGService:
         }
 
     async def delete_document_async(self, db: Session, doc_id: int) -> bool:
+        """Deletes a knowledge document by ID."""
         doc = db.query(KnowledgeDocument).filter(KnowledgeDocument.id == doc_id).first()
         if not doc:
             return False
         db.delete(doc)
-        db.commit()
+        try:
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
         return True
 
     async def get_documents_async(
@@ -231,6 +261,7 @@ class UnifiedRAGService:
         category: Optional[str] = None,
         tag: Optional[str] = None
     ) -> List[dict]:
+        """Lists knowledge documents with filtering."""
         q = db.query(KnowledgeDocument)
         if category:
             q = q.filter(KnowledgeDocument.category.ilike(category))
@@ -241,7 +272,7 @@ class UnifiedRAGService:
                 KnowledgeDocument.content.ilike(pattern)
             ))
         if tag:
-            q = q.filter(KnowledgeDocument.tags.ilike(f"%{tag}%"))
+            q = q.filter(KnowledgeDocument.tags.ilike(f'%"{tag}"%'))
 
         q = q.order_by(KnowledgeDocument.id.asc())
         docs = q.all()
@@ -261,23 +292,26 @@ class UnifiedRAGService:
         return results
 
     async def get_stats_async(self, db: Session) -> dict:
-        docs = db.query(KnowledgeDocument).all()
+        """Returns summary statistics for indexed knowledge documents."""
+        total_docs = db.query(KnowledgeDocument).count()
+        records = db.query(KnowledgeDocument.category, KnowledgeDocument.tags).all()
         all_tags = set()
         categories = set()
-        for doc in docs:
-            if doc.category:
-                categories.add(doc.category)
-            for t in _parse_tags(doc.tags):
+        for cat, raw_tags in records:
+            if cat:
+                categories.add(cat)
+            for t in _parse_tags(raw_tags):
                 all_tags.add(t)
 
         return {
-            "total_documents": len(docs),
+            "total_documents": total_docs,
             "total_tags": len(all_tags),
             "model_name": self.model_name,
             "categories": sorted(list(categories))
         }
 
     def close(self):
+        """Shuts down worker threads cleanly."""
         self._executor.shutdown(wait=False)
 
 
