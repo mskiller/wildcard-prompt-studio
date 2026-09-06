@@ -1,5 +1,6 @@
 import React, { useId } from 'react';
 import { ExternalLink } from 'lucide-react';
+import { WildcardSearchPicker } from '../WildcardSearchPicker';
 import './CanvasNodes.css';
 
 export interface CanvasWildcardNodeProps {
@@ -21,14 +22,6 @@ export const CanvasWildcardNode: React.FC<CanvasWildcardNodeProps> = ({
 }) => {
   const datalistId = useId();
   const hasAvailable = availableWildcards && availableWildcards.length > 0;
-  const isAvailableMatch = hasAvailable && availableWildcards.includes(name);
-
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = e.target.value;
-    if (val && val !== '__custom__') {
-      onChange(val);
-    }
-  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value);
@@ -44,24 +37,16 @@ export const CanvasWildcardNode: React.FC<CanvasWildcardNodeProps> = ({
     <div className="canvas-subnode canvas-wildcard-node">
       {hasAvailable && (
         <div className="wildcard-select-container">
-          <select
-            className="wildcard-select"
-            value={isAvailableMatch ? name : name ? '__custom_val__' : ''}
-            onChange={handleSelectChange}
-            disabled={readOnly}
-            onMouseDown={e => e.stopPropagation()}
-            aria-label="Select wildcard"
-          >
-            <option value="">-- Select wildcard file --</option>
-            {availableWildcards.map(wildcard => (
-              <option key={wildcard} value={wildcard}>
-                {wildcard}
-              </option>
-            ))}
-            {name && !isAvailableMatch && (
-              <option value="__custom_val__">{name} (custom)</option>
-            )}
-          </select>
+          <WildcardSearchPicker
+            variant="inspector"
+            value={name}
+            availableWildcards={availableWildcards}
+            placeholder="-- Search & choose wildcard --"
+            onSelect={(val) => {
+              if (val) onChange(val);
+            }}
+            readOnly={readOnly}
+          />
         </div>
       )}
 
