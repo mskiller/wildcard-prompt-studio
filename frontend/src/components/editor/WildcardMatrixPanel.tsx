@@ -320,7 +320,7 @@ export const WildcardMatrixPanel: React.FC = () => {
     }
     expandDebounceRef.current = setTimeout(async () => {
       try {
-        const combos = await expandMatrixPrompt(promptToExpand, undefined, expandWc);
+        const combos = await expandMatrixPrompt(promptToExpand, 5000, expandWc);
         setCombinations(combos);
         setStatus(`Generated ${combos.length} permutations (wildcard expansion ${expandWc ? 'enabled' : 'disabled'}).`);
       } catch (e: any) {
@@ -391,9 +391,9 @@ export const WildcardMatrixPanel: React.FC = () => {
     setLoading(true);
     try {
       const [resCombos, resGraph, resHeatmap] = await Promise.all([
-        expandMatrixPrompt(prompt, undefined, expandWildcards),
+        expandMatrixPrompt(prompt, 10000, expandWildcards),
         serializeASTToGraph(prompt).catch(() => null),
-        analyzeMatrixHeatmap(prompt, expandWildcards).catch(() => null),
+        analyzeMatrixHeatmap(prompt, expandWildcards, 500).catch(() => null),
       ]);
       setCombinations(resCombos);
       if (resGraph?.graph) {
@@ -487,7 +487,7 @@ export const WildcardMatrixPanel: React.FC = () => {
     try {
       const [resGraph, resHeatmap] = await Promise.all([
         serializeASTToGraph(prompt).catch(() => null),
-        analyzeMatrixHeatmap(prompt).catch(() => null),
+        analyzeMatrixHeatmap(prompt, expandWildcards, 500).catch(() => null),
       ]);
       if (resGraph?.graph) setGraphTree(resGraph.graph);
       if (resHeatmap) setHeatmapScores(resHeatmap);

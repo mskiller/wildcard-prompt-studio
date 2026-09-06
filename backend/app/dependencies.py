@@ -66,26 +66,44 @@ def get_provider_manager() -> AIProviderManager:
     return provider_manager_instance
 
 from sqlalchemy.orm import Session
+from typing import Dict, List, Optional
+import time
+
+_cached_matrix_wildcards: Optional[Dict[str, List[str]]] = None
+_cached_matrix_wildcards_timestamp: float = 0.0
+MATRIX_WILDCARDS_CACHE_TTL: float = 60.0
+
+def invalidate_matrix_wildcards_cache() -> None:
+    """Invalidates the in-memory matrix wildcards cache."""
+    global _cached_matrix_wildcards, _cached_matrix_wildcards_timestamp
+    _cached_matrix_wildcards = None
+    _cached_matrix_wildcards_timestamp = 0.0
 
 def get_matrix_engine(
     engine: WildcardEngine = Depends(get_wildcard_engine),
     db: Session = Depends(get_db)
 ) -> MatrixEngine:
+    global _cached_matrix_wildcards, _cached_matrix_wildcards_timestamp
+    now = time.time()
+    if _cached_matrix_wildcards is not None and (now - _cached_matrix_wildcards_timestamp < MATRIX_WILDCARDS_CACHE_TTL):
+        return MatrixEngine(wildcards=_cached_matrix_wildcards)
+
     wildcards_dict = dict(engine.wildcards)
     try:
         from app.models.wildcard import Wildcard
-        db_wildcards = db.query(Wildcard).all()
-        for w in db_wildcards:
-            clean_name = w.filename.replace('.txt', '').replace('.yaml', '').replace('.yml', '')
+        # Only query needed columns to avoid huge ORM memory footprint
+        db_wildcards = db.query(Wildcard.filename, Wildcard.entries, Wildcard.content).all()
+        for filename, entries, content in db_wildcards:
+            clean_name = filename.replace('.txt', '').replace('.yaml', '').replace('.yml', '')
             lines = []
-            if w.entries and isinstance(w.entries, list) and len(w.entries) > 0:
-                lines = [str(x).strip() for x in w.entries if str(x).strip()]
-            elif w.content:
-                lines = [l.strip() for l in w.content.splitlines() if l.strip() and not l.startswith('#')]
+            if entries and isinstance(entries, list) and len(entries) > 0:
+                lines = [str(x).strip() for x in entries if str(x).strip()]
+            elif content:
+                lines = [l.strip() for l in content.splitlines() if l.strip() and not l.startswith('#')]
 
             if lines:
                 wildcards_dict[clean_name] = lines
-                wildcards_dict[w.filename] = lines
+                wildcards_dict[filename] = lines
                 wildcards_dict[clean_name.lower()] = lines
                 if '/' in clean_name or '\\' in clean_name:
                     basename = clean_name.replace('\\', '/').split('/')[-1]
@@ -120,6 +138,10 @@ def get_matrix_engine(
                                 pass
     except Exception:
         pass
+
+    _cached_matrix_wildcards = wildcards_dict
+    _cached_matrix_wildcards_timestamp = now
     return MatrixEngine(wildcards=wildcards_dict)
+
 
 

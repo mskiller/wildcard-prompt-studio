@@ -49,46 +49,66 @@ async def generate_matrix(
     request: MatrixRequest,
     matrix_engine: MatrixEngine = Depends(get_matrix_engine)
 ):
-    expand_wc = request.expand_wildcards if request.expand_wildcards is not None else True
-    return matrix_engine.generate_matrix(
-        request.prompt,
-        max_depth=request.max_depth or 10,
-        expand_wildcards=expand_wc,
-        max_limit=request.max_limit
-    )
+    try:
+        expand_wc = request.expand_wildcards if request.expand_wildcards is not None else True
+        return matrix_engine.generate_matrix(
+            request.prompt,
+            max_depth=request.max_depth or 10,
+            expand_wildcards=expand_wc,
+            max_limit=request.max_limit
+        )
+    except Exception as e:
+        # Return empty list or fallback to the prompt string on syntax error
+        return [request.prompt] if request.prompt else []
 
 @router.post("/matrix/execute", response_model=MatrixExecuteResponse)
 async def execute_matrix_sweep(
     request: MatrixExecuteRequest,
     matrix_engine: MatrixEngine = Depends(get_matrix_engine)
 ):
-    expand_wc = request.expand_wildcards if request.expand_wildcards is not None else True
-    limit = request.limit
-    prompts = matrix_engine.generate_matrix(
-        request.prompt,
-        max_depth=request.max_depth or 10,
-        expand_wildcards=expand_wc,
-        max_limit=limit
-    )
-    if limit and limit > 0 and len(prompts) > limit:
-        prompts = prompts[:limit]
-    return MatrixExecuteResponse(
-        total_generated=len(prompts),
-        prompts=prompts,
-        status="queued"
-    )
+    try:
+        expand_wc = request.expand_wildcards if request.expand_wildcards is not None else True
+        limit = request.limit
+        prompts = matrix_engine.generate_matrix(
+            request.prompt,
+            max_depth=request.max_depth or 10,
+            expand_wildcards=expand_wc,
+            max_limit=limit
+        )
+        if limit and limit > 0 and len(prompts) > limit:
+            prompts = prompts[:limit]
+        return MatrixExecuteResponse(
+            total_generated=len(prompts),
+            prompts=prompts,
+            status="queued"
+        )
+    except Exception as e:
+        return MatrixExecuteResponse(
+            total_generated=1 if request.prompt else 0,
+            prompts=[request.prompt] if request.prompt else [],
+            status="error"
+        )
 
 @router.post("/matrix/analyze")
 async def analyze_matrix_heatmap(
     request: MatrixRequest,
     matrix_engine: MatrixEngine = Depends(get_matrix_engine)
 ):
-    expand_wc = request.expand_wildcards if request.expand_wildcards is not None else True
-    return matrix_engine.analyze_heatmap_scores(
-        request.prompt,
-        expand_wildcards=expand_wc,
-        max_limit=request.max_limit
-    )
+    try:
+        expand_wc = request.expand_wildcards if request.expand_wildcards is not None else True
+        return matrix_engine.analyze_heatmap_scores(
+            request.prompt,
+            expand_wildcards=expand_wc,
+            max_limit=request.max_limit
+        )
+    except Exception:
+        return {
+            "combinations_count": 0,
+            "avg_token_count": 0.0,
+            "min_token_count": 0,
+            "max_token_count": 0,
+            "category_distribution": {"artist": 0, "character": 0, "copyright": 0, "general": 0, "meta": 0}
+        }
 
 
 

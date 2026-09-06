@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from typing import List
 from app.models.wildcard import Wildcard
 from app.schemas.wildcard import WildcardCreate, WildcardUpdate, WildcardResponse
-from app.dependencies import get_db
+from app.dependencies import get_db, invalidate_matrix_wildcards_cache
 
 router = APIRouter()
 
@@ -82,6 +82,7 @@ def create_wildcard(wildcard: WildcardCreate, db: Session = Depends(get_db)):
 
     # Automatically extract and store tags from new wildcard
     _sync_tags_from_text(db_wildcard.content or "\n".join(db_wildcard.entries or []), db)
+    invalidate_matrix_wildcards_cache()
 
     return db_wildcard
 
@@ -111,6 +112,7 @@ def update_wildcard(wildcard_id: int, wildcard_update: WildcardUpdate, db: Sessi
 
     # Automatically extract and store tags from updated wildcard content
     _sync_tags_from_text(db_wildcard.content or "\n".join(db_wildcard.entries or []), db)
+    invalidate_matrix_wildcards_cache()
 
     return db_wildcard
 
@@ -126,6 +128,7 @@ def delete_wildcard(wildcard_id: int, db: Session = Depends(get_db)):
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=400, detail="Cannot delete because of related entities")
+    invalidate_matrix_wildcards_cache()
     return {"ok": True}
 
 class BatchDeleteWildcardsRequest(BaseModel):
@@ -137,6 +140,7 @@ def batch_delete_wildcards(payload: BatchDeleteWildcardsRequest, db: Session = D
         return {"ok": True, "deleted_count": 0}
     deleted = db.query(Wildcard).filter(Wildcard.id.in_(payload.ids)).delete(synchronize_session=False)
     db.commit()
+    invalidate_matrix_wildcards_cache()
     return {"ok": True, "deleted_count": deleted}
 
 from fastapi import UploadFile, File
@@ -258,6 +262,7 @@ async def import_wildcards(files: List[UploadFile] = File(...), db: Session = De
         except Exception as e:
             print(f"Warning exporting wildcards: {e}")
         
+        invalidate_matrix_wildcards_cache()
         return {"ok": True, "imported_wildcards": imported_count, "extracted_tags": len(extracted_tags)}
 
     except HTTPException:
