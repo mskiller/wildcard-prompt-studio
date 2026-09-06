@@ -4,6 +4,7 @@ import random
 import re
 import os
 import yaml
+import bisect
 
 @dataclass
 class ASTNode:
@@ -49,8 +50,10 @@ class WildcardASTEngine:
     def __init__(self, wildcards: Dict[str, List[str]] = None):
         self.wildcards = wildcards or {}
         self.variables: Dict[str, str] = {}
+        self._breakdown_cache: Dict[Any, Any] = {}
 
     def load_from_directory(self, directory_path: str):
+        self._breakdown_cache.clear()
         if not os.path.exists(directory_path):
             return
 
@@ -402,6 +405,230 @@ class WildcardASTEngine:
     def expand_prompt(self, prompt_text: str, max_depth: int = 10) -> str:
         ast = self.parse(prompt_text)
         return self.evaluate(ast, max_depth=max_depth, current_depth=0)
+
+    def _get_wildcard_breakdown(
+        self, name: str, expand_wildcards: bool = True, max_depth: int = 10, current_depth: int = 0
+    ) -> Tuple[int, Optional[List[int]], Optional[List[int]], bool]:
+        """
+        Returns (total_count, entry_counts, cumulative_counts, is_all_plain_text).
+        Memoized to ensure instant lookup even for large or repeatedly referenced wildcards.
+        """
+        entries = self.get_wildcard_entries(name)
+        if not entries:
+            return (1, None, None, True)
+
+        cache_key = (name, id(entries), len(entries), expand_wildcards, max_depth, current_depth)
+        if hasattr(self, "_breakdown_cache") and cache_key in self._breakdown_cache:
+            return self._breakdown_cache[cache_key]
+
+        if not hasattr(self, "_breakdown_cache"):
+            self._breakdown_cache = {}
+
+        # Fast path: check if all entries are plain text
+        is_plain = all("{" not in e and "__" not in e and "$" not in e for e in entries)
+        if is_plain:
+            res = (len(entries), None, None, True)
+            self._breakdown_cache[cache_key] = res
+            return res
+
+        entry_counts: List[int] = []
+        cumulative_counts: List[int] = []
+        cum = 0
+        for e in entries:
+            if "{" not in e and "__" not in e and "$" not in e:
+                cnt = 1
+            else:
+                if current_depth >= max_depth:
+                    cnt = 1
+                else:
+                    e_ast = self.parse(e)
+                    cnt = self.count_permutations(
+                        e_ast, expand_wildcards=expand_wildcards, max_depth=max_depth, current_depth=current_depth + 1
+                    )
+            entry_counts.append(cnt)
+            cum += cnt
+            cumulative_counts.append(cum)
+
+        res = (cum, entry_counts, cumulative_counts, False)
+        self._breakdown_cache[cache_key] = res
+        return res
+
+    def count_permutations(
+        self, node: ASTNode, expand_wildcards: bool = True, max_depth: int = 10, current_depth: int = 0
+    ) -> int:
+        """
+        Calculates exact total number of combinatorial permutations without generating prompts in memory.
+        """
+        if current_depth >= max_depth:
+            return 1
+
+        if isinstance(node, TextNode):
+            return 1
+
+        elif isinstance(node, RootNode):
+            if not node.children:
+                return 1
+            total = 1
+            for child in node.children:
+                cnt = self.count_permutations(
+                    child, expand_wildcards=expand_wildcards, max_depth=max_depth, current_depth=current_depth
+                )
+                if cnt == 0:
+                    return 0
+                total *= cnt
+            return total
+
+        elif isinstance(node, ChoiceNode):
+            if not node.options:
+                return 0
+            return sum(
+                self.count_permutations(
+                    opt.content, expand_wildcards=expand_wildcards, max_depth=max_depth, current_depth=current_depth
+                )
+                for opt in node.options
+            )
+
+        elif isinstance(node, WildcardNode):
+            if not expand_wildcards:
+                return 1
+            total, _, _, _ = self._get_wildcard_breakdown(
+                node.name, expand_wildcards=expand_wildcards, max_depth=max_depth, current_depth=current_depth
+            )
+            return total
+
+        elif isinstance(node, VarAssignmentNode):
+            return 1
+
+        elif isinstance(node, VarRefNode):
+            return 1
+
+        elif isinstance(node, MacroNode):
+            return 1
+
+        return 1
+
+    def get_permutation_at_index(
+        self, node: ASTNode, index: int, expand_wildcards: bool = True, max_depth: int = 10, current_depth: int = 0
+    ) -> str:
+        """
+        Retrieves the exact permutation string at a 0-based index via mixed-radix odometer indexing in O(depth) time.
+        """
+        if current_depth >= max_depth:
+            if index != 0:
+                raise IndexError(f"Index {index} out of range for max depth reached")
+            return self._unexpanded_str(node)
+
+        if isinstance(node, TextNode):
+            if index != 0:
+                raise IndexError(f"Index {index} out of range for TextNode")
+            return node.text
+
+        elif isinstance(node, RootNode):
+            if not node.children:
+                if index != 0:
+                    raise IndexError(f"Index {index} out of range for empty RootNode")
+                return ""
+
+            child_counts = [
+                self.count_permutations(
+                    c, expand_wildcards=expand_wildcards, max_depth=max_depth, current_depth=current_depth
+                )
+                for c in node.children
+            ]
+            total_count = 1
+            for c in child_counts:
+                total_count *= c
+
+            if index < 0 or index >= total_count:
+                raise IndexError(f"Index {index} out of range (0..{total_count - 1})")
+
+            m = len(node.children)
+            suffix_products = [1] * m
+            for k in range(m - 2, -1, -1):
+                suffix_products[k] = suffix_products[k + 1] * child_counts[k + 1]
+
+            rem = index
+            parts = []
+            for k in range(m):
+                p = suffix_products[k]
+                c_idx = rem // p
+                rem = rem % p
+                parts.append(
+                    self.get_permutation_at_index(
+                        node.children[k], c_idx, expand_wildcards=expand_wildcards, max_depth=max_depth, current_depth=current_depth
+                    )
+                )
+            return "".join(parts)
+
+        elif isinstance(node, ChoiceNode):
+            if not node.options:
+                raise IndexError("Cannot index into empty ChoiceNode")
+            total_count = self.count_permutations(
+                node, expand_wildcards=expand_wildcards, max_depth=max_depth, current_depth=current_depth
+            )
+            if index < 0 or index >= total_count:
+                raise IndexError(f"Index {index} out of range (0..{total_count - 1})")
+
+            curr = index
+            for opt in node.options:
+                cnt = self.count_permutations(
+                    opt.content, expand_wildcards=expand_wildcards, max_depth=max_depth, current_depth=current_depth
+                )
+                if curr < cnt:
+                    return self.get_permutation_at_index(
+                        opt.content, curr, expand_wildcards=expand_wildcards, max_depth=max_depth, current_depth=current_depth
+                    )
+                curr -= cnt
+            raise IndexError(f"Index {index} out of range")
+
+        elif isinstance(node, WildcardNode):
+            if not expand_wildcards:
+                if index != 0:
+                    raise IndexError(f"Index {index} out of range for unexpanded wildcard")
+                return f"__{node.name}__"
+
+            name = node.name
+            entries = self.get_wildcard_entries(name)
+            if not entries:
+                if index != 0:
+                    raise IndexError(f"Index {index} out of range for missing wildcard")
+                return f"__{name}__"
+
+            total_count, entry_counts, cumulative_counts, is_all_plain = self._get_wildcard_breakdown(
+                name, expand_wildcards=expand_wildcards, max_depth=max_depth, current_depth=current_depth
+            )
+            if index < 0 or index >= total_count:
+                raise IndexError(f"Index {index} out of range (0..{total_count - 1})")
+
+            if is_all_plain:
+                return entries[index]
+
+            entry_idx = bisect.bisect_right(cumulative_counts, index)
+            sub_idx = index if entry_idx == 0 else index - cumulative_counts[entry_idx - 1]
+            raw_entry = entries[entry_idx]
+            if "{" not in raw_entry and "__" not in raw_entry and "$" not in raw_entry:
+                return raw_entry
+            entry_ast = self.parse(raw_entry)
+            return self.get_permutation_at_index(
+                entry_ast, sub_idx, expand_wildcards=True, max_depth=max_depth, current_depth=current_depth + 1
+            )
+
+        elif isinstance(node, VarAssignmentNode):
+            if index != 0:
+                raise IndexError(f"Index {index} out of range for VarAssignmentNode")
+            return ""
+
+        elif isinstance(node, VarRefNode):
+            if index != 0:
+                raise IndexError(f"Index {index} out of range for VarRefNode")
+            return self.variables.get(node.var_name, f"${node.var_name}")
+
+        elif isinstance(node, MacroNode):
+            if index != 0:
+                raise IndexError(f"Index {index} out of range for MacroNode")
+            return f"${node.macro_name}({', '.join(node.args)})"
+
+        return ""
 
 
 def serialize_ast_to_graph(node: ASTNode) -> Dict[str, Any]:

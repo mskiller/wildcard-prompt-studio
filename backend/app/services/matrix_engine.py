@@ -1,4 +1,5 @@
 import itertools
+import random
 # CRITICAL: Always ensure 'Any' (and List/Dict) are imported from typing for type annotations to prevent FastAPI Uvicorn startup crashes
 from typing import List, Dict, Any, Optional
 from app.services.wildcard_ast import (
@@ -124,5 +125,68 @@ class MatrixEngine:
             "min_token_count": min(token_lengths) if token_lengths else 0,
             "max_token_count": max(token_lengths) if token_lengths else 0,
             "category_distribution": category_counts
+        }
+
+    def count_permutations(self, prompt: str, expand_wildcards: bool = True) -> int:
+        """Calculates exact total number of combinatorial permutations without generating all prompts in memory."""
+        ast = self.ast_engine.parse(prompt)
+        return self.ast_engine.count_permutations(ast, expand_wildcards=expand_wildcards)
+
+    def get_matrix_slice(self, prompt: str, offset: int = 0, limit: int = 50, expand_wildcards: bool = True) -> Dict[str, Any]:
+        """Retrieves a paginated slice of matrix combinations via direct indexing in O(1) time without generating the full Cartesian product."""
+        ast = self.ast_engine.parse(prompt)
+        total_count = self.ast_engine.count_permutations(ast, expand_wildcards=expand_wildcards)
+
+        safe_offset = max(0, offset)
+        safe_limit = max(0, limit)
+        end_idx = min(safe_offset + safe_limit, total_count)
+
+        items = []
+        for idx in range(safe_offset, end_idx):
+            prompt_str = self.ast_engine.get_permutation_at_index(ast, idx, expand_wildcards=expand_wildcards)
+            items.append({
+                "index": idx + 1,  # 1-based index
+                "prompt": prompt_str
+            })
+
+        return {
+            "total_count": total_count,
+            "offset": safe_offset,
+            "limit": safe_limit,
+            "items": items,
+            "is_sample": False
+        }
+
+    def get_matrix_sample(self, prompt: str, sample_size: int = 25, seed: Optional[int] = None, expand_wildcards: bool = True) -> Dict[str, Any]:
+        """Retrieves a deterministic or random uniform sample of matrix combinations across the entire parameter space."""
+        ast = self.ast_engine.parse(prompt)
+        total_count = self.ast_engine.count_permutations(ast, expand_wildcards=expand_wildcards)
+
+        safe_sample_size = max(0, sample_size)
+        if total_count == 0 or safe_sample_size == 0:
+            return {
+                "total_count": total_count,
+                "sample_size": safe_sample_size,
+                "items": [],
+                "is_sample": True
+            }
+
+        rng = random.Random(seed) if seed is not None else random.Random()
+        k = min(safe_sample_size, total_count)
+        sampled_indices = sorted(rng.sample(range(total_count), k))
+
+        items = []
+        for idx in sampled_indices:
+            prompt_str = self.ast_engine.get_permutation_at_index(ast, idx, expand_wildcards=expand_wildcards)
+            items.append({
+                "index": idx + 1,  # 1-based index
+                "prompt": prompt_str
+            })
+
+        return {
+            "total_count": total_count,
+            "sample_size": safe_sample_size,
+            "items": items,
+            "is_sample": True
         }
 
