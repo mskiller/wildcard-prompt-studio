@@ -740,6 +740,133 @@
   color: #89b4fa;
 }
 
+/* Batch Queue Mode Switcher & Scope Controls */
+.batch-mode-toggle-group {
+  display: inline-flex;
+  background: #181825;
+  border: 1px solid #313244;
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+  align-items: center;
+}
+
+.batch-mode-btn {
+  padding: 5px 9px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: #a6adc8;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.batch-mode-btn:hover {
+  color: #cdd6f4;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.batch-mode-btn.active {
+  background: #89b4fa;
+  color: #11111b;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.batch-range-fields {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.batch-range-input-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.batch-range-label {
+  font-size: 0.72rem;
+  color: #a6adc8;
+  font-weight: 600;
+}
+
+.batch-range-input {
+  width: 68px;
+}
+
+.batch-helper-text {
+  font-size: 0.72rem;
+  color: #7f849c;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.batch-selected-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  background: rgba(137, 180, 250, 0.15);
+  border: 1px solid rgba(137, 180, 250, 0.3);
+  border-radius: 6px;
+  font-size: 0.74rem;
+  color: #89b4fa;
+  font-weight: 600;
+  height: 31px;
+  box-sizing: border-box;
+}
+
+.batch-all-scope-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 31px;
+}
+
+.batch-all-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  background: rgba(166, 227, 161, 0.15);
+  border: 1px solid rgba(166, 227, 161, 0.35);
+  border-radius: 6px;
+  font-size: 0.74rem;
+  color: #a6e3a1;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+.batch-warning-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  background: rgba(243, 139, 168, 0.15);
+  border: 1px solid rgba(243, 139, 168, 0.4);
+  border-radius: 6px;
+  font-size: 0.72rem;
+  color: #f38ba8;
+  font-weight: 600;
+  animation: pulse-warning 2.5s infinite ease-in-out;
+}
+
+.batch-warning-indicator .warning-icon {
+  flex-shrink: 0;
+}
+
+@keyframes pulse-warning {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.65;
+  }
+}
+
 /* Permutation Selection Bar */
 .matrix-selection-bar {
   display: flex;

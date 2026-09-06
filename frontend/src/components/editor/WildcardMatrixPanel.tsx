@@ -32,7 +32,8 @@ import {
   RefreshCw,
   Eye,
   Download,
-  Image as ImageIcon
+  Image as ImageIcon,
+  AlertTriangle
 } from 'lucide-react';
 import { VisualASTCanvas } from './VisualASTCanvas';
 import { useASTGraphSync } from './useASTGraphSync';
@@ -222,9 +223,12 @@ export const WildcardMatrixPanel: React.FC = () => {
   const [width, setWidth] = useState<number>(896);
   const [height, setHeight] = useState<number>(1152);
 
-  // Queue limits & manual permutation selection
+  // Queue mode, limits & manual permutation selection
+  const [queueMode, setQueueMode] = useState<'view' | 'range' | 'sample' | 'all'>('view');
+  const [queueRangeStart, setQueueRangeStart] = useState<number>(1);
+  const [queueRangeCount, setQueueRangeCount] = useState<number>(10);
+  const [queueSampleCount, setQueueSampleCount] = useState<number>(10);
   const [maxPromptsToQueue, setMaxPromptsToQueue] = useState<number>(10);
-  const [queueAll, setQueueAll] = useState<boolean>(false);
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
 
   const handleToggleSelectPrompt = (item: MatrixPermutationItem) => {
@@ -585,31 +589,76 @@ export const WildcardMatrixPanel: React.FC = () => {
       return;
     }
 
-    let promptsToSend: string[];
-    let queueModeDesc: string;
-
-    if (selectedIndices.size > 0) {
-      promptsToSend = Array.from(selectedIndices)
-        .sort((a, b) => a - b)
-        .map((idx) => selectedPromptsMap.current.get(idx) || sliceItems.find((it) => it.index === idx)?.prompt)
-        .filter((p): p is string => Boolean(p));
-      queueModeDesc = `${promptsToSend.length} manually selected`;
-    } else if (queueAll) {
-      promptsToSend = combinations;
-      queueModeDesc = `all ${combinations.length} in current slice`;
-    } else {
-      promptsToSend = combinations.slice(0, maxPromptsToQueue);
-      queueModeDesc = `${promptsToSend.length} (of ${totalCount.toLocaleString()})`;
-    }
-
-    if (promptsToSend.length === 0) {
-      setStatus('No prompts selected to queue.');
-      return;
+    if (queueMode === 'all' && totalCount > 2000) {
+      const confirmed = window.confirm(
+        `Queueing ${totalCount.toLocaleString()} prompts will submit a large batch to ComfyUI. Are you sure you want to proceed?`
+      );
+      if (!confirmed) {
+        return;
+      }
     }
 
     setLoading(true);
-    setStatus(`Queueing ${queueModeDesc} batch sweep jobs in ComfyUI (${width}x${height})...`);
     try {
+      let promptsToSend: string[] = [];
+      let queueModeDesc = '';
+
+      if (queueMode === 'range') {
+        setStatus(`Fetching range slice #${queueRangeStart}–#${queueRangeStart + queueRangeCount - 1}...`);
+        const sliceRes = await fetchMatrixSlice({
+          prompt,
+          offset: Math.max(0, queueRangeStart - 1),
+          limit: queueRangeCount,
+          expandWildcards,
+        });
+        promptsToSend = sliceRes.items.map((it) => it.prompt);
+        queueModeDesc = `${promptsToSend.length} variants from range #${queueRangeStart} to #${queueRangeStart + promptsToSend.length - 1}`;
+      } else if (queueMode === 'sample') {
+        setStatus(`Sampling ${queueSampleCount} random variants...`);
+        const sampleRes = await fetchMatrixSlice({
+          prompt,
+          sampleSize: queueSampleCount,
+          expandWildcards,
+        });
+        promptsToSend = sampleRes.items.map((it) => it.prompt);
+        queueModeDesc = `${promptsToSend.length} random samples across ${totalCount.toLocaleString()} total`;
+      } else if (queueMode === 'all') {
+        setStatus(`Fetching all ${totalCount.toLocaleString()} variants...`);
+        const BATCH_SIZE = 2000;
+        const allPrompts: string[] = [];
+        for (let offset = 0; offset < totalCount; offset += BATCH_SIZE) {
+          const fetchLimit = Math.min(BATCH_SIZE, totalCount - offset);
+          const allRes = await fetchMatrixSlice({
+            prompt,
+            offset,
+            limit: fetchLimit,
+            expandWildcards,
+          });
+          allPrompts.push(...allRes.items.map((it) => it.prompt));
+          if (allRes.items.length < fetchLimit) break;
+        }
+        promptsToSend = allPrompts;
+        queueModeDesc = `all ${promptsToSend.length} variants across ${totalCount.toLocaleString()} total`;
+      } else {
+        // queueMode === 'view'
+        if (selectedIndices.size > 0) {
+          promptsToSend = Array.from(selectedIndices)
+            .sort((a, b) => a - b)
+            .map((idx) => selectedPromptsMap.current.get(idx) || sliceItems.find((it) => it.index === idx)?.prompt)
+            .filter((p): p is string => Boolean(p));
+          queueModeDesc = `${promptsToSend.length} manually selected`;
+        } else {
+          promptsToSend = combinations.slice(0, maxPromptsToQueue);
+          queueModeDesc = `${promptsToSend.length} (of ${totalCount.toLocaleString()})`;
+        }
+      }
+
+      if (promptsToSend.length === 0) {
+        setStatus('No prompts selected to queue.');
+        return;
+      }
+
+      setStatus(`Queueing ${queueModeDesc} batch sweep jobs in ComfyUI (${width}x${height})...`);
       const res = await executeComfyUISweep({
         prompts: promptsToSend,
         seedStrategy,
@@ -1037,38 +1086,144 @@ export const WildcardMatrixPanel: React.FC = () => {
           />
         </div>
 
-        {/* Prompts to Queue Limit */}
+        {/* Batch Queue Mode Switcher */}
         <div className="batch-field">
-          <label>Queue Limit</label>
-          <div className="batch-queue-limit-container">
-            <input
-              type="number"
-              className="batch-input number-small"
-              min={1}
-              max={totalCount || 10000}
-              value={queueAll ? (totalCount || 0) : maxPromptsToQueue}
-              disabled={queueAll || selectedIndices.size > 0}
-              onChange={(e) => setMaxPromptsToQueue(Math.max(1, parseInt(e.target.value, 10) || 1))}
-              title={
-                selectedIndices.size > 0
-                  ? `${selectedIndices.size} selected manually in grid below`
-                  : 'Number of prompts to send to queue'
-              }
-              aria-label="Prompts to queue"
-            />
+          <label>Queue Mode</label>
+          <div className="batch-mode-toggle-group" role="group" aria-label="Batch Queue Mode">
             <button
               type="button"
-              className={`batch-toggle-btn ${queueAll ? 'active' : ''}`}
-              onClick={() => {
-                setQueueAll(!queueAll);
-                if (selectedIndices.size > 0) setSelectedIndices(new Set());
-              }}
-              title={queueAll ? 'Switch to limited queue count' : `Queue all ${totalCount.toLocaleString()} permutations`}
+              className={`batch-mode-btn ${queueMode === 'view' ? 'active' : ''}`}
+              onClick={() => setQueueMode('view')}
+              title="Queue from current view slice or manual card selections"
             >
-              {queueAll ? 'All' : 'Limit'}
+              View / Selected
+            </button>
+            <button
+              type="button"
+              className={`batch-mode-btn ${queueMode === 'range' ? 'active' : ''}`}
+              onClick={() => setQueueMode('range')}
+              title="Queue a sequential range slice"
+            >
+              Range Slice
+            </button>
+            <button
+              type="button"
+              className={`batch-mode-btn ${queueMode === 'sample' ? 'active' : ''}`}
+              onClick={() => setQueueMode('sample')}
+              title="Queue a random sample across parameter space"
+            >
+              Random Sample
+            </button>
+            <button
+              type="button"
+              className={`batch-mode-btn ${queueMode === 'all' ? 'active' : ''}`}
+              onClick={() => setQueueMode('all')}
+              title={`Queue all ${totalCount.toLocaleString()} permutations`}
+            >
+              All
             </button>
           </div>
         </div>
+
+        {/* Contextual Queue Inputs */}
+        {queueMode === 'view' && (
+          <div className="batch-field">
+            <label>Limit</label>
+            {selectedIndices.size > 0 ? (
+              <div className="batch-selected-badge" title="Manual selection active in grid below">
+                <span>{selectedIndices.size} cards selected manually</span>
+              </div>
+            ) : (
+              <input
+                type="number"
+                className="batch-input number-small"
+                min={1}
+                max={totalCount || 10000}
+                value={maxPromptsToQueue}
+                onChange={(e) => setMaxPromptsToQueue(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                title="Number of prompts to send from current view slice"
+                aria-label="Prompts to queue from view"
+              />
+            )}
+          </div>
+        )}
+
+        {queueMode === 'range' && (
+          <div className="batch-field">
+            <label>Range Slice</label>
+            <div className="batch-range-fields">
+              <div className="batch-range-input-group">
+                <span className="batch-range-label">Start #</span>
+                <input
+                  type="number"
+                  className="batch-input batch-range-input number-small"
+                  min={1}
+                  max={Math.max(1, totalCount)}
+                  value={queueRangeStart}
+                  onChange={(e) => setQueueRangeStart(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                  title={`Start permutation index (1 to ${totalCount})`}
+                  aria-label="Range start index"
+                />
+              </div>
+              <div className="batch-range-input-group">
+                <span className="batch-range-label">Count</span>
+                <input
+                  type="number"
+                  className="batch-input batch-range-input number-small"
+                  min={1}
+                  max={2000}
+                  value={queueRangeCount}
+                  onChange={(e) => setQueueRangeCount(Math.max(1, Math.min(2000, parseInt(e.target.value, 10) || 1)))}
+                  title="Number of permutations to queue (max 2000)"
+                  aria-label="Range count"
+                />
+              </div>
+              <span className="batch-helper-text">
+                e.g. #{queueRangeStart} - #{queueRangeStart + queueRangeCount - 1}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {queueMode === 'sample' && (
+          <div className="batch-field">
+            <label>Sample Count</label>
+            <div className="batch-range-fields">
+              <input
+                type="number"
+                className="batch-input batch-range-input number-small"
+                min={1}
+                max={2000}
+                value={queueSampleCount}
+                onChange={(e) => setQueueSampleCount(Math.max(1, Math.min(2000, parseInt(e.target.value, 10) || 1)))}
+                title="Number of random permutations to sample (max 2000)"
+                aria-label="Sample count"
+              />
+              <span className="batch-helper-text">
+                randomly sampled from {totalCount.toLocaleString()} total
+              </span>
+            </div>
+          </div>
+        )}
+
+        {queueMode === 'all' && (
+          <div className="batch-field">
+            <label>Batch Scope</label>
+            <div className="batch-all-scope-container">
+              <span className="batch-all-badge">
+                All {totalCount.toLocaleString()} variants
+              </span>
+              {totalCount > 2000 && (
+                <span
+                  className="batch-warning-indicator"
+                  title="Queueing > 2,000 prompts will submit a large batch to ComfyUI"
+                >
+                  <AlertTriangle size={13} className="warning-icon" /> Large Batch (&gt;2,000)
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Expand Wildcards */}
         <div className="batch-field batch-checkbox-field">
@@ -1129,19 +1284,26 @@ export const WildcardMatrixPanel: React.FC = () => {
           onClick={handleExecuteBatchSweep}
           disabled={loading || (sliceItems.length === 0 && totalCount === 0)}
           title={
-            selectedIndices.size > 0
+            queueMode === 'view' && selectedIndices.size > 0
               ? `Queue ${selectedIndices.size} selected variants at ${width}x${height}`
-              : queueAll
-              ? `Queue all ${totalCount.toLocaleString()} variants at ${width}x${height}`
-              : `Queue first ${Math.min(maxPromptsToQueue, combinations.length)} of ${totalCount.toLocaleString()} variants at ${width}x${height}`
+              : queueMode === 'view'
+              ? `Queue ${Math.min(maxPromptsToQueue, combinations.length)} from View (${width}×${height})`
+              : queueMode === 'range'
+              ? `Queue ${queueRangeCount} from Range #${queueRangeStart}–#${queueRangeStart + queueRangeCount - 1} (${width}×${height})`
+              : queueMode === 'sample'
+              ? `Queue ${queueSampleCount} Random Samples (${width}×${height})`
+              : `Queue All (${totalCount.toLocaleString()}) (${width}×${height})`
           }
         >
           <Play size={14} />{' '}
-          {selectedIndices.size > 0
-            ? `Queue ${selectedIndices.size} Selected (${width}×${height})`
-            : queueAll
-            ? `Queue All (${totalCount.toLocaleString()}) (${width}×${height})`
-            : `Queue ${Math.min(maxPromptsToQueue, combinations.length)} of ${totalCount.toLocaleString()} (${width}×${height})`}
+          {queueMode === 'view' && (
+            selectedIndices.size > 0
+              ? `Queue ${selectedIndices.size} Selected (${width}×${height})`
+              : `Queue ${Math.min(maxPromptsToQueue, combinations.length)} from View (${width}×${height})`
+          )}
+          {queueMode === 'range' && `Queue ${queueRangeCount} from Range #${queueRangeStart}–#${queueRangeStart + queueRangeCount - 1} (${width}×${height})`}
+          {queueMode === 'sample' && `Queue ${queueSampleCount} Random Samples (${width}×${height})`}
+          {queueMode === 'all' && `Queue All (${totalCount.toLocaleString()}) (${width}×${height})`}
         </button>
       </div>
     </div>
