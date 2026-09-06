@@ -14,7 +14,7 @@ export interface UseASTGraphSyncReturn {
   hasCycle: boolean;
   isCompiling: boolean;
   updateNodeData: (id: string, partial: Partial<ASTCanvasNodeData>) => void;
-  addNode: (type: 'text' | 'wildcard' | 'choice' | 'variable') => void;
+  addNode: (type: 'text' | 'wildcard' | 'choice' | 'variable', initialValue?: string) => void;
   deleteNode: (id: string) => void;
   autoLayout: () => void;
   syncFromPrompt: (promptText: string) => void;
@@ -567,7 +567,7 @@ export function useASTGraphSync(options: UseASTGraphSyncOptions = {}): UseASTGra
   }, []);
 
   // Add a new node in sequence
-  const addNode = useCallback((type: 'text' | 'wildcard' | 'choice' | 'variable') => {
+  const addNode = useCallback((type: 'text' | 'wildcard' | 'choice' | 'variable', initialValue?: string) => {
     setNodes(prev => {
       const col = prev.length;
       const newNodeId = `node_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
@@ -579,7 +579,7 @@ export function useASTGraphSync(options: UseASTGraphSyncOptions = {}): UseASTGra
             id: newNodeId,
             type: 'text',
             title: 'Text Prompt',
-            value: 'new prompt phrase',
+            value: initialValue || 'new prompt phrase',
             x: col * 300 + 40,
             y: 80,
             outputs: []
@@ -589,8 +589,8 @@ export function useASTGraphSync(options: UseASTGraphSyncOptions = {}): UseASTGra
           newNode = {
             id: newNodeId,
             type: 'wildcard',
-            title: 'Wildcard',
-            value: 'wildcard_name',
+            title: initialValue || 'Wildcard',
+            value: initialValue || 'wildcard_name',
             x: col * 300 + 40,
             y: 80,
             outputs: []
@@ -601,7 +601,7 @@ export function useASTGraphSync(options: UseASTGraphSyncOptions = {}): UseASTGra
             id: newNodeId,
             type: 'choice',
             title: 'Choice Group',
-            value: '{optionA | optionB}',
+            value: initialValue || '{optionA | optionB}',
             options: [
               { id: `opt_${Date.now().toString(36)}_1`, text: 'optionA', weight: 1.0 },
               { id: `opt_${Date.now().toString(36)}_2`, text: 'optionB', weight: 1.0 }
@@ -615,7 +615,7 @@ export function useASTGraphSync(options: UseASTGraphSyncOptions = {}): UseASTGra
           newNode = {
             id: newNodeId,
             type: 'variable',
-            title: '$var_name',
+            title: initialValue ? (initialValue.startsWith('$') ? initialValue : `$${initialValue}`) : '$var_name',
             value: 'value',
             x: col * 300 + 40,
             y: 80,

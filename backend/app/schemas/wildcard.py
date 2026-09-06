@@ -6,8 +6,8 @@ class WildcardBase(BaseModel):
     filename: str
     file_path: Optional[str] = None
     type: str = "txt"
-    entries: List[Any] = []
-    content: str
+    entries: Optional[List[Any]] = []
+    content: Optional[str] = ""
 
 class WildcardCreate(WildcardBase):
     pass

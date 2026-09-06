@@ -1268,14 +1268,37 @@ export const WildcardMatrixPanel: React.FC = () => {
             >
               <Plus size={13} /> Text
             </button>
-            <button
-              type="button"
-              className="toolbar-node-btn"
-              onClick={() => addNode('wildcard')}
-              title="Add Wildcard node"
-            >
-              <Plus size={13} /> Wildcard
-            </button>
+            <div className="toolbar-wildcard-add-group">
+              <button
+                type="button"
+                className="toolbar-node-btn"
+                onClick={() => addNode('wildcard')}
+                title="Add blank Wildcard node"
+              >
+                <Plus size={13} /> Wildcard
+              </button>
+              {availableWildcards.length > 0 && (
+                <select
+                  className="toolbar-wildcard-quick-picker"
+                  value=""
+                  onChange={(e) => {
+                    const picked = e.target.value;
+                    if (picked) {
+                      addNode('wildcard', picked);
+                    }
+                  }}
+                  title="Quick-insert existing wildcard"
+                  aria-label="Quick add existing wildcard"
+                >
+                  <option value="">+ Pick existing ({availableWildcards.length})...</option>
+                  {availableWildcards.map((w) => (
+                    <option key={w} value={w}>
+                      __{w}__
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
             <button
               type="button"
               className="toolbar-node-btn"
@@ -1366,6 +1389,8 @@ export const WildcardMatrixPanel: React.FC = () => {
               selectedNodeId={selectedNodeId}
               onAutoLayout={autoLayout}
               hasCycle={hasCycle}
+              availableWildcards={availableWildcards}
+              onUpdateNode={updateNodeData}
             />
             {renderNodeInspector()}
           </div>
@@ -1388,6 +1413,8 @@ export const WildcardMatrixPanel: React.FC = () => {
               selectedNodeId={selectedNodeId}
               onAutoLayout={autoLayout}
               hasCycle={hasCycle}
+              availableWildcards={availableWildcards}
+              onUpdateNode={updateNodeData}
             />
             {renderNodeInspector()}
           </div>

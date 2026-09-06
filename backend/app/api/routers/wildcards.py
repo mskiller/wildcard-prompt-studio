@@ -10,8 +10,35 @@ from app.dependencies import get_db
 router = APIRouter()
 
 @router.get("/", response_model=List[WildcardResponse])
-def get_wildcards(skip: int = 0, limit: int = Query(default=10000, le=10000), db: Session = Depends(get_db)):
-    return db.query(Wildcard).offset(skip).limit(limit).all()
+def get_wildcards(
+    skip: int = 0,
+    limit: int = Query(default=10000, le=10000),
+    include_content: bool = Query(default=False),
+    db: Session = Depends(get_db)
+):
+    if include_content:
+        return db.query(Wildcard).offset(skip).limit(limit).all()
+    rows = db.query(
+        Wildcard.id,
+        Wildcard.filename,
+        Wildcard.file_path,
+        Wildcard.type,
+        Wildcard.created_at,
+        Wildcard.updated_at
+    ).offset(skip).limit(limit).all()
+    return [
+        WildcardResponse(
+            id=r.id,
+            filename=r.filename,
+            file_path=r.file_path,
+            type=r.type or "txt",
+            content="",
+            entries=[],
+            created_at=r.created_at,
+            updated_at=r.updated_at
+        )
+        for r in rows
+    ]
 
 def _sync_tags_from_text(text: str, db: Session):
     """Safely extracts atomic tags from text and stores them in the tags database."""

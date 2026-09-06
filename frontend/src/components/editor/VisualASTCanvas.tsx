@@ -20,6 +20,8 @@ export interface VisualASTCanvasProps {
   selectedNodeId?: string | null;
   onAutoLayout?: () => void;
   hasCycle?: boolean;
+  availableWildcards?: string[];
+  onUpdateNode?: (nodeId: string, updates: Partial<ASTCanvasNodeData>) => void;
 }
 
 const TYPE_PILL_LABELS: Record<ASTCanvasNodeData['type'], string> = {
@@ -39,7 +41,9 @@ export const VisualASTCanvas: React.FC<VisualASTCanvasProps> = ({
   onNodeSelect,
   selectedNodeId = null,
   onAutoLayout,
-  hasCycle = false
+  hasCycle = false,
+  availableWildcards = [],
+  onUpdateNode
 }) => {
   const [zoom, setZoom] = useState<number>(1);
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 40, y: 40 });
@@ -379,6 +383,39 @@ export const VisualASTCanvas: React.FC<VisualASTCanvasProps> = ({
                         </div>
                       );
                     })}
+                  </div>
+                ) : node.type === 'wildcard' ? (
+                  <div className="canvas-wildcard-preview-box" onMouseDown={e => e.stopPropagation()}>
+                    {availableWildcards && availableWildcards.length > 0 ? (
+                      <select
+                        className="canvas-node-wildcard-select"
+                        value={availableWildcards.includes(node.value) ? node.value : ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val && onUpdateNode) {
+                            onUpdateNode(node.id, { value: val, title: val });
+                          }
+                        }}
+                        title={`Select wildcard (${availableWildcards.length} available)`}
+                        aria-label="Select wildcard"
+                      >
+                        <option value="" disabled>
+                          -- Choose Wildcard ({availableWildcards.length}) --
+                        </option>
+                        {availableWildcards.map(w => (
+                          <option key={w} value={w}>
+                            __{w}__
+                          </option>
+                        ))}
+                        {node.value && !availableWildcards.includes(node.value) && (
+                          <option value={node.value}>{node.value} (custom)</option>
+                        )}
+                      </select>
+                    ) : (
+                      <div className="node-value-preview" title={node.value}>
+                        __{node.value || 'wildcard_name'}__
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="node-value-preview" title={node.value}>
