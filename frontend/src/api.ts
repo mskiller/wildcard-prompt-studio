@@ -213,25 +213,29 @@ export async function searchRAGKnowledge(query: string, topK: number = 3, catego
   return data.results || [];
 }
 
+export async function indexRAGKnowledge(title: string, content: string, tags?: string[], category?: string): Promise<{ status: string; document: RAGDocument }>;
+export async function indexRAGKnowledge(title: string, content: string, category?: string, tags?: string[]): Promise<{ status: string; document: RAGDocument }>;
 export async function indexRAGKnowledge(
   title: string,
   content: string,
-  tagsOrCategory?: string[] | string,
-  categoryOrTags?: string | string[]
+  arg3?: string[] | string,
+  arg4?: string | string[]
 ): Promise<{ status: string; document: RAGDocument }> {
   let category = 'general';
   let tags: string[] = [];
 
-  if (Array.isArray(tagsOrCategory)) {
-    tags = tagsOrCategory;
-    if (typeof categoryOrTags === 'string') {
-      category = categoryOrTags;
+  if (Array.isArray(arg3)) {
+    tags = arg3;
+    if (typeof arg4 === 'string') {
+      category = arg4;
     }
-  } else if (typeof tagsOrCategory === 'string') {
-    category = tagsOrCategory;
-    if (Array.isArray(categoryOrTags)) {
-      tags = categoryOrTags;
+  } else if (typeof arg3 === 'string') {
+    category = arg3;
+    if (Array.isArray(arg4)) {
+      tags = arg4;
     }
+  } else if (Array.isArray(arg4)) {
+    tags = arg4;
   }
 
   const res = await fetch(`${API_BASE}/ai/rag/index`, {
@@ -239,17 +243,19 @@ export async function indexRAGKnowledge(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, content, category, tags }),
   });
-  if (!res.ok) throw new Error(`Failed to index knowledge: ${res.statusText}`);
+  if (!res.ok) throw new Error(`Failed to index knowledge (${res.status}): ${res.statusText || res.status}`);
   return res.json();
 }
 
+export async function indexRAGDocument(title: string, content: string, tags?: string[], category?: string): Promise<{ status: string; document: RAGDocument }>;
+export async function indexRAGDocument(title: string, content: string, category?: string, tags?: string[]): Promise<{ status: string; document: RAGDocument }>;
 export async function indexRAGDocument(
   title: string,
   content: string,
-  tagsOrCategory?: string[] | string,
-  categoryOrTags?: string | string[]
+  arg3?: string[] | string,
+  arg4?: string | string[]
 ): Promise<{ status: string; document: RAGDocument }> {
-  return indexRAGKnowledge(title, content, tagsOrCategory, categoryOrTags);
+  return indexRAGKnowledge(title, content, arg3 as any, arg4 as any);
 }
 
 
@@ -714,7 +720,7 @@ export async function getGalleryImages(params?: GalleryQueryParams): Promise<Gal
   const query = new URLSearchParams();
   if (params?.skip !== undefined) query.set('skip', params.skip.toString());
   if (params?.limit !== undefined) query.set('limit', params.limit.toString());
-  if (params?.search) query.set('search', params.search);
+  if (params?.search?.trim()) query.set('search', params.search.trim());
   if (params?.sampler) query.set('sampler', params.sampler);
   if (params?.is_favorite !== undefined) query.set('is_favorite', params.is_favorite.toString());
   if (params?.min_rating !== undefined) query.set('min_rating', params.min_rating.toString());
@@ -723,7 +729,7 @@ export async function getGalleryImages(params?: GalleryQueryParams): Promise<Gal
   const qs = query.toString();
   const res = await fetch(`${API_BASE}/images/gallery${qs ? `?${qs}` : ''}`);
   if (!res.ok) {
-    throw new Error(`Failed to fetch gallery: ${res.statusText}`);
+    throw new Error(`Failed to fetch gallery (${res.status}): ${res.statusText || res.status}`);
   }
   return res.json();
 }
