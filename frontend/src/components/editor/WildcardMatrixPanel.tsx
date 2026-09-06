@@ -230,6 +230,7 @@ export const WildcardMatrixPanel: React.FC = () => {
   const [queueSampleCount, setQueueSampleCount] = useState<number>(10);
   const [maxPromptsToQueue, setMaxPromptsToQueue] = useState<number>(10);
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
+  const rangeEnd = Math.min(queueRangeStart + queueRangeCount - 1, totalCount);
 
   const handleToggleSelectPrompt = (item: MatrixPermutationItem) => {
     setSelectedIndices((prev) => {
@@ -347,6 +348,7 @@ export const WildcardMatrixPanel: React.FC = () => {
   }, [fetchComfyAvailabilities]);
 
   const expandDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sweepPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const loadSlice = useCallback(
     async (
@@ -558,6 +560,9 @@ export const WildcardMatrixPanel: React.FC = () => {
       if (expandDebounceRef.current) {
         clearTimeout(expandDebounceRef.current);
       }
+      if (sweepPollRef.current) {
+        clearInterval(sweepPollRef.current);
+      }
     };
   }, []);
 
@@ -589,12 +594,26 @@ export const WildcardMatrixPanel: React.FC = () => {
       return;
     }
 
-    if (queueMode === 'all' && totalCount > 2000) {
-      const confirmed = window.confirm(
-        `Queueing ${totalCount.toLocaleString()} prompts will submit a large batch to ComfyUI. Are you sure you want to proceed?`
-      );
-      if (!confirmed) {
-        return;
+    if (queueMode === 'range' && queueRangeStart > totalCount) {
+      setStatus(`Range start #${queueRangeStart} exceeds total permutations (${totalCount.toLocaleString()}).`);
+      return;
+    }
+
+    if (queueMode === 'all') {
+      if (totalCount > 10000) {
+        const confirmed = window.confirm(
+          `Queueing ${totalCount.toLocaleString()} variants is very large and may take significant time. Consider using Range Slice or Random Sample mode instead. Do you want to continue?`
+        );
+        if (!confirmed) {
+          return;
+        }
+      } else if (totalCount > 2000) {
+        const confirmed = window.confirm(
+          `Queueing ${totalCount.toLocaleString()} prompts will submit a large batch to ComfyUI. Are you sure you want to proceed?`
+        );
+        if (!confirmed) {
+          return;
+        }
       }
     }
 
@@ -679,8 +698,9 @@ export const WildcardMatrixPanel: React.FC = () => {
       setStatus(`Successfully queued ${res.queued_count} batch sweep jobs in ComfyUI (${width}x${height})${discordMsg}! Generating...`);
 
       // Poll periodically to stream completed images into the results space
+      if (sweepPollRef.current) clearInterval(sweepPollRef.current);
       let pollCount = 0;
-      const pollInterval = setInterval(async () => {
+      sweepPollRef.current = setInterval(async () => {
         pollCount++;
         try {
           const syncRes = await syncRecentComfyOutputs('MatrixSweep', 50);
@@ -691,7 +711,10 @@ export const WildcardMatrixPanel: React.FC = () => {
           // ignore transient errors during generation
         }
         if (pollCount >= 20) {
-          clearInterval(pollInterval);
+          if (sweepPollRef.current) {
+            clearInterval(sweepPollRef.current);
+            sweepPollRef.current = null;
+          }
         }
       }, 3000);
     } catch (e: any) {
@@ -1179,7 +1202,7 @@ export const WildcardMatrixPanel: React.FC = () => {
                 />
               </div>
               <span className="batch-helper-text">
-                e.g. #{queueRangeStart} - #{queueRangeStart + queueRangeCount - 1}
+                e.g. #{queueRangeStart} - #{rangeEnd}
               </span>
             </div>
           </div>
@@ -1289,7 +1312,7 @@ export const WildcardMatrixPanel: React.FC = () => {
               : queueMode === 'view'
               ? `Queue ${Math.min(maxPromptsToQueue, combinations.length)} from View (${width}×${height})`
               : queueMode === 'range'
-              ? `Queue ${queueRangeCount} from Range #${queueRangeStart}–#${queueRangeStart + queueRangeCount - 1} (${width}×${height})`
+              ? `Queue ${queueRangeCount} from Range #${queueRangeStart}–#${rangeEnd} (${width}×${height})`
               : queueMode === 'sample'
               ? `Queue ${queueSampleCount} Random Samples (${width}×${height})`
               : `Queue All (${totalCount.toLocaleString()}) (${width}×${height})`
@@ -1301,7 +1324,7 @@ export const WildcardMatrixPanel: React.FC = () => {
               ? `Queue ${selectedIndices.size} Selected (${width}×${height})`
               : `Queue ${Math.min(maxPromptsToQueue, combinations.length)} from View (${width}×${height})`
           )}
-          {queueMode === 'range' && `Queue ${queueRangeCount} from Range #${queueRangeStart}–#${queueRangeStart + queueRangeCount - 1} (${width}×${height})`}
+          {queueMode === 'range' && `Queue ${queueRangeCount} from Range #${queueRangeStart}–#${rangeEnd} (${width}×${height})`}
           {queueMode === 'sample' && `Queue ${queueSampleCount} Random Samples (${width}×${height})`}
           {queueMode === 'all' && `Queue All (${totalCount.toLocaleString()}) (${width}×${height})`}
         </button>
