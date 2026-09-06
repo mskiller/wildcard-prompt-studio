@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import random
 from typing import Dict, List, Optional, Any
+from app.services.unified_rag import unified_rag_service, UnifiedRAGService
 
 class AsyncRAGEngine:
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):

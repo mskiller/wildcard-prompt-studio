@@ -14,6 +14,7 @@ from app.services.ai.provider_manager import AIProviderManager
 from app.services.comfyui_connector import ComfyUIConnector
 from app.services.ai.utils import get_url_candidates
 from app.services.async_rag import async_rag_engine
+from app.services.unified_rag import unified_rag_service
 from app.services.ai.vision_service import vision_service
 from app.services.prompt_chat_service import prompt_chat_service
 
@@ -163,16 +164,20 @@ async def test_integration_connection(req: ConnectionTestRequest):
 class RAGSearchRequest(BaseModel):
     query: str
     top_k: int = Field(default=3, gt=0)
+    category: Optional[str] = None
+    tag: Optional[str] = None
 
 class RAGIndexRequest(BaseModel):
     title: str
     content: str
+    category: Optional[str] = "general"
     tags: List[str] = Field(default_factory=list)
 
 class RAGDocumentItem(BaseModel):
     id: int
     title: str
     content: str
+    category: Optional[str] = "general"
     tags: List[str] = Field(default_factory=list)
 
 class RAGSearchResultItem(RAGDocumentItem):
@@ -190,6 +195,7 @@ class RAGStatsResponse(BaseModel):
     total_documents: int
     total_tags: int
     model_name: str
+    categories: Optional[List[str]] = None
 
 class RAGDocumentsResponse(BaseModel):
     documents: List[RAGDocumentItem]
@@ -199,28 +205,50 @@ class RAGDeleteResponse(BaseModel):
     doc_id: int
 
 @router.post("/rag/search", response_model=RAGSearchResponse)
-async def rag_search_endpoint(req: RAGSearchRequest):
-    results = await async_rag_engine.search_knowledge_async(req.query, top_k=req.top_k)
+async def rag_search_endpoint(req: RAGSearchRequest, db: Session = Depends(get_db)):
+    results = await unified_rag_service.search_knowledge_async(
+        db=db,
+        query=req.query,
+        top_k=req.top_k,
+        category=req.category,
+        tag=req.tag,
+    )
     return {"query": req.query, "results": results}
 
 @router.post("/rag/index", response_model=RAGIndexResponse)
-async def rag_index_endpoint(req: RAGIndexRequest):
-    doc = await async_rag_engine.index_document_async(req.title, req.content, tags=req.tags)
+async def rag_index_endpoint(req: RAGIndexRequest, db: Session = Depends(get_db)):
+    doc = await unified_rag_service.index_document_async(
+        db=db,
+        title=req.title,
+        content=req.content,
+        category=req.category or "general",
+        tags=req.tags,
+    )
     return {"status": "indexed", "document": doc}
 
 @router.get("/rag/stats", response_model=RAGStatsResponse)
-async def rag_stats_endpoint():
-    stats = await async_rag_engine.get_stats_async()
+async def rag_stats_endpoint(db: Session = Depends(get_db)):
+    stats = await unified_rag_service.get_stats_async(db=db)
     return stats
 
 @router.get("/rag/documents", response_model=RAGDocumentsResponse)
-async def rag_get_documents_endpoint(query: Optional[str] = None, tag: Optional[str] = None):
-    documents = await async_rag_engine.get_documents_async(query=query, tag=tag)
+async def rag_get_documents_endpoint(
+    query: Optional[str] = None,
+    category: Optional[str] = None,
+    tag: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    documents = await unified_rag_service.get_documents_async(
+        db=db,
+        query=query,
+        category=category,
+        tag=tag,
+    )
     return {"documents": documents}
 
 @router.delete("/rag/documents/{doc_id}", response_model=RAGDeleteResponse)
-async def rag_delete_document_endpoint(doc_id: int):
-    deleted = await async_rag_engine.delete_document_async(doc_id)
+async def rag_delete_document_endpoint(doc_id: int, db: Session = Depends(get_db)):
+    deleted = await unified_rag_service.delete_document_async(db=db, doc_id=doc_id)
     if not deleted:
         raise HTTPException(status_code=404, detail=f"Document with ID {doc_id} not found")
     return {"status": "deleted", "doc_id": doc_id}
@@ -242,14 +270,21 @@ async def vision_describe_endpoint(
 async def vision_extract_style_endpoint(
     file: UploadFile = File(...),
     provider: str = Form("auto"),
-    index_rag: bool = Form(False)
+    index_rag: bool = Form(False),
+    db: Session = Depends(get_db)
 ):
     image_bytes = await file.read()
     result = await vision_service.extract_style_descriptors(image_bytes, provider=provider)
     if index_rag and "descriptors" in result:
         desc = result["descriptors"]
         content_str = json.dumps(desc)
-        await async_rag_engine.index_document_async("Extracted Vision Style", content_str, tags=["vision", "extracted_style"])
+        await unified_rag_service.index_document_async(
+            db=db,
+            title="Extracted Vision Style",
+            content=content_str,
+            category="vision",
+            tags=["vision", "extracted_style"]
+        )
     return result
 
 @router.post("/chat-refine", response_model=ChatRefineResponse)
