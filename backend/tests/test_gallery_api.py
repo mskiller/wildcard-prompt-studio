@@ -111,7 +111,7 @@ def test_gallery_similar_and_sorting():
         db.refresh(img3)
 
         # 1. Test similar renders
-        res = client.get(f"/api/v1/images/{img1.id}/similar?limit=50")
+        res = client.get(f"/api/v1/images/{img1.id}/similar?limit=200")
         assert res.status_code == 200
         similar_items = res.json()
         assert len(similar_items) >= 2

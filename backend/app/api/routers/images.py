@@ -90,10 +90,10 @@ def ensure_image_prompt_linked(img: Image, db: Session) -> Optional[str]:
 
 def _to_gallery_response(img: Image, db: Optional[Session] = None) -> GalleryItemResponse:
     prompt_content = ""
-    if db:
-        prompt_content = ensure_image_prompt_linked(img, db) or ""
-    elif img.prompt and img.prompt.content:
+    if img.prompt and img.prompt.content:
         prompt_content = img.prompt.content
+    elif db:
+        prompt_content = ensure_image_prompt_linked(img, db) or ""
 
     return GalleryItemResponse(
         id=img.id,
@@ -151,7 +151,7 @@ def get_gallery(
         query = query.order_by(Image.created_at.desc(), Image.id.desc())
 
     images = query.offset(skip).limit(limit).all()
-    return [_to_gallery_response(img) for img in images]
+    return [_to_gallery_response(img, db) for img in images]
 
 @router.get("/file/{filename}")
 async def get_image_file(
@@ -336,13 +336,13 @@ async def batch_index_rag(payload: BatchRAGIndexRequest, db: Session = Depends(g
 
     return {"status": "indexed", "indexed_count": indexed_count}
 
-@router.get("/{image_id}", response_model=ImageResponse)
+@router.get("/{image_id}", response_model=GalleryItemResponse)
 def get_image(image_id: int, db: Session = Depends(get_db)):
     image = db.query(Image).filter(Image.id == image_id).first()
     if image is None:
         raise HTTPException(status_code=404, detail="Image not found")
     ensure_image_prompt_linked(image, db)
-    return image
+    return _to_gallery_response(image, db)
 
 @router.patch("/{image_id}", response_model=ImageResponse)
 def update_image(image_id: int, image_update: ImageUpdate, db: Session = Depends(get_db)):
@@ -421,7 +421,7 @@ def score_image_aesthetic(image_id: int, db: Session = Depends(get_db)):
 @router.get("/{image_id}/similar", response_model=List[GalleryItemResponse])
 async def get_similar_images(
     image_id: int,
-    limit: int = Query(default=10, le=50),
+    limit: int = Query(default=10, le=200),
     db: Session = Depends(get_db),
 ):
     """Find images with semantically similar prompts using pgvector cosine distance."""
@@ -471,4 +471,4 @@ async def get_similar_images(
         .all()
     )
 
-    return [_to_gallery_response(s_img) for s_img in similar_images]
+    return [_to_gallery_response(s_img, db) for s_img in similar_images]
