@@ -82,6 +82,10 @@ export const VisualASTCanvas: React.FC<VisualASTCanvasProps> = ({
     if (!container) return;
 
     const handleWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('.wildcard-picker-list') || target?.closest('.choice-options-summary')) {
+        return; // Allow native element scrolling
+      }
       e.preventDefault();
       const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
       setZoom(prev => {
@@ -395,6 +399,8 @@ export const VisualASTCanvas: React.FC<VisualASTCanvasProps> = ({
                       onSelect={(val) => {
                         if (onUpdateNode) {
                           onUpdateNode(node.id, { value: val, title: val });
+                        } else {
+                          onNodesChange(nodes.map(n => n.id === node.id ? { ...n, value: val, title: val } : n));
                         }
                       }}
                     />
