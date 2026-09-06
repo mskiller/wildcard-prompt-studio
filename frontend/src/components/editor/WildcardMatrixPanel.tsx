@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   fetchMatrixSlice,
   MatrixPermutationItem,
@@ -143,15 +143,14 @@ export const WildcardMatrixPanel: React.FC = () => {
   const [pageSize, setPageSize] = useState<number>(250);
   const [isSampleMode, setIsSampleMode] = useState<boolean>(false);
   const [sampleCount, setSampleCount] = useState<number>(100);
+  const [sampleCountInput, setSampleCountInput] = useState<string>('100');
   const [jumpIndexInput, setJumpIndexInput] = useState<string>('');
   const [pageInput, setPageInput] = useState<string>('1');
-  const [combinations, setCombinations] = useState<string[]>([]);
   const selectedPromptsMap = useRef<Map<number, string>>(new Map());
+  const latestRequestIdRef = useRef<number>(0);
 
-  // Synchronize combinations with sliceItems
-  useEffect(() => {
-    setCombinations(sliceItems.map((item) => item.prompt));
-  }, [sliceItems]);
+  // Derive combinations from sliceItems
+  const combinations = useMemo(() => sliceItems.map((item) => item.prompt), [sliceItems]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const currentPage = Math.floor(currentOffset / pageSize) + 1;
@@ -356,9 +355,10 @@ export const WildcardMatrixPanel: React.FC = () => {
       const targetPrompt = promptOverride !== undefined ? promptOverride : prompt;
       const targetExpandWc = expandWcOverride !== undefined ? expandWcOverride : expandWildcards;
 
+      const requestId = ++latestRequestIdRef.current;
+
       if (!targetPrompt.trim()) {
         setSliceItems([]);
-        setCombinations([]);
         setTotalCount(0);
         setCurrentOffset(0);
         setIsSampleMode(false);
@@ -376,8 +376,9 @@ export const WildcardMatrixPanel: React.FC = () => {
           sampleSize,
         });
 
+        if (requestId !== latestRequestIdRef.current) return;
+
         setSliceItems(res.items);
-        setCombinations(res.items.map((it) => it.prompt));
         setTotalCount(res.total_count);
         setCurrentOffset(res.offset);
         setIsSampleMode(res.is_sample);
@@ -396,9 +397,12 @@ export const WildcardMatrixPanel: React.FC = () => {
           );
         }
       } catch (e: any) {
+        if (requestId !== latestRequestIdRef.current) return;
         setStatus(`Error loading permutations: ${e.message}`);
       } finally {
-        setLoading(false);
+        if (requestId === latestRequestIdRef.current) {
+          setLoading(false);
+        }
       }
     },
     [prompt, pageSize, expandWildcards]
@@ -419,10 +423,8 @@ export const WildcardMatrixPanel: React.FC = () => {
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
-      const newOffset = currentOffset + pageSize;
-      if (newOffset < totalCount) {
-        loadSlice(newOffset, pageSize);
-      }
+      const targetOffset = Math.min(currentOffset + pageSize, (totalPages - 1) * pageSize);
+      loadSlice(targetOffset, pageSize);
     }
   };
 
@@ -442,6 +444,7 @@ export const WildcardMatrixPanel: React.FC = () => {
     }
     const clampedPage = Math.max(1, Math.min(parsed, totalPages));
     setPageInput(String(clampedPage));
+    if (clampedPage === currentPage && !isSampleMode) return;
     const targetOffset = (clampedPage - 1) * pageSize;
     loadSlice(targetOffset, pageSize);
   };
@@ -481,9 +484,9 @@ export const WildcardMatrixPanel: React.FC = () => {
       if (expandDebounceRef.current) {
         clearTimeout(expandDebounceRef.current);
       }
+      handleClearSelection();
       if (!promptToExpand.trim()) {
         setSliceItems([]);
-        setCombinations([]);
         setTotalCount(0);
         setCurrentOffset(0);
         setIsSampleMode(false);
@@ -555,6 +558,7 @@ export const WildcardMatrixPanel: React.FC = () => {
   }, []);
 
   const handlePreview = async () => {
+    handleClearSelection();
     setLoading(true);
     try {
       const [, resGraph, resHeatmap] = await Promise.all([
@@ -1175,6 +1179,7 @@ export const WildcardMatrixPanel: React.FC = () => {
               value={pageSize}
               onChange={(e) => handlePageSizeChange(Number(e.target.value))}
               disabled={loading}
+              aria-label="Page size"
             >
               <option value="50">50 / page</option>
               <option value="100">100 / page</option>
@@ -1192,6 +1197,7 @@ export const WildcardMatrixPanel: React.FC = () => {
               onClick={handleFirstPage}
               disabled={currentPage <= 1 || loading || isSampleMode}
               title="First Page (<<)"
+              aria-label="First page"
             >
               &laquo;
             </button>
@@ -1201,6 +1207,7 @@ export const WildcardMatrixPanel: React.FC = () => {
               onClick={handlePrevPage}
               disabled={currentPage <= 1 || loading || isSampleMode}
               title="Previous Page (<)"
+              aria-label="Previous page"
             >
               &lsaquo;
             </button>
@@ -1215,6 +1222,7 @@ export const WildcardMatrixPanel: React.FC = () => {
                 onBlur={handlePageInputSubmit}
                 disabled={loading || isSampleMode}
                 title="Press Enter to jump to page"
+                aria-label="Page number"
               />
               <span className="slice-nav-label">of {totalPages.toLocaleString()}</span>
             </form>
@@ -1225,6 +1233,7 @@ export const WildcardMatrixPanel: React.FC = () => {
               onClick={handleNextPage}
               disabled={currentPage >= totalPages || loading || isSampleMode}
               title="Next Page (>)"
+              aria-label="Next page"
             >
               &rsaquo;
             </button>
@@ -1234,6 +1243,7 @@ export const WildcardMatrixPanel: React.FC = () => {
               onClick={handleLastPage}
               disabled={currentPage >= totalPages || loading || isSampleMode}
               title="Last Page (>>)"
+              aria-label="Last page"
             >
               &raquo;
             </button>
@@ -1249,11 +1259,13 @@ export const WildcardMatrixPanel: React.FC = () => {
               value={jumpIndexInput}
               onChange={(e) => setJumpIndexInput(e.target.value)}
               disabled={loading}
+              aria-label="Jump to variation index"
             />
             <button
               type="submit"
               className="slice-nav-btn go-btn"
               disabled={loading || !jumpIndexInput.trim()}
+              aria-label="Go to variation index"
             >
               Go
             </button>
@@ -1266,10 +1278,29 @@ export const WildcardMatrixPanel: React.FC = () => {
               className="slice-sample-input"
               min={1}
               max={2000}
-              value={sampleCount}
-              onChange={(e) => setSampleCount(Math.max(1, parseInt(e.target.value, 10) || 100))}
+              value={sampleCountInput}
+              onChange={(e) => {
+                const valStr = e.target.value;
+                setSampleCountInput(valStr);
+                const parsed = parseInt(valStr, 10);
+                if (!isNaN(parsed) && parsed >= 1) {
+                  setSampleCount(Math.min(parsed, 2000));
+                }
+              }}
+              onBlur={() => {
+                const parsed = parseInt(sampleCountInput.trim(), 10);
+                if (isNaN(parsed) || parsed < 1) {
+                  setSampleCount(100);
+                  setSampleCountInput('100');
+                } else {
+                  const clamped = Math.max(1, Math.min(parsed, 2000));
+                  setSampleCount(clamped);
+                  setSampleCountInput(String(clamped));
+                }
+              }}
               disabled={loading}
               title="Number of random permutations to sample"
+              aria-label="Sample count"
             />
             <button
               type="button"
@@ -1277,6 +1308,7 @@ export const WildcardMatrixPanel: React.FC = () => {
               onClick={() => handleSampleRandom(sampleCount)}
               disabled={loading || totalCount === 0}
               title="Sample random permutations uniformly across entire combinatorial space"
+              aria-label="Sample random variations"
             >
               🎲 Sample {sampleCount} Random
             </button>
@@ -1287,6 +1319,7 @@ export const WildcardMatrixPanel: React.FC = () => {
                 onClick={handleResetToSequential}
                 disabled={loading}
                 title="Return to sequential paginated view"
+                aria-label="Switch to sequential view"
               >
                 Sequential View
               </button>
