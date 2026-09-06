@@ -1,4 +1,3 @@
-import pytest
 from app.models.knowledge import KnowledgeDocument
 from app.models.image import Image
 

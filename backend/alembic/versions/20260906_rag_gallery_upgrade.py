@@ -21,6 +21,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     # 1. Update knowledge_documents table
+    # Clear existing embeddings before altering dimension to prevent casting errors on populated tables
+    op.execute("UPDATE knowledge_documents SET embedding = NULL")
     op.alter_column(
         'knowledge_documents',
         'embedding',
@@ -33,7 +35,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_knowledge_documents_title'), 'knowledge_documents', ['title'], unique=False)
     op.add_column('knowledge_documents', sa.Column('tags', sa.Text(), server_default='[]', nullable=True))
     op.add_column('knowledge_documents', sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True))
-    op.add_column('knowledge_documents', sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True))
+    op.add_column('knowledge_documents', sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True))
 
     # 2. Update images table
     op.add_column('images', sa.Column('is_favorite', sa.Boolean(), server_default=sa.text('false'), nullable=True))
@@ -42,10 +44,12 @@ def upgrade() -> None:
     op.create_index(op.f('ix_images_rating'), 'images', ['rating'], unique=False)
     op.add_column('images', sa.Column('aesthetic_score', sa.Float(), nullable=True))
     op.create_index(op.f('ix_images_aesthetic_score'), 'images', ['aesthetic_score'], unique=False)
+    op.create_index(op.f('ix_images_created_at'), 'images', ['created_at'], unique=False)
 
 
 def downgrade() -> None:
     # 1. Revert images table
+    op.drop_index(op.f('ix_images_created_at'), table_name='images')
     op.drop_index(op.f('ix_images_aesthetic_score'), table_name='images')
     op.drop_column('images', 'aesthetic_score')
     op.drop_index(op.f('ix_images_rating'), table_name='images')
@@ -60,6 +64,7 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_knowledge_documents_title'), table_name='knowledge_documents')
     op.drop_index(op.f('ix_knowledge_documents_category'), table_name='knowledge_documents')
     op.drop_column('knowledge_documents', 'category')
+    op.execute("UPDATE knowledge_documents SET embedding = NULL")
     op.alter_column(
         'knowledge_documents',
         'embedding',
