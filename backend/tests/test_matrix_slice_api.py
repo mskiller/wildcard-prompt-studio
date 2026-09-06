@@ -121,4 +121,20 @@ def test_matrix_slice_default_limit():
     assert data["limit"] == 250
     assert len(data["items"]) == 250
 
+def test_matrix_execute_stepped_range():
+    res = client.post("/generate/matrix/execute", json={
+        "prompt": "{a|b|c} {1|2|3}",
+        "mode": "range",
+        "offset": 0,
+        "limit": 3,
+        "step": 2
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "queued"
+    assert data["total_generated"] == 3
+    # Indices 0, 2, 4 -> "a 1", "a 3", "b 2"
+    assert data["prompts"] == ["a 1", "a 3", "b 2"]
+
+
 

@@ -52,6 +52,7 @@ class MatrixExecuteRequest(BaseModel):
     expand_wildcards: Optional[bool] = True
     mode: Optional[str] = "view"
     offset: Optional[int] = 0
+    step: Optional[int] = 1
     sample_size: Optional[int] = None
     seed: Optional[int] = None
     indices: Optional[List[int]] = None
@@ -161,12 +162,21 @@ async def execute_matrix_sweep(
         elif request.mode in ("range", "view"):
             offset = request.offset if request.offset is not None else 0
             limit = request.limit if request.limit is not None else 250
-            data = matrix_engine.get_matrix_slice(
-                request.prompt,
-                offset=offset,
-                limit=limit,
-                expand_wildcards=expand_wc
-            )
+            step = request.step if (request.step is not None and request.step > 1) else 1
+            if step > 1 and request.mode == "range":
+                stepped_indices = [offset + i * step for i in range(limit)]
+                data = matrix_engine.get_matrix_indices(
+                    request.prompt,
+                    stepped_indices,
+                    expand_wildcards=expand_wc
+                )
+            else:
+                data = matrix_engine.get_matrix_slice(
+                    request.prompt,
+                    offset=offset,
+                    limit=limit,
+                    expand_wildcards=expand_wc
+                )
             prompts = [item["prompt"] for item in data.get("items", [])]
         else:
             limit = request.limit

@@ -226,11 +226,29 @@ export const WildcardMatrixPanel: React.FC = () => {
   // Queue mode, limits & manual permutation selection
   const [queueMode, setQueueMode] = useState<'view' | 'range' | 'sample' | 'all'>('view');
   const [queueRangeStart, setQueueRangeStart] = useState<number>(1);
+  const [queueRangeStep, setQueueRangeStep] = useState<number>(1);
   const [queueRangeCount, setQueueRangeCount] = useState<number>(10);
   const [queueSampleCount, setQueueSampleCount] = useState<number>(10);
   const [maxPromptsToQueue, setMaxPromptsToQueue] = useState<number>(10);
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
-  const rangeEnd = Math.min(queueRangeStart + queueRangeCount - 1, totalCount);
+
+  const effectiveRangeCount = useMemo(() => {
+    if (totalCount <= 0 || queueRangeStart > totalCount) return 0;
+    if (queueRangeStep <= 1) {
+      return Math.min(queueRangeCount, totalCount - queueRangeStart + 1);
+    }
+    const maxAvailable = Math.floor((totalCount - queueRangeStart) / queueRangeStep) + 1;
+    return Math.max(1, Math.min(queueRangeCount, maxAvailable));
+  }, [totalCount, queueRangeStart, queueRangeCount, queueRangeStep]);
+
+  const rangeEnd = useMemo(() => {
+    if (totalCount <= 0) return 0;
+    if (queueRangeStep <= 1) {
+      return Math.min(queueRangeStart + queueRangeCount - 1, totalCount);
+    }
+    const lastIndex = queueRangeStart + (effectiveRangeCount - 1) * queueRangeStep;
+    return Math.min(lastIndex, totalCount);
+  }, [totalCount, queueRangeStart, queueRangeStep, effectiveRangeCount]);
 
   const handleToggleSelectPrompt = (item: MatrixPermutationItem) => {
     setSelectedIndices((prev) => {
@@ -623,15 +641,38 @@ export const WildcardMatrixPanel: React.FC = () => {
       let queueModeDesc = '';
 
       if (queueMode === 'range') {
-        setStatus(`Fetching range slice #${queueRangeStart}–#${queueRangeStart + queueRangeCount - 1}...`);
-        const sliceRes = await fetchMatrixSlice({
-          prompt,
-          offset: Math.max(0, queueRangeStart - 1),
-          limit: queueRangeCount,
-          expandWildcards,
-        });
-        promptsToSend = sliceRes.items.map((it) => it.prompt);
-        queueModeDesc = `${promptsToSend.length} variants from range #${queueRangeStart} to #${queueRangeStart + promptsToSend.length - 1}`;
+        if (queueRangeStep <= 1) {
+          setStatus(`Fetching range slice #${queueRangeStart}–#${rangeEnd}...`);
+          const sliceRes = await fetchMatrixSlice({
+            prompt,
+            offset: Math.max(0, queueRangeStart - 1),
+            limit: queueRangeCount,
+            expandWildcards,
+          });
+          promptsToSend = sliceRes.items.map((it) => it.prompt);
+          queueModeDesc = `${promptsToSend.length} variants from range #${queueRangeStart} to #${rangeEnd}`;
+        } else {
+          // Stepped range selection: calculate exact indices
+          const targetIndices: number[] = [];
+          for (let i = 0; i < queueRangeCount; i++) {
+            const idx1Based = queueRangeStart + i * queueRangeStep;
+            if (idx1Based > totalCount) break;
+            targetIndices.push(idx1Based - 1); // 0-based for API
+          }
+          if (targetIndices.length === 0) {
+            setStatus('No valid permutation indices in specified range/step.');
+            setLoading(false);
+            return;
+          }
+          setStatus(`Fetching ${targetIndices.length} stepped variants (step ${queueRangeStep}) from #${queueRangeStart} to #${rangeEnd}...`);
+          const sliceRes = await fetchMatrixSlice({
+            prompt,
+            indices: targetIndices,
+            expandWildcards,
+          });
+          promptsToSend = sliceRes.items.map((it) => it.prompt);
+          queueModeDesc = `${promptsToSend.length} stepped variants (step ${queueRangeStep}) from #${queueRangeStart} to #${rangeEnd}`;
+        }
       } else if (queueMode === 'sample') {
         setStatus(`Sampling ${queueSampleCount} random variants...`);
         const sampleRes = await fetchMatrixSlice({
@@ -1189,6 +1230,19 @@ export const WildcardMatrixPanel: React.FC = () => {
                 />
               </div>
               <div className="batch-range-input-group">
+                <span className="batch-range-label">Step</span>
+                <input
+                  type="number"
+                  className="batch-input batch-range-input number-small"
+                  min={1}
+                  max={Math.max(1, totalCount)}
+                  value={queueRangeStep}
+                  onChange={(e) => setQueueRangeStep(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                  title="Step increment between permutations (1 = consecutive, 5 = advance by 5 each time)"
+                  aria-label="Range step size"
+                />
+              </div>
+              <div className="batch-range-input-group">
                 <span className="batch-range-label">Count</span>
                 <input
                   type="number"
@@ -1202,7 +1256,9 @@ export const WildcardMatrixPanel: React.FC = () => {
                 />
               </div>
               <span className="batch-helper-text">
-                e.g. #{queueRangeStart} - #{rangeEnd}
+                {queueRangeStep > 1
+                  ? `e.g. #${queueRangeStart}, #${queueRangeStart + queueRangeStep}... (to #${rangeEnd}, step ${queueRangeStep})`
+                  : `e.g. #${queueRangeStart} - #${rangeEnd}`}
               </span>
             </div>
           </div>
@@ -1312,7 +1368,9 @@ export const WildcardMatrixPanel: React.FC = () => {
               : queueMode === 'view'
               ? `Queue ${Math.min(maxPromptsToQueue, combinations.length)} from View (${width}×${height})`
               : queueMode === 'range'
-              ? `Queue ${queueRangeCount} from Range #${queueRangeStart}–#${rangeEnd} (${width}×${height})`
+              ? queueRangeStep > 1
+                ? `Queue ${effectiveRangeCount} (step ${queueRangeStep}) from Range #${queueRangeStart}–#${rangeEnd} (${width}×${height})`
+                : `Queue ${effectiveRangeCount} from Range #${queueRangeStart}–#${rangeEnd} (${width}×${height})`
               : queueMode === 'sample'
               ? `Queue ${queueSampleCount} Random Samples (${width}×${height})`
               : `Queue All (${totalCount.toLocaleString()}) (${width}×${height})`
@@ -1324,7 +1382,11 @@ export const WildcardMatrixPanel: React.FC = () => {
               ? `Queue ${selectedIndices.size} Selected (${width}×${height})`
               : `Queue ${Math.min(maxPromptsToQueue, combinations.length)} from View (${width}×${height})`
           )}
-          {queueMode === 'range' && `Queue ${queueRangeCount} from Range #${queueRangeStart}–#${rangeEnd} (${width}×${height})`}
+          {queueMode === 'range' && (
+            queueRangeStep > 1
+              ? `Queue ${effectiveRangeCount} (Step ${queueRangeStep}) from Range #${queueRangeStart}–#${rangeEnd} (${width}×${height})`
+              : `Queue ${effectiveRangeCount} from Range #${queueRangeStart}–#${rangeEnd} (${width}×${height})`
+          )}
           {queueMode === 'sample' && `Queue ${queueSampleCount} Random Samples (${width}×${height})`}
           {queueMode === 'all' && `Queue All (${totalCount.toLocaleString()}) (${width}×${height})`}
         </button>

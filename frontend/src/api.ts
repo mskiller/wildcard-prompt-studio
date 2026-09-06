@@ -121,6 +121,7 @@ export interface ExecuteMatrixSweepOptions {
   prompt: string;
   mode?: 'view' | 'range' | 'sample' | 'indices' | 'all';
   offset?: number;
+  step?: number;
   limit?: number;
   sampleSize?: number;
   seed?: number;
@@ -147,6 +148,7 @@ export async function executeMatrixSweep(
       prompt: promptOrOptions.prompt,
       mode: promptOrOptions.mode ?? 'view',
       offset: promptOrOptions.offset ?? 0,
+      step: promptOrOptions.step ?? 1,
       limit: promptOrOptions.limit ?? limit ?? null,
       sample_size: promptOrOptions.sampleSize ?? null,
       seed: promptOrOptions.seed ?? null,
