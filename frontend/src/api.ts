@@ -8,6 +8,7 @@ export interface Krea2Options {
   clean_buzzwords?: boolean;
   provider?: 'kobold' | 'ollama' | 'gemini' | string;
   max_tokens?: number;
+  use_rag?: boolean;
 }
 
 export async function krea2ImprovePrompt(options: Krea2Options): Promise<string> {
@@ -35,6 +36,7 @@ export interface AnimaOptions {
   negative_prompt?: string;
   provider?: string;
   model?: string;
+  use_rag?: boolean;
 }
 
 export async function animaImprovePrompt(options: AnimaOptions): Promise<string> {
@@ -155,7 +157,10 @@ export interface RAGDocument {
   id: number;
   title: string;
   content: string;
+  category?: string;
   tags: string[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface RAGSearchResult extends RAGDocument {
@@ -166,6 +171,7 @@ export interface RAGStats {
   total_documents: number;
   total_tags: number;
   model_name: string;
+  categories?: string[];
 }
 
 export async function getRAGStats(): Promise<RAGStats> {
@@ -174,17 +180,18 @@ export async function getRAGStats(): Promise<RAGStats> {
   return res.json();
 }
 
-export async function getRAGDocuments(query?: string, tag?: string, signal?: AbortSignal): Promise<RAGDocument[]> {
+export async function getRAGDocuments(query?: string, tag?: string, signal?: AbortSignal, category?: string): Promise<RAGDocument[]> {
   const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
   const fullBase = API_BASE.startsWith('http') ? API_BASE : `${origin}${API_BASE}`;
   const url = new URL(`${fullBase}/ai/rag/documents`);
   if (query) url.searchParams.append('query', query);
   if (tag) url.searchParams.append('tag', tag);
+  if (category) url.searchParams.append('category', category);
 
   const res = await fetch(url.toString(), { signal });
   if (!res.ok) throw new Error(`Failed to fetch RAG documents: ${res.statusText}`);
   const data = await res.json();
-  return data.documents;
+  return data.documents || [];
 }
 
 export async function deleteRAGDocument(docId: number): Promise<{ status: string; doc_id: number }> {
@@ -195,29 +202,54 @@ export async function deleteRAGDocument(docId: number): Promise<{ status: string
   return res.json();
 }
 
-export async function searchRAGKnowledge(query: string, topK: number = 3): Promise<RAGSearchResult[]> {
+export async function searchRAGKnowledge(query: string, topK: number = 3, category?: string, tag?: string): Promise<RAGSearchResult[]> {
   const res = await fetch(`${API_BASE}/ai/rag/search`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query, top_k: topK }),
+    body: JSON.stringify({ query, top_k: topK, category, tag }),
   });
   if (!res.ok) throw new Error(`Failed to search RAG vector db: ${res.statusText}`);
   const data = await res.json();
-  return data.results;
+  return data.results || [];
 }
 
-export async function indexRAGKnowledge(title: string, content: string, tags: string[] = []): Promise<{ status: string; document: RAGDocument }> {
+export async function indexRAGKnowledge(
+  title: string,
+  content: string,
+  tagsOrCategory?: string[] | string,
+  categoryOrTags?: string | string[]
+): Promise<{ status: string; document: RAGDocument }> {
+  let category = 'general';
+  let tags: string[] = [];
+
+  if (Array.isArray(tagsOrCategory)) {
+    tags = tagsOrCategory;
+    if (typeof categoryOrTags === 'string') {
+      category = categoryOrTags;
+    }
+  } else if (typeof tagsOrCategory === 'string') {
+    category = tagsOrCategory;
+    if (Array.isArray(categoryOrTags)) {
+      tags = categoryOrTags;
+    }
+  }
+
   const res = await fetch(`${API_BASE}/ai/rag/index`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, content, tags }),
+    body: JSON.stringify({ title, content, category, tags }),
   });
   if (!res.ok) throw new Error(`Failed to index knowledge: ${res.statusText}`);
   return res.json();
 }
 
-export async function indexRAGDocument(title: string, content: string, tags: string[] = []): Promise<{ status: string; document: RAGDocument }> {
-  return indexRAGKnowledge(title, content, tags);
+export async function indexRAGDocument(
+  title: string,
+  content: string,
+  tagsOrCategory?: string[] | string,
+  categoryOrTags?: string | string[]
+): Promise<{ status: string; document: RAGDocument }> {
+  return indexRAGKnowledge(title, content, tagsOrCategory, categoryOrTags);
 }
 
 
@@ -650,12 +682,153 @@ export async function updateProfile(id: number, data: any): Promise<any> {
   return res.json();
 }
 
-export async function getGalleryImages(): Promise<any[]> {
-  const res = await fetch(`${API_BASE}/images/gallery`);
+export interface GalleryQueryParams {
+  skip?: number;
+  limit?: number;
+  search?: string;
+  sampler?: string;
+  is_favorite?: boolean;
+  min_rating?: number;
+  sort_by?: 'newest' | 'oldest' | 'rating' | 'aesthetic_score';
+}
+
+export interface GalleryItem {
+  id: number;
+  filename: string;
+  prompt_id?: number | null;
+  seed?: number | null;
+  cfg_scale?: number | null;
+  steps?: number | null;
+  sampler_name?: string | null;
+  width?: number | null;
+  height?: number | null;
+  comfy_workflow_id?: string | null;
+  is_favorite: boolean;
+  rating: number;
+  aesthetic_score?: number | null;
+  created_at: string;
+  prompt_content: string;
+}
+
+export async function getGalleryImages(params?: GalleryQueryParams): Promise<GalleryItem[]> {
+  const query = new URLSearchParams();
+  if (params?.skip !== undefined) query.set('skip', params.skip.toString());
+  if (params?.limit !== undefined) query.set('limit', params.limit.toString());
+  if (params?.search) query.set('search', params.search);
+  if (params?.sampler) query.set('sampler', params.sampler);
+  if (params?.is_favorite !== undefined) query.set('is_favorite', params.is_favorite.toString());
+  if (params?.min_rating !== undefined) query.set('min_rating', params.min_rating.toString());
+  if (params?.sort_by) query.set('sort_by', params.sort_by);
+
+  const qs = query.toString();
+  const res = await fetch(`${API_BASE}/images/gallery${qs ? `?${qs}` : ''}`);
   if (!res.ok) {
     throw new Error(`Failed to fetch gallery: ${res.statusText}`);
   }
   return res.json();
+}
+
+export async function toggleImageFavorite(id: number): Promise<GalleryItem> {
+  const res = await fetch(`${API_BASE}/images/${id}/favorite`, {
+    method: 'PATCH',
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to toggle favorite: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function setImageRating(id: number, rating: number): Promise<GalleryItem> {
+  const res = await fetch(`${API_BASE}/images/${id}/rating`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rating }),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to set rating: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function scoreImageAesthetic(id: number): Promise<GalleryItem> {
+  const res = await fetch(`${API_BASE}/images/${id}/score-aesthetic`, {
+    method: 'POST',
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to score image aesthetic: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function batchDeleteImages(imageIds: number[]): Promise<{ status: string; deleted_count: number }> {
+  const res = await fetch(`${API_BASE}/images/batch/delete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image_ids: imageIds }),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to batch delete images: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function batchIndexImagesToRAG(
+  imageIds: number[],
+  category: string = 'gallery_generations',
+  tags: string[] = []
+): Promise<{ status: string; indexed_count: number }> {
+  const res = await fetch(`${API_BASE}/images/batch/index-rag`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image_ids: imageIds, category, tags }),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to batch index images to RAG: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function getSimilarImages(id: number, limit: number = 10): Promise<GalleryItem[]> {
+  const res = await fetch(`${API_BASE}/images/${id}/similar?limit=${limit}`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch similar images: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export interface SemanticTagResult {
+  tag: string;
+  category?: string;
+  score?: number;
+  reason?: string;
+}
+
+export async function searchTagsSemantic(query: string, limit: number = 20): Promise<SemanticTagResult[]> {
+  try {
+    const recs = await getDanbooruRecommendations(query, undefined, limit);
+    if (recs && recs.length > 0) {
+      return recs.map((r: DanbooruRecommendation) => ({
+        tag: r.tag,
+        category: r.category,
+        score: r.score,
+        reason: r.reason || 'Semantic match'
+      }));
+    }
+  } catch (e) {
+    console.warn('Semantic Danbooru recommendation failed, falling back to lexical search:', e);
+  }
+
+  try {
+    const directTags = await getDanbooruTags({ q: query, limit });
+    return directTags.map((t: DanbooruTagItem) => ({
+      tag: t.tag,
+      category: t.category,
+      score: t.total_count,
+      reason: 'Direct match'
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export async function createImage(data: any): Promise<any> {
