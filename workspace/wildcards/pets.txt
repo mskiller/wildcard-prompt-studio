@@ -1,0 +1,43 @@
+dog
+cat
+fish
+bird
+hamster
+guinea pig
+rabbit
+ferret
+turtle
+snake
+lizard
+tortoise
+hedgehog
+domestic rat
+gerbil
+chinchilla
+sugar glider
+hermit crab
+tarantula
+mice
+cockatiel
+lovebird
+parakeet
+axolotl
+betta fish
+guppy
+shrimp
+guinea pig
+hamster
+miniature pig
+miniature horse
+ferret
+cockatoo
+conure
+african grey parrot
+macaw
+pot-bellied pig
+iguana
+box turtle
+domestic rabbit
+runner duck
+domestic duck
+baby goat

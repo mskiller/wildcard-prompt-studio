@@ -1,0 +1,55 @@
+deer
+fox
+rabbit
+squirrel
+raccoon
+skunk
+chipmunk
+coyote
+hedgehog
+badger
+otter
+beaver
+groundhog
+woodchuck
+opossum
+possum
+turtle
+snake
+lizard
+frog
+salamander
+toad
+turtle
+alligator
+armadillo
+jackalope
+bat
+bobcat
+cougar
+mountain lion
+lynx
+black bear
+grizzly bear
+panda
+polar bear
+wolf
+elk
+moose
+caribou
+reindeer
+bison
+buffalo
+giraffe
+elephant
+hippopotamus
+rhinoceros
+zebra
+lion
+cheetah
+tiger
+leopard
+jaguar
+hyena
+gorilla
+chimpanzee

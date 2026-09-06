@@ -63,10 +63,23 @@ Built for power users who need:
 - **Vision Style Extraction** — extract visual descriptors from uploaded images with 1-click indexing into RAG knowledge documents
 - **Thread-Safe & Non-Blocking** — async thread offloading with mutex safety locks and graceful offline runtime fallbacks
 
-### 🌳 AST-Based Wildcard & Matrix Engine
+### ♾️ Unlimited Matrix Permutations & Slice Navigator
+- **Closed-Form Direct Indexing (`MatrixIndexingEngine`)** — factor decomposition and coordinate mapping algorithm calculating exact Cartesian permutation spaces ($N = \prod |C_i|$) in $O(1)$ time with zero memory allocation.
+- **Astronomical Space Support** — handles massive spaces (hundreds of millions or billions of combinations) with zero OOM risk or Cartesian freezing.
+- **O(1) Direct Index Mapping** — instant $O(1)$ lookup (`get_permutation_at_index(n)`) that fetches any arbitrary combination without computing prior combinations.
+- **Matrix Slice & Random Sample APIs** — `POST /api/v1/generate/matrix/slice` and `/api/v1/generate/matrix/sample` for sub-millisecond pagination and uniform random sampling.
+- **Interactive Slice Navigator UI** — responsive pagination (50, 100, 250, 500 per page), direct index jump, random sample picker with reproducible seed, and combination count badges.
+- **Flexible Matrix Batch Queue** — queue specific index slices (e.g. 100–250) or random sample subsets directly to ComfyUI workflows.
+
+### 🔍 Universal Searchable Wildcard Picker (`WildcardSearchPicker`)
+- **Instant Search & Category Filtering** — fast interactive dropdown with real-time filtering, category grouping, and matched query highlighting.
+- **Full Keyboard Navigation** — seamless navigation with Arrow Up/Down, Enter selection, and Escape to dismiss.
+- **Canvas Scroll Decoupling** — smart wheel event interception preventing parent canvas panning or zooming while scrolling through wildcard items.
+- **Deep Studio Integration** — embedded directly inside Visual AST Canvas nodes (`CanvasWildcardNode`), the Node Inspector drawer, and the Matrix Studio toolbar.
+
+### 🌳 AST-Based Wildcard Engine
 - **Full AST Parser** — recursive lexer and parser for complex wildcard syntax (`{a|b}`, `{3$$a|1$$b}`, `__category/file__`)
 - **896×1152 Resolution Defaults** — modern default aspect ratios with dedicated width and height numeric controls
-- **OOM Freeze Prevention & Safety Limits** — safeguards against combinatorial Cartesian explosions with early stopping and wildcard caching
 - **Queue Limits & Permutation Picker** — preview matrix sweep permutations and selectively queue individual combinations
 - **High-Performance Wildcard Listing** — optimized API queries (`include_content=false` by default) reducing payload size by ~99%
 - **1-Click Explorer Insertion** — click any wildcard in the sidebar Explorer to instantly populate the Monaco Prompt Editor buffer
@@ -104,7 +117,7 @@ Built for power users who need:
 - **Live WebSocket Bridge** — real-time job status, queue progress, and node execution tracking
 - **Batch Dispatch** — send matrix-generated prompt lists directly to ComfyUI workflows
 - **Generation Simulator** — debug complex multi-node workflows before submitting heavy render batches
-- **Automated Discord Webhooks** — automatically dispatch downloaded sweep images and prompt text to Discord channels upon completion
+- **Automated Discord Webhooks** — automatically dispatch downloaded sweep images and prompt text to Discord channels upon completion with multi-source config resolution (ComfyUI config file, environment variable, or settings) and exponential backoff retries
 
 ### 🔄 Civitai Cloud Sync
 - **Model Import** — browse and import wildcard files, trigger words, and presets from Civitai

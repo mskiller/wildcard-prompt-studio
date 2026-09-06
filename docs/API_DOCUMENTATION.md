@@ -161,15 +161,19 @@ Parses all registered wildcards using the AST engine, sanitizes atomic tokens, c
 ---
 
 ### `POST /api/v1/generate/matrix`
-Generates a Cartesian product sweep matrix from a template prompt containing wildcard choice nodes.
+Generates a Cartesian product sweep matrix from a template prompt containing wildcard choice nodes. Powered by `MatrixIndexingEngine` using closed-form factor decomposition to support exact combination counts without materializing full spaces.
 
 #### Request Body
 ```json
 {
   "template": "A __style__ portrait of a {warrior|mage} with {blue|green} eyes",
-  "max_limit": 50
+  "max_limit": 50,
+  "mode": "view"
 }
 ```
+- `template` (string, required): Template prompt containing `{choice|options}` or `__wildcards__`.
+- `max_limit` (int, default: 250): Maximum number of prompt combinations returned.
+- `mode` (string, optional, default: `"view"`): Execution mode (`"view"` for preview/inspection, `"generate"` for dispatching).
 
 #### Response `200 OK`
 ```json
@@ -180,6 +184,73 @@ Generates a Cartesian product sweep matrix from a template prompt containing wil
     "A oil painting portrait of a warrior with green eyes",
     "A oil painting portrait of a mage with blue eyes",
     "A oil painting portrait of a mage with green eyes"
+  ]
+}
+```
+
+---
+
+### `POST /api/v1/generate/matrix/slice`
+Fetches a specific slice / page of combinations directly using $O(1)$ index coordinate mapping. Enables smooth pagination across millions or billions of combinations with zero server memory footprint.
+
+#### Request Body
+```json
+{
+  "template": "A {cyberpunk|steampunk|fantasy} {cat|dog|fox} with {golden|silver|ruby} eyes",
+  "start_index": 0,
+  "limit": 250,
+  "mode": "view"
+}
+```
+- `template` (string, required): Template prompt string.
+- `start_index` (int, default: 0): Zero-based starting index in the Cartesian combination space.
+- `limit` (int, default: 250): Number of combinations to return in this slice.
+- `mode` (string, optional, default: `"view"`): Execution mode.
+
+#### Response `200 OK`
+```json
+{
+  "total_combinations": 27,
+  "start_index": 0,
+  "limit": 250,
+  "count": 27,
+  "has_more": false,
+  "prompts": [
+    "A cyberpunk cat with golden eyes",
+    "A cyberpunk cat with silver eyes",
+    "A cyberpunk cat with ruby eyes"
+  ]
+}
+```
+
+---
+
+### `POST /api/v1/generate/matrix/sample`
+Draws a uniform random sample of permutations across arbitrary large combinatorial spaces using pseudo-random index generation without generating or holding full Cartesian products in memory.
+
+#### Request Body
+```json
+{
+  "template": "A {cyberpunk|steampunk|fantasy} {cat|dog|fox} with {golden|silver|ruby} eyes",
+  "count": 10,
+  "seed": 42
+}
+```
+- `template` (string, required): Template prompt string.
+- `count` (int, default: 10): Number of unique random combinations to sample.
+- `seed` (int, optional): Random seed for reproducible sampling.
+
+#### Response `200 OK`
+```json
+{
+  "total_combinations": 27,
+  "count": 10,
+  "seed": 42,
+  "indices": [3, 8, 12, 15, 17, 19, 21, 22, 24, 26],
+  "sampled_prompts": [
+    "A cyberpunk dog with golden eyes",
+    "A cyberpunk fox with ruby eyes",
+    "A steampunk cat with ruby eyes"
   ]
 }
 ```

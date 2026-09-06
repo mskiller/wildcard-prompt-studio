@@ -1,0 +1,7 @@
+sportswear, cycling_uniform, jersey, bike_jersey, biker_clothes{1::|1::, bodysuit, cameltoe}, sneakers
+sportswear, basketball_uniform, baseball_jersey, basketball_jersey, basketball_shorts, socks, sneakers
+sportswear, helmet, motorcycle_helmet, holding_unworn_helmet, racing_suit, bikesuit, bodysuit{1::|1::, cameltoe}, sneakers
+sportswear, baseball_uniform{1::|1::, baseball_helmet|1::, baseball_cap}, jersey{1::|1::, baseball_mitt|1::, baseball_bat, holding_baseball_bat}, buruma{1::|1::, cameltoe}, socks, sneakers
+sportswear, soccer_uniform{4::|1::, raimon}, jersey, shorts, socks, sneakers
+sportswear, tennis_uniform, shirt, skirt, socks, sneakers
+sportswear, volleyball_uniform, jersey, elbow_pads, knee_pads, buruma{1::|1::, cameltoe}, socks, sneakers

@@ -1,0 +1,52 @@
+fish
+shark
+dolphin
+whale
+octopus
+squid
+jellyfish
+seahorse
+sea turtle
+crab
+lobster
+shrimp
+starfish
+sea urchin
+clam
+oyster
+mussel
+coral
+sea anemone
+sea cucumber
+sea slug
+eel
+ray (e.g., stingray, manta ray)
+sea lion
+walrus
+seal
+manatee
+mermaid
+Jack Sparrow
+dugong
+sea dragon
+cuttlefish
+clownfish
+pufferfish
+angelfish
+lionfish
+moray eel
+mantis shrimp
+nudibranch
+horseshoe crab
+sea bream
+parrotfish
+grouper
+barracuda
+triggerfish
+clown triggerfish
+butterflyfish
+damselfish
+surgeonfish
+wrasse
+seagull
+pelican

@@ -1,0 +1,6 @@
+woven grass
+pelt
+fur
+zebra print {fur|pelt}
+tiger print {fur|pelt}
+leopard print {fur|pelt}

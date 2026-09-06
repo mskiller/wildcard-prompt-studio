@@ -151,11 +151,45 @@ Unified async provider management with failover support:
 
 ---
 
+### 2.11 Direct Indexing Engine & Factor Decomposition (`MatrixIndexingEngine`)
+- **Mathematical Space Formulation**: Models Cartesian combinations as a multi-dimensional space $S = C_1 \times C_2 \times \dots \times C_k$ where $|S| = \prod_{i=1}^k |C_i|$.
+- **Closed-Form Permutation Counting**: Computes total permutation spaces in $O(k)$ time where $k$ is the number of choice dimensions, eliminating the need to materialize combinations in memory.
+- **Mixed-Radix Coordinate Decomposition**:
+  - Defines coordinate stride weights $w_i = \prod_{j=i+1}^k |C_j|$ with $w_k = 1$.
+  - For any integer index $n \in [0, |S|-1]$, choice option $c_i = \lfloor \frac{n}{w_i} \rfloor \pmod{|C_i|}$.
+  - Computes any specific prompt combination in $O(k)$ time without generating prior permutations.
+- **Arbitrary Range Slicing & Sampling**:
+  - `slice(start_index, limit)`: Evaluates indices $[start, start+limit)$ on demand in sub-millisecond response times.
+  - `sample(count, seed)`: Generates pseudo-random unique index sets within $[0, |S|-1]$ and resolves them directly.
+
+---
+
+### 2.12 Discord Sweep Delivery & Reliability Pipeline (`app/api/routers/comfyui.py`)
+- **Multi-Source Config Resolution**: Dynamically reads webhook configuration with fallback priority:
+  1. Local ComfyUI custom node config file: `ComfyUI-SendToDiscord/config.ini`.
+  2. Server environment variable: `DISCORD_WEBHOOK_URL`.
+  3. User settings database value.
+- **Background Polling & Multi-Part Dispatch**:
+  - Background asynchronous task monitors ComfyUI WebSocket job completion.
+  - Dispatches rendered PNG image bytes alongside structured metadata (prompt text, seed, steps, sampler, scheduler, dimensions) as `multipart/form-data`.
+  - Implements exponential backoff retry logic for handling Discord rate limits (HTTP 429) and network transients.
+
+---
+
 ## 3. Frontend Architecture (`frontend/src/`)
 
 The frontend is a single-page React 18 application built with Vite:
 
 - **Monaco Code Editor (`MonacoPromptEditor.tsx`)**: Customized Monaco Editor instance supporting wildcard token highlighting, autocompletion, and live syntax validation.
+- **Wildcard Search Picker (`WildcardSearchPicker.tsx`)**:
+  - Reusable search dropdown supporting real-time fuzzy filtering, categorized taxonomy display, and query highlighting.
+  - Full keyboard accessibility (Arrow Up/Down navigation, Enter selection, Escape dismissal).
+  - Wheel event decoupling: intercepts mouse wheel events internally to enable smooth dropdown scrolling without propagating zoom or pan events to parent Visual AST canvases.
+  - Deployed in Visual AST Canvas nodes (`CanvasWildcardNode`), Node Inspector drawer, and Matrix Studio toolbar.
+- **Slice Navigator (`WildcardMatrixPanel.tsx`)**:
+  - High-performance pagination controls (50, 100, 250, 500 items/page).
+  - Direct index jump and pseudo-random sampling with reproducible seed.
+  - Flexible batch queue integration supporting range slice and sample dispatch modes to ComfyUI.
 - **State Management (`store/`)**: Powered by **Zustand** for lightweight, predictable reactive state handling:
   - `usePromptStore`: Holds active prompt text, prompt library, history, and diff buffers.
   - `useSettingsStore`: Stores theme selection (Cyberpunk, Dark, Light), i18n locale, and API host config.

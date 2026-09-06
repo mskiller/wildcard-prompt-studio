@@ -1,0 +1,53 @@
+lion
+tiger
+elephant
+giraffe
+cheetah
+zebra
+red panda
+pangolin
+jackalope
+leopard
+gorilla
+kangaroo
+polar bear
+grizzly bear
+panda
+koala
+wolf
+fox
+coyote
+rhinoceros
+hippopotamus
+crocodile
+alligator
+jaguar
+hyena
+wildebeest
+moose
+bison
+puma
+sloth
+chimpanzee
+meerkat
+sea lion
+otter
+beaver
+armadillo
+porcupine
+platypus
+bald eagle
+hawk
+vulture
+owl
+falcon
+dolphin
+whale
+shark
+octopus
+penguin
+sea turtle
+seal
+manatee
+jellyfish
+seahorse

@@ -31,6 +31,10 @@ Welcome to the **Wildcard Prompt Studio V2 User Guide**. This document provides 
 14. [Overhauled Gallery Studio & Roundtrip Production Flow](#14-overhauled-gallery-studio--roundtrip-production-flow)
 15. [Cross-Tab RAG Controls & Vision Integration](#15-cross-tab-rag-controls--vision-integration)
 16. [Matrix Studio Resolution & Permutation Controls](#16-matrix-studio-resolution--permutation-controls)
+17. [Universal Searchable Wildcard Picker](#17-universal-searchable-wildcard-picker)
+18. [Unlimited Matrix Permutations & Slice Navigator](#18-unlimited-matrix-permutations--slice-navigator)
+19. [ComfyUI Matrix Batch Queue Slicing](#19-comfyui-matrix-batch-queue-slicing)
+20. [Automated Discord Sweep Webhook Delivery](#20-automated-discord-sweep-webhook-delivery)
 
 ---
 
@@ -320,3 +324,73 @@ The **Wildcard Matrix Panel** provides systematic prompt sweep capabilities with
 - Built-in combinatorial safety limits prevent browser freezes and server out-of-memory errors on massive wildcard combinations.
 - Wildcard listings query with `include_content=false` by default, ensuring fast rendering and low latency even with thousands of wildcard files.
 - Clicking any wildcard in the sidebar Explorer automatically populates the Monaco Prompt Editor.
+
+---
+
+## 17. Universal Searchable Wildcard Picker
+
+The studio includes an interactive, accessible wildcard picker (`WildcardSearchPicker`) designed for rapid discovery and insertion across all creative workspaces.
+
+### Features
+- **Real-Time Fuzzy Search & Filtering**: Type any keyword to instantly filter thousands of wildcards with query term highlighting.
+- **Categorized View**: Groups wildcards by directory and semantic taxonomy (e.g. `characters/`, `clothing/`, `creatures/`, `locations/`, `styles/`).
+- **Keyboard-First Navigation**:
+  - `↑` / `↓` arrows to navigate entries.
+  - `Enter` to select and insert.
+  - `Esc` to dismiss the picker popup.
+- **Canvas Scroll Decoupling**: Captures mouse wheel events internally so scrolling through long lists never moves or zooms the underlying canvas.
+
+### Where to Use
+1. **Visual AST Canvas Nodes**: Click the search input in any `CanvasWildcardNode` to choose from available wildcards instead of typing paths manually.
+2. **Node Inspector Drawer**: Inspect and swap selected wildcard tokens with live preview.
+3. **Matrix Studio Toolbar**: Quickly select wildcards to assemble multi-dimensional Cartesian sweeps.
+
+---
+
+## 18. Unlimited Matrix Permutations & Slice Navigator
+
+The **Matrix Studio** features the `MatrixIndexingEngine`, which employs closed-form factor decomposition to handle arbitrarily large combinatorial spaces.
+
+### Closed-Form Direct Indexing
+- **Astronomical Combinations**: Computes exact permutation counts ($N = \prod |C_i|$) in $O(1)$ time with zero memory allocations, effortlessly supporting millions or billions of combinations without browser freezes or backend OOM crashes.
+- **O(1) Direct Lookup**: Retrieves the exact $n$-th combination directly using mixed-radix factor decomposition without generating or holding earlier permutations in memory.
+
+### Slice Navigator Controls
+- **Pagination Toolbar**:
+  - Browse combinations in manageable chunks (configurable to **50**, **100**, **250**, or **500** per page).
+  - Use `First`, `Previous`, `Next`, and `Last` buttons to traverse massive matrices.
+- **Jump to Index**: Type any combination number (e.g., `45,000`) into the index input to immediately jump to that permutation slice.
+- **Random Permutation Sampling**:
+  - Specify sample count $N$ (e.g., `20` random variations).
+  - Optional seed input ensures deterministic, reproducible sampling.
+- **Range Slice Selection**: Define explicit start offsets and limits to inspect specific sub-ranges.
+
+---
+
+## 19. ComfyUI Matrix Batch Queue Slicing
+
+When dispatching large prompt matrices to ComfyUI, you can selectively render sub-ranges or random samples rather than overwhelming your generation queue.
+
+### Dispatch Modes
+- **All Permutations**: Dispatches the entire generated combination set (subject to configured queue safety caps).
+- **Range Slice**: Specify a `Start Index` and `Count` (e.g., render indices `200` to `250`).
+- **Random Sample**: Dispatches $N$ uniformly sampled combinations using a reproducible random seed.
+- **Selected Permutations**: Manually select individual combinations via preview checkboxes.
+
+---
+
+## 20. Automated Discord Sweep Webhook Delivery
+
+Wildcard Prompt Studio can automatically notify your team and deliver generated images to a Discord channel as batch sweeps execute.
+
+### Multi-Source Configuration
+The backend automatically resolves the target Discord webhook URL using the following priority order:
+1. `ComfyUI-SendToDiscord/config.ini` in your ComfyUI custom nodes directory.
+2. `DISCORD_WEBHOOK_URL` environment variable.
+3. Webhook URL configured in the studio **Settings** panel.
+
+### Delivery Payload
+- **Full-Resolution Image**: Transmitted as `multipart/form-data` directly from ComfyUI disk output.
+- **Rich Prompt Embed / Message**: Includes the full prompt text, seed, steps, CFG scale, sampler, scheduler, dimensions, and model checkpoint.
+- **Fault-Tolerant Delivery**: Built-in exponential backoff retries handling Discord rate limits (HTTP 429) and network blips.
+

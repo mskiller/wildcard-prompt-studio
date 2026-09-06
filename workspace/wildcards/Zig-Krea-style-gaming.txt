@@ -1,0 +1,20 @@
+8-bit pixel art style, limited color palette, blocky pixelated sprites, retro NES-era aesthetic, crisp hard-edged pixels, nostalgic classic video game look
+16-bit pixel art style, detailed pixel shading, richer color palette than 8-bit, SNES/Genesis-era aesthetic, smooth dithered gradients, classic retro RPG sprite quality
+isometric pixel art style, precise angled perspective, detailed tile-based environment design, clean pixel shading, strategy/simulation game aesthetic, crisp architectural pixel detail
+low poly 3D render style, faceted geometric shapes, flat shaded surfaces, minimalist stylized environment, clean simple color palette, indie game aesthetic, crisp geometric lighting
+cel-shaded 3D render style, bold black outlines, flat toon shading, vibrant saturated colors, sharp light-to-shadow transitions, anime-inspired game aesthetic, clean graphic look
+voxel art style, blocky 3D cube-based construction, charming miniature diorama quality, soft ambient lighting, playful geometric detail, Minecraft-adjacent aesthetic
+photorealistic AAA video game render, high-fidelity detailed textures, dynamic cinematic lighting, physically-based rendering, sharp environmental detail, modern next-gen game engine quality
+stylized hand-painted game art, painterly textures with visible brushwork, warm fantasy color palette, World of Warcraft-inspired aesthetic, exaggerated proportions, whimsical charm
+soulslike dark fantasy game art style, grim atmospheric environment, muted desaturated color palette, intricate gothic armor design, oppressive dramatic lighting, punishing epic mood
+synthwave retro-futuristic game art style, neon pink and cyan gradients, glowing grid horizon lines, 80s retro-futurism, chrome and neon accents, nostalgic arcade aesthetic
+colorful cartoon platformer game art, bouncy exaggerated character design, bright saturated color palette, playful rounded shapes, clean bold outlines, family-friendly game aesthetic
+roguelike pixel art style, dark dungeon color palette, detailed tile-based sprite design, atmospheric torch-lit lighting, retro RPG dungeon aesthetic, moody procedural game art
+anime JRPG game art style, vibrant character design, detailed cel-shaded rendering, expressive stylized faces, dynamic battle poses, Japanese role-playing game aesthetic
+minimalist flat design game art, simple geometric shapes, clean bold flat colors, mobile puzzle game aesthetic, smooth rounded elements, modern minimalist illustration style
+cyberpunk video game concept art, neon-lit dystopian cityscape, detailed futuristic character design, dramatic atmospheric fog, high-tech gritty environment, cinematic game render quality
+claymation stop-motion game art style, textured clay-like surfaces, charming handcrafted imperfections, soft studio lighting, whimsical tactile aesthetic, playful character design
+watercolor painted indie game art, soft blended color washes, dreamy atmospheric environment, delicate hand-painted textures, whimsical storybook quality, gentle emotional tone
+grimdark fantasy strategy game art, gritty detailed miniature-inspired design, muted battle-worn color palette, dramatic epic composition, Warhammer-inspired aesthetic, richly textured armor and weapons
+sci-fi space opera game art style, sleek futuristic ship and armor design, dramatic starfield backdrop, cinematic dynamic lighting, richly detailed technological textures, epic space exploration mood
+classic arcade game art style, bright bold primary colors, simple geometric sprite design, high-contrast flat shading, nostalgic coin-op aesthetic, crisp clean retro composition

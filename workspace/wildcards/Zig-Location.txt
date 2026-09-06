@@ -1,0 +1,45 @@
+car_interior, vehicle_interior, seatbelt
+prison_cell, prison, in_cell, iron_bars, indoors
+on bed, silk bedsheet, bed ornament, bedroom
+outdoors, beach, palm tree, {sunset|midday|sunrise|fullmoon|night, night_sky}
+throne, indoor, throne room, red carpet, torchlight
+{Big Ben tower, London, England|eiffel tower, paris, France, street, gardens|sand, colosseum, Rome, Italy|Pyramid, Egypt, Desert, sphynx}, outdoors, sunrise, sun flare
+dark river, horror, night
+jungle pond
+desert oasis, palm tree
+desert island, beach, pond
+dark cave, pond, rocks
+indoors, livingroom, fireplace
+indoors, library, bookshelf, desk
+outdoors, graveyard, tombstone, candles, {sunset|midday|sunrise|fullmoon|night, night_sky}
+indoors, bedroom, bedsheet, windows, framed portrait
+indoors, bathroom, bathtube, sink, cabinet
+indoors, school, classroom, desk, chalkboard
+outdoors, jungle, vines, waterfall, pond, {sunset|midday|sunrise|fullmoon|night, night_sky}
+{outdoors|indoors}, farm, barn, haybale, woodfences, {sunset|midday|sunrise|fullmoon|night, night_sky}
+{outdoors|indoors}, Cyberpunk bar, pole bar, neonlit
+outdoors, rooftop, luxurious, city skyline, {sunset|midday|sunrise|fullmoon|night, night_sky}
+indoor, dirty floor, public toilet, toilet stall, sink, mirror
+outdoors, threehouse, swing, garden, {sunset|midday|sunrise|fullmoon|night, night_sky}
+indoors, movie theater, theater_seat, red curtain, big_screen
+outdoors, desert, cactus,{| rattlesnake,| scorpio,} {sunset|midday|sunrise|fullmoon|night, night_sky}
+outdoors, (beachfront villa:1.1), (infinity pool:1.1), sea, {sunset|midday|sunrise|fullmoon|night, night_sky}
+indoors, bar, (crowded tavern:1.2), beer, money
+outdoors, park, bench, fountain, {sunset|midday|sunrise|fullmoon|night, night_sky}
+outdoors, onsen, pond, japanese, {sunset|midday|sunrise|fullmoon|night, night_sky}
+indoors, shopping_center, cash_register, shop
+outdoors, sales platform, market, roman, antiquity, marble pillar, {sunset|midday|sunrise|fullmoon|night, night_sky}
+{outdoors|indoors}, onstage, (crowded concert:1.2), party, speaker, light_projector
+indoors, basement, neon_light, workshop, workbench, tools, boxes
+outdoors, (dark alley:1.1), back_alley, trashcan, (horror:1.2), {fullmoon|night, night_sky}
+indoors, (inside elevator:1.2), glass elevator, skyline, cityview, seashore
+outdoors, beach hut, wooden hut, {sunset|midday|sunrise|fullmoon|night, night_sky}
+outdoors, Victorian steampunk dockyard, {sunset|midday|sunrise|fullmoon|night, night_sky}
+cyberpunk, vaporwave, neon, vibes, vibrant, {indoors|outdoors, {sunset|midday|sunrise|fullmoon|night, night_sky}}
+Cherry blossom Tree, outdoors, {sunset|midday|sunrise|fullmoon|night, night_sky}
+locker room, indoors
+dark, gothic cathedral, towering arches, stained glass windows, shrouded shadows, indoors
+great hall, castle, outdoors, {sunset|midday|sunrise|fullmoon|night, night_sky}
+indoors, horror, Dungeon, torchlight
+outdoors, junkyard, wreckage, Junk, pile_of_trash, {sunset|midday|sunrise|fullmoon|night, night_sky}
+{black|white} background

@@ -1,0 +1,25 @@
+barn
+silo
+farmhouse
+stable
+chicken coop
+dairy barn
+granary
+machine shed
+hog pen
+sheepfold
+cattle barn
+milking parlor
+horse barn
+greenhouse
+toolshed
+hayloft
+corncrib
+smokehouse
+root cellar
+pump house
+tractor shed
+apiary
+sheep barn
+turkey house
+duck house

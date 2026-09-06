@@ -1,0 +1,25 @@
+emperor penguin
+adelie penguin
+gentoo penguin
+chinstrap penguin
+king penguin
+weddell seal
+leopard seal
+crabeater seal
+ross seal
+elephant seal
+orca
+minke whale
+blue whale
+humpback whale
+albatross
+petrel
+skua
+snow petrel
+antarctic shag
+south polar skua
+sheathbill
+antarctic silverfish
+icefish
+antarctic toothfish
+antarctic krill

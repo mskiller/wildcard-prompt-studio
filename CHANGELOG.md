@@ -4,6 +4,52 @@ All notable changes to Wildcard Prompt Studio V2 are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-09-06
+
+### Added
+
+#### Unlimited Matrix Permutations & Slice Navigator Engine
+- **Closed-Form Direct Indexing Engine (`MatrixIndexingEngine`)**:
+  - Factor decomposition and coordinate mapping algorithm calculating exact Cartesian permutation spaces ($N = \prod |C_i|$) in $O(1)$ time with zero memory allocation.
+  - Supports astronomical permutation spaces (hundreds of millions / billions) without out-of-memory crashes or Cartesian freezing.
+  - Direct index mapping (`get_permutation_at_index(n)`): retrieves the exact $n$-th permutation in $O(1)$ time without materializing earlier combinations.
+- **Matrix Slice & Random Sample Endpoints**:
+  - `POST /api/v1/generate/matrix/slice`: On-demand slice pagination (`start_index`, `limit`, default 250) returning sub-ranges of permutations in milliseconds.
+  - `POST /api/v1/generate/matrix/sample`: Uniform pseudo-random sampling (`count`, `seed`) across arbitrary permutation spaces.
+  - Execution mode support (`view` mode for instant UI inspection vs `generate` mode).
+- **Matrix Studio Slice Navigator (Frontend)**:
+  - Full pagination controls with configurable page size (50, 100, 250, 500).
+  - Direct Index Jumping input to jump to any arbitrary permutation slice.
+  - "Sample Random N" permutation picker with reproducible seed configuration.
+  - Formatted permutation count badges (e.g. `10,485,760 combinations`).
+  - High-performance slice rendering with non-blocking preview.
+- **ComfyUI Matrix Batch Queue Slicing**:
+  - Range Slice and Random Sample dispatch modes integrated into the ComfyUI batch queue modal.
+  - Allows dispatching targeted slices (e.g. combinations 100–250) or random sample subsets (e.g. 50 random samples) directly to ComfyUI render workflows.
+
+#### Searchable Wildcard Picker Component (`WildcardSearchPicker`)
+- **Universal Searchable Dropdown**:
+  - Reusable component with instant search filtering, category groupings, and query match highlighting.
+  - Full keyboard accessibility: Arrow Up/Down navigation, Enter to select, Escape to close.
+  - Scroll decoupling: prevents canvas panning/zooming when scrolling through wildcard entries on visual graph canvases.
+- **Studio Integrations**:
+  - **Visual AST Canvas (`CanvasWildcardNode`)**: Replaced raw text and native datalists with the interactive searchable picker.
+  - **Canvas Node Inspector**: Easily search and swap wildcard references with live preview.
+  - **Matrix Studio Toolbar**: Fast wildcard insertion and selection for sweep combinations.
+
+#### Discord Sweep Webhook Delivery & Reliability
+- **Automatic Config Resolution**: Automatically discovers Discord webhook URLs from ComfyUI custom node configs (`ComfyUI-SendToDiscord/config.ini`), environment variables (`DISCORD_WEBHOOK_URL`), or application settings.
+- **Reliable Dispatch Pipeline**: Dispatches rendered PNG images as `multipart/form-data` with prompt text, seed, steps, sampler, resolution, and generation metadata directly to Discord channels upon sweep completion.
+- **Built-in Retries**: Resilient error handling with exponential backoff on HTTP 429 rate limits and 5xx errors.
+
+#### Expanded Wildcard Ecosystem
+- **Creature Taxonomies**: Added Orc Soldier, Phoenix, Robot, Skeleton Soldier, Snake, Spider, Steampunk Robot, Unicorn, Werewolf, and Zombie wildcard suites.
+- **Comprehensive Animal Collections**: Added East Asian, European, North American, South American, South Asian animals, sea creatures, wildcats, wilddogs, and birds.
+- **Fashion & Wardrobe Collections**: Added extensive Grok clothing datasets (Gothic Victorian, Cyberpunk armor, Dark Fantasy, Cheerleader, Lingerie, Magical Girl, etc.).
+- **Wallpaper & Scene Templates**: Added Krea 2 wallpaper, SFW/NSFW templates, and scene datasets.
+
+---
+
 ## [2.2.0] - 2026-09-06
 
 ### Added

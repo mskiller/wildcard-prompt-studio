@@ -1,0 +1,100 @@
+european red deer
+european roe deer
+wild boar
+european brown bear
+eurasian wolf
+eurasian lynx
+european badger
+european otter
+european pine marten
+european polecat
+european hare
+european red squirrel
+european beaver
+european bison (wisent)
+european mouflon
+alpine ibex
+chamois
+european mink
+european wildcat
+iberian lynx
+iberian wolf
+iberian red deer
+corsican red deer
+sardinian mouflon
+algarvian wild goat
+iberian ibex (spanish ibex)
+golden jackal
+european otter
+european mink
+european polecat
+stoat (ermine)
+weasel
+least weasel
+european hamster
+european mole
+european water vole
+edible dormouse
+european garden dormouse
+european hedgehog
+european bat species (various)
+european adder (common viper)
+european grass snake
+european smooth snake
+european sand lizard
+european pond turtle
+european green lizard
+european wall lizard
+european slowworm
+european fire salamander
+european common frog
+european tree frog
+european natterjack toad
+european common toad
+european common newt
+european great crested newt
+european fire-bellied toad
+european yellow-bellied toad
+european spadefoot toad
+european edible frog
+european painted frog
+european agile frog
+european smooth newt
+european green toad
+european marbled newt
+european parsley frog
+european common lizard
+european wall lizard
+european sand lizard
+european adder
+european green lizard
+european slowworm
+european grass snake
+european common swift
+european robin
+european blackbird
+european blue tit
+european great tit
+european house sparrow
+european goldfinch
+european chaffinch
+european greenfinch
+european jay
+european magpie
+european crow
+european raven
+european white stork
+european crane (common crane)
+european heron species (various)
+european swan species (various)
+european duck species (various)
+european eagle species (various)
+european owl species (various)
+european falcon species (various)
+european goshawk
+european sparrowhawk
+european kestrel
+european honey buzzard
+european golden eagle
+european buzzard
+european osprey
