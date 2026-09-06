@@ -138,7 +138,7 @@ class MatrixEngine:
         total_count = self.ast_engine.count_permutations(ast, expand_wildcards=expand_wildcards)
 
         safe_offset = max(0, offset)
-        safe_limit = max(0, limit)
+        safe_limit = max(0, min(limit, 2000))
         end_idx = min(safe_offset + safe_limit, total_count)
 
         items = []
@@ -162,10 +162,12 @@ class MatrixEngine:
         ast = self.ast_engine.parse(prompt)
         total_count = self.ast_engine.count_permutations(ast, expand_wildcards=expand_wildcards)
 
-        safe_sample_size = max(0, sample_size)
+        safe_sample_size = max(0, min(sample_size, 2000))
         if total_count == 0 or safe_sample_size == 0:
             return {
                 "total_count": total_count,
+                "offset": 0,
+                "limit": safe_sample_size,
                 "sample_size": safe_sample_size,
                 "items": [],
                 "is_sample": True
@@ -185,8 +187,34 @@ class MatrixEngine:
 
         return {
             "total_count": total_count,
+            "offset": 0,
+            "limit": safe_sample_size,
             "sample_size": safe_sample_size,
             "items": items,
             "is_sample": True
         }
+
+    def get_matrix_indices(self, prompt: str, indices: List[int], expand_wildcards: bool = True) -> Dict[str, Any]:
+        """Retrieves permutations for specific 0-based indices."""
+        ast = self.ast_engine.parse(prompt)
+        total_count = self.ast_engine.count_permutations(ast, expand_wildcards=expand_wildcards)
+
+        clamped_indices = indices[:2000] if len(indices) > 2000 else indices
+        items = []
+        for idx in clamped_indices:
+            if 0 <= idx < total_count:
+                prompt_str = self.ast_engine.get_permutation_at_index(ast, idx, expand_wildcards=expand_wildcards)
+                items.append({
+                    "index": idx + 1,
+                    "prompt": prompt_str
+                })
+
+        return {
+            "total_count": total_count,
+            "offset": 0,
+            "limit": len(clamped_indices),
+            "items": items,
+            "is_sample": False
+        }
+
 

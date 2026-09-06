@@ -25,11 +25,37 @@ class SubmitRequest(BaseModel):
     workflow: Dict[str, Any]
     comfyui_url: Optional[str] = None
 
-class MatrixExecuteRequest(BaseModel):
+class MatrixPermutationItem(BaseModel):
+    index: int
     prompt: str
+
+class MatrixSliceRequest(BaseModel):
+    prompt: str
+    offset: Optional[int] = 0
+    limit: Optional[int] = 50
+    expand_wildcards: Optional[bool] = True
+    sample_size: Optional[int] = None
+    seed: Optional[int] = None
+    indices: Optional[List[int]] = None
+
+class MatrixSliceResponse(BaseModel):
+    total_count: int
+    offset: int = 0
+    limit: int = 0
+    is_sample: bool = False
+    items: List[MatrixPermutationItem]
+
+class MatrixExecuteRequest(BaseModel):
+    prompt: Optional[str] = ""
     max_depth: Optional[int] = 10
     limit: Optional[int] = None
     expand_wildcards: Optional[bool] = True
+    mode: Optional[str] = "view"
+    offset: Optional[int] = 0
+    sample_size: Optional[int] = None
+    seed: Optional[int] = None
+    indices: Optional[List[int]] = None
+    prompts: Optional[List[str]] = None
 
 class MatrixExecuteResponse(BaseModel):
     total_generated: int
@@ -61,6 +87,45 @@ async def generate_matrix(
         # Return empty list or fallback to the prompt string on syntax error
         return [request.prompt] if request.prompt else []
 
+@router.post("/matrix/slice", response_model=MatrixSliceResponse)
+async def get_matrix_slice(
+    request: MatrixSliceRequest,
+    matrix_engine: MatrixEngine = Depends(get_matrix_engine)
+):
+    try:
+        expand_wc = request.expand_wildcards if request.expand_wildcards is not None else True
+        if request.indices is not None:
+            data = matrix_engine.get_matrix_indices(
+                request.prompt,
+                indices=request.indices,
+                expand_wildcards=expand_wc
+            )
+        elif request.sample_size is not None:
+            data = matrix_engine.get_matrix_sample(
+                request.prompt,
+                sample_size=request.sample_size,
+                seed=request.seed,
+                expand_wildcards=expand_wc
+            )
+        else:
+            offset = request.offset if request.offset is not None else 0
+            limit = request.limit if request.limit is not None else 50
+            data = matrix_engine.get_matrix_slice(
+                request.prompt,
+                offset=offset,
+                limit=limit,
+                expand_wildcards=expand_wc
+            )
+        return MatrixSliceResponse(**data)
+    except Exception as e:
+        return MatrixSliceResponse(
+            total_count=0,
+            offset=0,
+            limit=0,
+            is_sample=False,
+            items=[]
+        )
+
 @router.post("/matrix/execute", response_model=MatrixExecuteResponse)
 async def execute_matrix_sweep(
     request: MatrixExecuteRequest,
@@ -68,15 +133,49 @@ async def execute_matrix_sweep(
 ):
     try:
         expand_wc = request.expand_wildcards if request.expand_wildcards is not None else True
-        limit = request.limit
-        prompts = matrix_engine.generate_matrix(
-            request.prompt,
-            max_depth=request.max_depth or 10,
-            expand_wildcards=expand_wc,
-            max_limit=limit
-        )
-        if limit and limit > 0 and len(prompts) > limit:
-            prompts = prompts[:limit]
+        prompts: List[str] = []
+
+        if request.prompts is not None and len(request.prompts) > 0:
+            prompts = list(request.prompts)
+            if request.limit and request.limit > 0 and len(prompts) > request.limit:
+                prompts = prompts[:request.limit]
+        elif request.mode == "sample":
+            sample_size = request.sample_size if request.sample_size is not None else (request.limit or 25)
+            data = matrix_engine.get_matrix_sample(
+                request.prompt,
+                sample_size=sample_size,
+                seed=request.seed,
+                expand_wildcards=expand_wc
+            )
+            prompts = [item["prompt"] for item in data.get("items", [])]
+        elif request.mode == "range":
+            offset = request.offset if request.offset is not None else 0
+            limit = request.limit if request.limit is not None else 50
+            data = matrix_engine.get_matrix_slice(
+                request.prompt,
+                offset=offset,
+                limit=limit,
+                expand_wildcards=expand_wc
+            )
+            prompts = [item["prompt"] for item in data.get("items", [])]
+        elif request.mode == "indices" and request.indices is not None:
+            data = matrix_engine.get_matrix_indices(
+                request.prompt,
+                indices=request.indices,
+                expand_wildcards=expand_wc
+            )
+            prompts = [item["prompt"] for item in data.get("items", [])]
+        else:
+            limit = request.limit
+            prompts = matrix_engine.generate_matrix(
+                request.prompt,
+                max_depth=request.max_depth or 10,
+                expand_wildcards=expand_wc,
+                max_limit=limit
+            )
+            if limit and limit > 0 and len(prompts) > limit:
+                prompts = prompts[:limit]
+
         return MatrixExecuteResponse(
             total_generated=len(prompts),
             prompts=prompts,
