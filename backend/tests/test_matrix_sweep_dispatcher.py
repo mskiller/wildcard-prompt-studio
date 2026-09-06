@@ -179,3 +179,41 @@ def test_sync_recent_outputs():
         assert item["cfg_scale"] == 1.0
 
 
+def test_execute_sweep_resolution_parameters():
+    with patch("app.api.routers.comfyui.connector.queue_prompt", new_callable=AsyncMock) as mock_queue, \
+         patch("app.api.routers.comfyui.connector.get_object_info", new_callable=AsyncMock) as mock_obj:
+        mock_queue.return_value = {"prompt_id": "res-sweep", "number": 101}
+        mock_obj.return_value = {
+            "UNETLoader": {"input": {"required": {"unet_name": [["Mklan_Kea2_V1.safetensors"]]}}},
+            "CLIPLoader": {"input": {"required": {"clip_name": [["qwen3-vl-4b-heretic.safetensors"]]}}},
+            "VAELoader": {"input": {"required": {"vae_name": [["qwen_image_vae.safetensors"]]}}}
+        }
+
+        # 1. Verify default resolution is 896x1152
+        resp_def = client.post(
+            "/api/v1/comfyui/execute-sweep",
+            json={"prompts": ["default resolution prompt"]}
+        )
+        assert resp_def.status_code == 200
+        wf_def = mock_queue.call_args[0][0]
+        assert wf_def["6"]["class_type"] == "EmptyLatentImage"
+        assert wf_def["6"]["inputs"]["width"] == 896
+        assert wf_def["6"]["inputs"]["height"] == 1152
+
+        # 2. Verify custom resolution (e.g. 1024x1024)
+        mock_queue.reset_mock()
+        resp_custom = client.post(
+            "/api/v1/comfyui/execute-sweep",
+            json={
+                "prompts": ["custom resolution prompt"],
+                "width": 1024,
+                "height": 1024
+            }
+        )
+        assert resp_custom.status_code == 200
+        wf_custom = mock_queue.call_args[0][0]
+        assert wf_custom["6"]["inputs"]["width"] == 1024
+        assert wf_custom["6"]["inputs"]["height"] == 1024
+
+
+

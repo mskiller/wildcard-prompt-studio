@@ -900,6 +900,8 @@ export interface SweepExecuteOptions {
   model?: string;
   clip?: string;
   vae?: string;
+  width?: number;
+  height?: number;
   sendToDiscord?: boolean;
   discordWebhookUrl?: string;
 }
@@ -919,6 +921,8 @@ export async function executeComfyUISweep(options: SweepExecuteOptions): Promise
     model: options.model ?? 'Mklan_Kea2_V1.safetensors',
     clip: options.clip ?? 'qwen3-vl-4b-heretic.safetensors',
     vae: options.vae ?? 'qwen_image_vae.safetensors',
+    width: options.width ?? 896,
+    height: options.height ?? 1152,
     send_to_discord: options.sendToDiscord ?? false,
     discord_webhook_url: options.discordWebhookUrl ?? '',
   };

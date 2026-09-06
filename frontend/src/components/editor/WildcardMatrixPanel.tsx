@@ -194,6 +194,59 @@ export const WildcardMatrixPanel: React.FC = () => {
   const [expandWildcards, setExpandWildcards] = useState<boolean>(true);
   const [sendToDiscord, setSendToDiscord] = useState<boolean>(false);
 
+  // Resolution controls (Default: 896x1152 as requested)
+  const [width, setWidth] = useState<number>(896);
+  const [height, setHeight] = useState<number>(1152);
+
+  // Queue limits & manual permutation selection
+  const [maxPromptsToQueue, setMaxPromptsToQueue] = useState<number>(10);
+  const [queueAll, setQueueAll] = useState<boolean>(false);
+  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
+
+  const handleToggleSelectPrompt = (idx: number) => {
+    setSelectedIndices((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) {
+        next.delete(idx);
+      } else {
+        next.add(idx);
+      }
+      return next;
+    });
+  };
+
+  const handleSelectFirstN = (n: number) => {
+    const count = Math.min(n, combinations.length);
+    const newSet = new Set<number>();
+    for (let i = 0; i < count; i++) {
+      newSet.add(i);
+    }
+    setSelectedIndices(newSet);
+  };
+
+  const handleSelectRandomN = (n: number) => {
+    const count = Math.min(n, combinations.length);
+    const indices = Array.from({ length: combinations.length }, (_, i) => i);
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    setSelectedIndices(new Set(indices.slice(0, count)));
+  };
+
+  const handleSelectAllShown = () => {
+    const count = Math.min(visibleLimit, combinations.length);
+    const newSet = new Set<number>();
+    for (let i = 0; i < count; i++) {
+      newSet.add(i);
+    }
+    setSelectedIndices(newSet);
+  };
+
+  const handleClearSelection = () => {
+    setSelectedIndices(new Set());
+  };
+
   // Live ComfyUI Availabilities
   const [comfyOptions, setComfyOptions] = useState<GenerationOptionsData>({
     models: ['Mklan_Kea2_V1.safetensors', 'Mklan_Krea28v1.safetensors'],
@@ -362,11 +415,34 @@ export const WildcardMatrixPanel: React.FC = () => {
       setStatus('No permutations available to queue. Preview or edit template first.');
       return;
     }
+
+    let promptsToSend: string[];
+    let queueModeDesc: string;
+
+    if (selectedIndices.size > 0) {
+      promptsToSend = Array.from(selectedIndices)
+        .sort((a, b) => a - b)
+        .map((idx) => combinations[idx])
+        .filter(Boolean);
+      queueModeDesc = `${promptsToSend.length} manually selected`;
+    } else if (queueAll) {
+      promptsToSend = combinations;
+      queueModeDesc = `all ${combinations.length}`;
+    } else {
+      promptsToSend = combinations.slice(0, maxPromptsToQueue);
+      queueModeDesc = `${promptsToSend.length} (of ${combinations.length})`;
+    }
+
+    if (promptsToSend.length === 0) {
+      setStatus('No prompts selected to queue.');
+      return;
+    }
+
     setLoading(true);
-    setStatus(`Queueing all ${combinations.length} batch sweep jobs in ComfyUI...`);
+    setStatus(`Queueing ${queueModeDesc} batch sweep jobs in ComfyUI (${width}x${height})...`);
     try {
       const res = await executeComfyUISweep({
-        prompts: combinations,
+        prompts: promptsToSend,
         seedStrategy,
         baseSeed,
         steps,
@@ -376,10 +452,12 @@ export const WildcardMatrixPanel: React.FC = () => {
         model,
         clip,
         vae,
+        width,
+        height,
         sendToDiscord,
         discordWebhookUrl: sendToDiscord ? discordWebhookUrl : undefined,
       });
-      setStatus(`Successfully queued ${res.queued_count} batch sweep jobs in ComfyUI! Generating...`);
+      setStatus(`Successfully queued ${res.queued_count} batch sweep jobs in ComfyUI (${width}x${height})! Generating...`);
 
       // Poll periodically to stream completed images into the results space
       let pollCount = 0;
@@ -726,6 +804,102 @@ export const WildcardMatrixPanel: React.FC = () => {
           />
         </div>
 
+        {/* Resolution Preset */}
+        <div className="batch-field">
+          <label>Resolution</label>
+          <select
+            className="batch-input batch-select"
+            value={
+              ['896x1152', '1024x1024', '1152x896', '832x1216', '1216x832', '768x1024', '1024x768'].includes(`${width}x${height}`)
+                ? `${width}x${height}`
+                : 'custom'
+            }
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val && val !== 'custom') {
+                const [w, h] = val.split('x').map(Number);
+                setWidth(w);
+                setHeight(h);
+              }
+            }}
+            title="Choose aspect ratio & resolution preset"
+          >
+            <option value="896x1152">896 × 1152 (Default Portrait)</option>
+            <option value="1024x1024">1024 × 1024 (Square 1:1)</option>
+            <option value="1152x896">1152 × 896 (Landscape 9:7)</option>
+            <option value="832x1216">832 × 1216 (Portrait 2:3)</option>
+            <option value="1216x832">1216 × 832 (Landscape 3:2)</option>
+            <option value="768x1024">768 × 1024 (Portrait 3:4)</option>
+            <option value="1024x768">1024 × 768 (Landscape 4:3)</option>
+            <option value="custom">Custom ({width} × {height})</option>
+          </select>
+        </div>
+
+        {/* Width Case */}
+        <div className="batch-field">
+          <label>Width</label>
+          <input
+            type="number"
+            className="batch-input number-small"
+            min={64}
+            max={4096}
+            step={64}
+            value={width}
+            onChange={(e) => setWidth(Math.max(64, parseInt(e.target.value, 10) || 896))}
+            title="Image width in pixels (e.g. 896)"
+            aria-label="Image width"
+          />
+        </div>
+
+        {/* Height Case */}
+        <div className="batch-field">
+          <label>Height</label>
+          <input
+            type="number"
+            className="batch-input number-small"
+            min={64}
+            max={4096}
+            step={64}
+            value={height}
+            onChange={(e) => setHeight(Math.max(64, parseInt(e.target.value, 10) || 1152))}
+            title="Image height in pixels (e.g. 1152)"
+            aria-label="Image height"
+          />
+        </div>
+
+        {/* Prompts to Queue Limit */}
+        <div className="batch-field">
+          <label>Queue Limit</label>
+          <div className="batch-queue-limit-container">
+            <input
+              type="number"
+              className="batch-input number-small"
+              min={1}
+              max={combinations.length || 10000}
+              value={queueAll ? (combinations.length || 0) : maxPromptsToQueue}
+              disabled={queueAll || selectedIndices.size > 0}
+              onChange={(e) => setMaxPromptsToQueue(Math.max(1, parseInt(e.target.value, 10) || 1))}
+              title={
+                selectedIndices.size > 0
+                  ? `${selectedIndices.size} selected manually in grid below`
+                  : 'Number of prompts to send to queue'
+              }
+              aria-label="Prompts to queue"
+            />
+            <button
+              type="button"
+              className={`batch-toggle-btn ${queueAll ? 'active' : ''}`}
+              onClick={() => {
+                setQueueAll(!queueAll);
+                if (selectedIndices.size > 0) setSelectedIndices(new Set());
+              }}
+              title={queueAll ? 'Switch to limited queue count' : `Queue all ${combinations.length} permutations`}
+            >
+              {queueAll ? 'All' : 'Limit'}
+            </button>
+          </div>
+        </div>
+
         {/* Expand Wildcards */}
         <div className="batch-field batch-checkbox-field">
           <label className="expand-wildcards-toggle-sm" title="Expand each wildcard into all its possibilities">
@@ -758,8 +932,20 @@ export const WildcardMatrixPanel: React.FC = () => {
           className="matrix-btn success"
           onClick={handleExecuteBatchSweep}
           disabled={loading || combinations.length === 0}
+          title={
+            selectedIndices.size > 0
+              ? `Queue ${selectedIndices.size} selected variants at ${width}x${height}`
+              : queueAll
+              ? `Queue all ${combinations.length} variants at ${width}x${height}`
+              : `Queue first ${Math.min(maxPromptsToQueue, combinations.length)} of ${combinations.length} variants at ${width}x${height}`
+          }
         >
-          <Play size={14} /> Queue Batch Sweep ({combinations.length} Variants)
+          <Play size={14} />{' '}
+          {selectedIndices.size > 0
+            ? `Queue ${selectedIndices.size} Selected (${width}×${height})`
+            : queueAll
+            ? `Queue All (${combinations.length}) (${width}×${height})`
+            : `Queue ${Math.min(maxPromptsToQueue, combinations.length)} of ${combinations.length} (${width}×${height})`}
         </button>
       </div>
     </div>
@@ -780,15 +966,81 @@ export const WildcardMatrixPanel: React.FC = () => {
 
     return (
       <div className="matrix-grid-container">
+        {/* Permutation Selection Bar */}
+        <div className="matrix-selection-bar">
+          <div className="selection-info">
+            <span className="selection-badge">
+              Selected: <strong>{selectedIndices.size}</strong> / {combinations.length}
+            </span>
+            {selectedIndices.size > 0 && (
+              <span className="selection-hint">
+                (Batch sweep will queue only these {selectedIndices.size} selected variants)
+              </span>
+            )}
+          </div>
+          <div className="selection-btn-group">
+            <button
+              type="button"
+              className="selection-btn"
+              onClick={() => handleSelectFirstN(maxPromptsToQueue)}
+              title={`Select first ${maxPromptsToQueue} permutations`}
+            >
+              Select First {maxPromptsToQueue}
+            </button>
+            <button
+              type="button"
+              className="selection-btn"
+              onClick={() => handleSelectRandomN(maxPromptsToQueue)}
+              title={`Randomly select ${maxPromptsToQueue} permutations`}
+            >
+              Random {maxPromptsToQueue}
+            </button>
+            <button
+              type="button"
+              className="selection-btn"
+              onClick={handleSelectAllShown}
+              title={`Select all currently visible (${displayedCombos.length}) permutations`}
+            >
+              Select Visible ({displayedCombos.length})
+            </button>
+            {selectedIndices.size > 0 && (
+              <button
+                type="button"
+                className="selection-btn clear"
+                onClick={handleClearSelection}
+                title="Deselect all permutations"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="matrix-grid">
           {displayedCombos.map((variantPrompt, idx) => {
             const score = getVariationTokenScore(variantPrompt);
             const isCopied = copiedIdx === idx;
+            const isSelected = selectedIndices.has(idx);
             return (
-              <div key={idx} className="matrix-card">
+              <div
+                key={idx}
+                className={`matrix-card ${isSelected ? 'is-selected' : ''}`}
+                onClick={() => handleToggleSelectPrompt(idx)}
+                title="Click card or checkbox to select for queue"
+              >
                 <div className="matrix-card-header">
-                  <span className="matrix-badge">Variation #{idx + 1}</span>
-                  <div className="card-header-actions">
+                  <div className="card-header-left" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      className="matrix-card-checkbox"
+                      checked={isSelected}
+                      onChange={() => handleToggleSelectPrompt(idx)}
+                      title={`Select variation #${idx + 1}`}
+                      aria-label={`Select variation #${idx + 1}`}
+                    />
+                    <span className="matrix-badge">Variation #{idx + 1}</span>
+                  </div>
+                  <div className="card-header-actions" onClick={(e) => e.stopPropagation()}>
                     <span className={`heatmap-pill ${score.heatClass}`}>
                       <Flame size={11} /> {score.count} tokens
                     </span>

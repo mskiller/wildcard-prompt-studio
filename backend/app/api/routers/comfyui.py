@@ -199,7 +199,9 @@ def build_default_krea_sweep_workflow(
     cfg: float,
     seed: int,
     prompt_str: str,
-    is_unet: bool = True
+    is_unet: bool = True,
+    width: int = 896,
+    height: int = 1152
 ) -> Dict[str, Any]:
     wf: Dict[str, Any] = {}
     if is_unet:
@@ -249,8 +251,8 @@ def build_default_krea_sweep_workflow(
     wf["6"] = {
         "class_type": "EmptyLatentImage",
         "inputs": {
-            "width": 1024,
-            "height": 1024,
+            "width": width,
+            "height": height,
             "batch_size": 1
         }
     }
@@ -301,6 +303,8 @@ class SweepExecutionRequest(BaseModel):
     model: Optional[str] = "Mklan_Kea2_V1.safetensors"
     clip: Optional[str] = "qwen3-vl-4b-heretic.safetensors"
     vae: Optional[str] = "qwen_image_vae.safetensors"
+    width: Optional[int] = 896
+    height: Optional[int] = 1152
     send_to_discord: Optional[bool] = False
     discord_webhook_url: Optional[str] = None
 
@@ -369,6 +373,15 @@ async def execute_sweep(req: SweepExecutionRequest, background_tasks: Background
                             inputs["sampler_name"] = req.sampler_name
                         if req.scheduler is not None:
                             inputs["scheduler"] = req.scheduler
+                # Update EmptyLatentImage width/height if present in custom workflow
+                if req.width is not None or req.height is not None:
+                    for n_id, n_data in wf_copy.items():
+                        if isinstance(n_data, dict) and n_data.get("class_type") == "EmptyLatentImage":
+                            if "inputs" in n_data and isinstance(n_data["inputs"], dict):
+                                if req.width is not None:
+                                    n_data["inputs"]["width"] = req.width
+                                if req.height is not None:
+                                    n_data["inputs"]["height"] = req.height
             else:
                 wf_copy = build_default_krea_sweep_workflow(
                     model_name=resolved_model,
@@ -380,7 +393,9 @@ async def execute_sweep(req: SweepExecutionRequest, background_tasks: Background
                     cfg=req.cfg if req.cfg is not None else 1.0,
                     seed=seed,
                     prompt_str=str(prompt_str),
-                    is_unet=is_unet
+                    is_unet=is_unet,
+                    width=req.width if req.width is not None else 896,
+                    height=req.height if req.height is not None else 1152
                 )
 
             res = await connector.queue_prompt(wf_copy, base_url=req.base_url, client_id=req.client_id)
