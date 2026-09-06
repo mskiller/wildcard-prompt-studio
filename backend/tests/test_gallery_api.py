@@ -4,6 +4,7 @@ from main import app
 from app.database import SessionLocal
 from app.models.image import Image
 from app.models.prompt import Prompt
+from app.models.knowledge import KnowledgeDocument
 
 client = TestClient(app)
 
@@ -84,6 +85,7 @@ def test_gallery_batch_actions_and_aesthetic_scoring():
     finally:
         db.query(Image).filter(Image.filename.in_(["batch_test_1.png", "batch_test_2.png"])).delete()
         db.query(Prompt).filter(Prompt.name.in_(["Batch 1", "Batch 2"])).delete()
+        db.query(KnowledgeDocument).filter(KnowledgeDocument.category == "gallery_vault").delete()
         db.commit()
         db.close()
 

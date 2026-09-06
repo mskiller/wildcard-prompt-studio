@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy import or_
-from typing import List, Optional
+import logging
 import os
+from typing import List, Optional
 import aiofiles
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel
+from sqlalchemy import or_
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session, contains_eager, joinedload
 from app.models.image import Image
 from app.models.prompt import Prompt
 from app.schemas.image import (
@@ -21,6 +22,7 @@ from app.services.comfyui_connector import ComfyUIConnector
 from app.services.aesthetic_scorer import score_aesthetic_prompt
 from app.services.unified_rag import unified_rag_service
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 class GalleryItemResponse(ImageResponse):
@@ -65,7 +67,8 @@ def get_gallery(
     sort_by: str = "newest",
     db: Session = Depends(get_db)
 ):
-    query = db.query(Image).outerjoin(Prompt, Image.prompt_id == Prompt.id).options(joinedload(Image.prompt))
+    """Retrieve gallery images with search, filtering by sampler/favorites/ratings, and custom sorting."""
+    query = db.query(Image).outerjoin(Prompt, Image.prompt_id == Prompt.id).options(contains_eager(Image.prompt))
 
     if search:
         search_pattern = f"%{search}%"
@@ -161,19 +164,18 @@ async def create_image(
 
 @router.post("/batch/delete")
 def batch_delete_images(payload: BatchDeleteRequest, db: Session = Depends(get_db)):
+    """Delete multiple images and their local cached files safely."""
     if not payload.image_ids:
         return {"status": "deleted", "deleted_count": 0}
 
     images = db.query(Image).filter(Image.id.in_(payload.image_ids)).all()
     deleted_count = 0
+    files_to_delete = []
+
     for img in images:
         if img.filename:
-            file_path = os.path.join(STATIC_IMAGES_DIR, img.filename)
-            if os.path.exists(file_path):
-                try:
-                    os.remove(file_path)
-                except Exception as e:
-                    print(f"Failed to remove static file {file_path}: {e}")
+            safe_filename = os.path.basename(img.filename)
+            files_to_delete.append(os.path.join(STATIC_IMAGES_DIR, safe_filename))
         db.delete(img)
         deleted_count += 1
 
@@ -183,10 +185,19 @@ def batch_delete_images(payload: BatchDeleteRequest, db: Session = Depends(get_d
         db.rollback()
         raise HTTPException(status_code=400, detail="Cannot delete because of related entities")
 
+    # Unlink local cached files after database commit succeeds
+    for file_path in files_to_delete:
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except Exception as e:
+                logger.warning(f"Failed to remove static file {file_path}: {e}")
+
     return {"status": "deleted", "deleted_count": deleted_count}
 
 @router.post("/batch/index-rag")
 async def batch_index_rag(payload: BatchRAGIndexRequest, db: Session = Depends(get_db)):
+    """Index prompts and metadata from selected images into the RAG knowledge vault."""
     if not payload.image_ids:
         return {"status": "indexed", "indexed_count": 0}
 
@@ -257,6 +268,7 @@ def delete_image(image_id: int, db: Session = Depends(get_db)):
 
 @router.patch("/{image_id}/favorite", response_model=GalleryItemResponse)
 def toggle_favorite(image_id: int, db: Session = Depends(get_db)):
+    """Toggle the favorite status of an image."""
     img = db.query(Image).options(joinedload(Image.prompt)).filter(Image.id == image_id).first()
     if not img:
         raise HTTPException(status_code=404, detail="Image not found")
@@ -271,6 +283,7 @@ def update_image_rating(
     rating_update: RatingUpdateRequest,
     db: Session = Depends(get_db),
 ):
+    """Update star rating (0-5) for an image."""
     img = db.query(Image).options(joinedload(Image.prompt)).filter(Image.id == image_id).first()
     if not img:
         raise HTTPException(status_code=404, detail="Image not found")
@@ -281,6 +294,7 @@ def update_image_rating(
 
 @router.post("/{image_id}/score-aesthetic", response_model=GalleryItemResponse)
 def score_image_aesthetic(image_id: int, db: Session = Depends(get_db)):
+    """Calculate and store an aesthetic quality score for an image based on prompt and parameters."""
     img = db.query(Image).options(joinedload(Image.prompt)).filter(Image.id == image_id).first()
     if not img:
         raise HTTPException(status_code=404, detail="Image not found")
@@ -300,6 +314,7 @@ async def get_similar_images(
     limit: int = Query(default=10, le=50),
     db: Session = Depends(get_db),
 ):
+    """Find images with semantically similar prompts using pgvector cosine distance."""
     img = db.query(Image).options(joinedload(Image.prompt)).filter(Image.id == image_id).first()
     if not img:
         raise HTTPException(status_code=404, detail="Image not found")
@@ -318,11 +333,13 @@ async def get_similar_images(
     elif hasattr(target_vec, "__iter__") and not isinstance(target_vec, list):
         target_vec = list(target_vec)
 
-    # Compute missing embeddings for candidate images' prompts
+    # Lazily compute missing embeddings for candidate images' prompts up to a bounded batch
     unembedded_prompts = (
         db.query(Prompt)
         .join(Image, Image.prompt_id == Prompt.id)
         .filter(Image.id != image_id, Prompt.embedding.is_(None))
+        .distinct()
+        .limit(25)
         .all()
     )
     if unembedded_prompts:
@@ -333,8 +350,8 @@ async def get_similar_images(
 
     similar_images = (
         db.query(Image)
-        .options(joinedload(Image.prompt))
         .join(Prompt, Image.prompt_id == Prompt.id)
+        .options(contains_eager(Image.prompt))
         .filter(Image.id != image_id)
         .filter(Prompt.embedding.isnot(None))
         .order_by(Prompt.embedding.cosine_distance(target_vec))

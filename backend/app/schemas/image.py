@@ -36,9 +36,6 @@ class ImageUpdate(BaseModel):
 class ImageResponse(ImageBase):
     id: int
     created_at: datetime
-    is_favorite: Optional[bool] = False
-    rating: Optional[int] = 0
-    aesthetic_score: Optional[float] = None
 
     model_config = ConfigDict(from_attributes=True)
 
