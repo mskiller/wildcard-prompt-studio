@@ -88,9 +88,12 @@ Unified async provider management with failover support:
 
 ---
 
-### 2.4 Non-Blocking Async RAG & Vector DB (`app/services/async_rag.py`)
-- **Lazy Initialization**: `SentenceTransformer` models are loaded lazily on first access.
-- **Background Thread Offloading**: Embedding generation is delegated to `asyncio.to_thread` workers to prevent blocking FastAPI's main event loop.
+### 2.4 Persistent Unified RAG & pgvector Store (`app/services/unified_rag.py`)
+- **pgvector Native Storage**: Upgraded knowledge store using PostgreSQL `pgvector` with 384-dimensional dense vectors generated via `all-MiniLM-L6-v2`.
+- **Pre-Seeded Knowledge Bases**: Automatically ingests domain prompting guides for Krea 2, ANIMA, ComfyUI workflows, and Wildcard AST grammar upon database initialization.
+- **Thread Safety & Mutex Lock**: Employs an `asyncio.Lock` to guarantee safe concurrent embedding computations across worker threads.
+- **Graceful Runtime Fallback**: Employs an offline/mock fallback mechanism when model weights cannot be downloaded or hardware acceleration is unavailable, ensuring API calls never hang.
+- **Application Lifespan Integration**: Properly registers and terminates during FastAPI lifespan events, cleanly closing vector model sessions.
 
 ---
 
@@ -131,6 +134,20 @@ Unified async provider management with failover support:
   - Automatically loads webhook URL from `ComfyUI-SendToDiscord/config.ini` or user settings.
   - Transmits rendered PNG files with companion `prompt.txt` as multi-part form data to Discord channels using `httpx.AsyncClient`.
 
+---
+
+### 2.9 Gallery Architecture & Image Metadata Auto-Healing (`app/api/routers/images.py`, `app/services/image_metadata.py`)
+- **PNG Chunk Metadata Extraction**: Scans embedded ComfyUI workflow JSON and prompt texts from rendered PNG files directly using standard library chunks parsing.
+- **Auto-Healing Relational Repair**: On image retrieval (`/gallery` or `/{id}`), automatically resolves broken prompt links and backfills missing generation parameters (seed, steps, CFG, sampler, dimensions) from disk into PostgreSQL.
+- **pgvector Cosine Distance Similarity**: Computes real-time cosine distance over prompt embedding vectors to discover visually and conceptually related images without requiring external vector indices.
+- **Safe Batch Operations**: Atomic deletion guarantees that disk files are only removed after database transactions commit successfully.
+
+---
+
+### 2.10 Matrix Engine Safety & Caching Pipeline (`app/services/matrix_engine.py`, `app/services/wildcard_service.py`)
+- **Cartesian Explosion Safety**: Implements strict safety limits and early stopping to prevent server freeze and memory crashes when computing massive matrix permutations.
+- **In-Memory Wildcard Cache**: Caches parsed wildcard files with automatic cache invalidation triggers on create, update, or deletion.
+- **Lightweight Serialization**: `GET /api/v1/wildcards` queries project metadata columns by default (`include_content=false`), reducing serialization overhead and payload bandwidth by ~99%.
 
 ---
 

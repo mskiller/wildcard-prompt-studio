@@ -1,0 +1,54 @@
+Smurfette From the movie The Smurfs, blue skin, petite body, blond hair, long hair, white phrygian hat
+Tara, American woman, long face, medium nose, big luscious lips, {1::tied-up, ponytail, medium blond hair|1::tied-up, updo, medium blond hair|1::untied medium blond hair, bangs}, muscular woman, light tanned skin
+Aadhya, indian woman, bindi on front, makeup, long face, medium nose, small luscious lips, {1::tied-up, singlebraid, very long black hair|1::untied , very long black hair, curly}, thin woman, dark-tanned skin
+Freya, round face, small nose, large eyes, big luscious lips, {1::long single braid|1::untied loose} blond white hair, viking woman, pale skin, muscular woman
+Grace, long face, long curly black hair, long nose, small luscious lips, middle-east woman, tanned skin, brown-skinned female, thin slim body
+Tanaka, Dark skinned female, long curly {1::brown|1::black|1::red} hair, ovale face, long nose, {1::big|1::enormous|1::gigantic} luscious lips, dark african woman, muscular woman
+Wu, chinese woman, slanting eyes, pale skin, long black hair, thin body, wide hips
+Aylin, round face, long wavy curly red hair{10::|1::, tied-up hair, twin braids|1::, tied-up hair, twintails}, big nose, big luscious lips, freckles, irish woman, light-skinned female, curvy body
+Betty Boop, pale skin, round face, black curly hair, short hair, hoops earings, red puckered lips
+Princess Leia From Star Wars movies
+Moana Waialiki From Moana Disney's movie
+Ahsoka Tano from Star Wars movies
+Gwen Tennyson From Ben10 Series{1::, mature, aged up|1::}
+Cinderella From Cinderella Disney's Movie
+Snow White From Snow White Disney's Movie
+Jessica Rabbit From Who Framed Roger Rabbit Movie
+Harley Quinn From DC Comics
+Daphne Blake From Scoodidoo's Series
+Velma Dinkley, round eyewear glasses From Scoodidoo's Series
+Kido Saori From Saint Seiya series, purple long hair
+Rapunzel From Disney's Rapunzel Movie
+Belle From Disney's Beauty and the Beast Movie
+Jasmine From Disney's Aladin Movie
+Poison Ivy From DC Cmics
+Wednesday Addams From The Addams's family Movie
+Violet Parr From Disney Pixar The incredibles Movie, purple streaked long black hair
+Supergirl
+She-hulk
+Elsa From Disney's Frozen Movie
+Anna From Disney's Frozen Movie
+Tinker Bell From Disney's Peter Pan Movie, fairy wings
+Aurora From Disney's Sleeping Beauty Movie
+Vampirella
+Ariel From Ariel The Little Mermaid Movie{1::, human form|1::, merfolk, mermaid}
+Vanellope Von Schweetz From Disney's Wreck It Ralph Movie, aged up, mature
+Chi-Chi From Dragon Ball series{1::|1::, aged up, mature}
+Android 18 From Dragon Ball series
+Android 21 From Dragon Ball series
+Bulma From Dragon Ball series
+Lunch good From Dragon Ball series, blue hair, red tied hairband
+Lunch bad (dragon ball), blond hair, red tied hairband
+Raven From DC Comics
+Wonder Woman From DC Comics
+Chun-Li From Street FIghter games series
+Emma Frost From Marvel's Comics
+Sue Storm From Marvel's Comics
+Psylocke From Marvel's Comics
+Gwen Stacy From Marvel's Comics
+Spider-Gwen From Marvel's Comics
+princess peach
+princess king boo{1::|1::, white hair}
+princess daisy
+princess zelda
+bowsette from Mario series

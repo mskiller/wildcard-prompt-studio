@@ -4,6 +4,42 @@ All notable changes to Wildcard Prompt Studio V2 are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-09-06
+
+### Added
+
+#### Persistent Unified RAG System (pgvector & 384-dimensional Embeddings)
+- **UnifiedRAGService**: Persistent pgvector-backed knowledge retrieval system utilizing `all-MiniLM-L6-v2` (384-dimensional) embeddings.
+- **Pre-seeded Domain Knowledge**: Out-of-the-box knowledge documents for Krea 2 guidelines, ANIMA hybrid anime prompting rules, ComfyUI workflows, and Wildcard AST syntax.
+- **Thread Safety & Lifespan Management**: Integrated thread safety lock, non-blocking asynchronous embeddings, runtime fallback for missing models or offline deployments, and graceful application lifespan shutdown.
+- **Cross-Tab RAG Controls**:
+  - **Krea 2 Studio**: Toggleable RAG context injection grounding prompt optimizations in model-specific guidelines.
+  - **ANIMA Studio**: Domain-grounded anime prompting combining Danbooru ontology with narrative structure.
+  - **Tags Studio**: Semantic tag grouping and context-aware tag recommendations.
+  - **Vision Inspector**: Image style descriptor extraction with 1-click indexing into the RAG knowledge base.
+- **REST Endpoints**: Full knowledge management suite including `/api/v1/ai/rag/search`, `/api/v1/ai/rag/index`, `/api/v1/ai/rag/stats`, `/api/v1/ai/rag/documents`, and `/api/v1/ai/rag/documents/{doc_id}`.
+
+#### Gallery Studio Complete Overhaul & Roundtrip Workflow
+- **Redesigned Gallery Interface**: High-performance responsive grid with isolated styling, flex collapse prevention, and polished UI animations.
+- **Rich Parameter Cards**: Visual chips displaying seed, width × height resolution, steps, CFG scale, sampler, aesthetic quality score, 1-5 star ratings, and favorite bookmarking.
+- **Advanced Filtering & Search**: Real-time prompt text and filename search, sampler filtering, favorite filtering, minimum star rating threshold, and multi-mode sorting (Newest, Oldest, Rating, Aesthetic Score).
+- **Floating Batch Actions Bar**: Multi-select images for batch favorite/unfavorite, safe batch deletion (removing DB records and static files on disk), and batch indexing into RAG.
+- **Roundtrip Lightbox Modal**: Full-resolution image viewer with prompt inspection, 1-click prompt copy, 1-click send to Prompt Editor, 1-click send to ComfyUI batch queue, and semantic similarity discovery.
+- **Side-by-Side A/B Comparison Modal**: Compare two generated outputs with parameter diffs to evaluate prompt variations and sampler changes.
+- **Metadata Auto-Healing**: Automatically reads PNG metadata chunks from disk on image retrieval or creation, populating missing prompt text, seed, steps, sampler, width, height, and CFG scale while repairing database relationships.
+- **Semantic Similarity Lookup**: `GET /api/v1/images/{image_id}/similar` calculates cosine distance using `pgvector` to recommend visually and conceptually related generations.
+
+#### Wildcard Matrix Studio & Engine Safety Upgrades
+- **Modern Resolution Defaults**: Default 896×1152 SDXL/Kea2 resolution with custom width and height controls in the UI and backend dispatcher.
+- **Queue Limits & Manual Permutation Selection**: Configurable queue safety caps, with interactive selection checkboxes to pick specific matrix combinations before dispatching.
+- **OOM Freeze Prevention & Safety Limits**: Combinatorial explosion limits, early stopping mechanisms, and cached wildcard loading in `WildcardService` with invalidation triggers.
+- **High-Performance Wildcard Listing**: `GET /api/v1/wildcards` endpoint optimized with `include_content=false` by default, reducing payload size and memory overhead by ~99% for large libraries.
+- **Canvas & Inspector Selectors**: Restored existing wildcard selectors on the Visual AST Canvas and Inspector, accompanied by robust AST graph synchronization.
+
+#### Explorer & Prompt Editor Integration
+- **1-Click Wildcard Population**: Clicking a wildcard in the Explorer sidebar instantly populates the active Prompt Editor buffer.
+- **Bidirectional AST Sync**: Enhanced synchronization between the visual canvas and raw Monaco editor buffer.
+
 ---
 
 ## [2.1.0] - 2026-09-06

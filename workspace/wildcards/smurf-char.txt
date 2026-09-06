@@ -1,0 +1,7 @@
+greedy smurf (/the smurfs)/, male, white hat, blue skin, bib{|, fat}, eating cake, white pants
+jokey smurf (/the smurfs)/, male, white hat, blue skin, smirk, holding gift, white pants
+clumsy smurf (/the smurfs)/, male, white hat, blue skin{||, tripping}, clumsy, white pants
+grouchy smurf (/the smurfs)/, male, white hat, blue skin, angry, crossed arms, white pants
+Papa Smurf (/the smurfs)/, male, red hat, white beard, blue skin, muscular, red pants, smoke cigar
+brainy smurf (/the smurfs)/, male, white hat, blue skin, glasses, skinny, white pants
+hefty smurf (/the smurfs)/, male, white hat, blue skin, arm tattoo, heart tattoo, muscular, white pants

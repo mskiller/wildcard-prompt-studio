@@ -34,6 +34,7 @@ Built for power users who need:
 
 ### 🎨 Krea 2 Prompt Optimization Studio
 - **Faithfulness-First Prompting** — system prompt injection based on official Krea 2 guidelines
+- **RAG Knowledge Grounding** — optional cross-tab domain knowledge injection directly into optimizer context
 - **Model Variant Presets** — specialized optimization for Turbo (speed), Medium (artistic), and Large (photorealistic) variants
 - **Buzzword Stripper** — eliminates legacy SD anti-patterns (`8k`, `masterpiece`, `trending on artstation`)
 - **Quote Text Helper** — auto-formats text elements for accurate text rendering (e.g., `"OPEN 24 HOURS"`)
@@ -41,25 +42,39 @@ Built for power users who need:
 
 ### 🌀 ANIMA Prompt Engineering Studio
 - **Hybrid Prompting Engine** — combines Danbooru anime tags with natural language narrative
+- **Cross-Tab RAG Integration** — grounds anime prompt generation in curated domain knowledge and styling guidelines
 - **SD Weight Stripper** — removes legacy `(tag:1.3)` syntax incompatible with Qwen encoders
 - **Quality Score Injector** — prepends `score_9, score_8, score_7` quality anchors automatically
 - **Artist Syntax Formatter** — converts artist references to `@artist_name` format
 
+### 🖼️ Overhauled Gallery Studio & Roundtrip Production Flow
+- **Interactive Parameter Cards** — visual chips displaying seed, 896×1152 resolution, steps, CFG scale, sampler, aesthetic quality score, 1-5 star ratings, and favorite toggle
+- **Advanced Filtering & Multi-Mode Sorting** — filter by text search, sampler, favorites, or minimum rating; sort by newest, oldest, rating, or aesthetic score
+- **Floating Batch Actions Bar** — multi-select images for batch favoriting, safe batch deletion (disk files + DB records), and batch indexing into RAG
+- **Roundtrip Lightbox Modal** — full-resolution viewer with 1-click prompt copy, 1-click send to Prompt Editor, 1-click queue in ComfyUI, and similarity search
+- **Side-by-Side A/B Comparison** — compare two outputs side-by-side with complete parameter diffs to evaluate prompt variations and samplers
+- **Metadata Auto-Healing** — automatically parses PNG chunks on disk to recover prompt text, seed, steps, sampler, and dimensions, repairing database links
+- **Semantic Similarity Discovery** — finds visually and conceptually related images using `pgvector` cosine distance on prompt embeddings
+
+### 🧠 Persistent Unified RAG Knowledge Base
+- **pgvector Vector Store** — persistent 384-dimensional embeddings (`all-MiniLM-L6-v2`) stored natively in PostgreSQL
+- **Pre-Seeded Knowledge Vault** — bundled best practices for Krea 2, ANIMA, ComfyUI workflows, and Wildcard AST grammar
+- **Cross-Tab RAG Controls** — toggleable domain grounding across Krea 2 Studio, ANIMA Studio, Tags Studio, and Vision Inspector
+- **Vision Style Extraction** — extract visual descriptors from uploaded images with 1-click indexing into RAG knowledge documents
+- **Thread-Safe & Non-Blocking** — async thread offloading with mutex safety locks and graceful offline runtime fallbacks
+
 ### 🌳 AST-Based Wildcard & Matrix Engine
-- **Full AST Parser** — recursive lexer and parser for complex wildcard syntax
-- **Nested & Weighted Choices** — `{a|{b|c}}` nesting and `{3$$optionA|1$$optionB}` probability weights
-- **Subdirectory Wildcards** — hierarchical references like `__lighting/studio_lights__`
-- **Combinatorial Matrix Sweeps** — Cartesian product generation across all prompt parameters
+- **Full AST Parser** — recursive lexer and parser for complex wildcard syntax (`{a|b}`, `{3$$a|1$$b}`, `__category/file__`)
+- **896×1152 Resolution Defaults** — modern default aspect ratios with dedicated width and height numeric controls
+- **OOM Freeze Prevention & Safety Limits** — safeguards against combinatorial Cartesian explosions with early stopping and wildcard caching
+- **Queue Limits & Permutation Picker** — preview matrix sweep permutations and selectively queue individual combinations
+- **High-Performance Wildcard Listing** — optimized API queries (`include_content=false` by default) reducing payload size by ~99%
+- **1-Click Explorer Insertion** — click any wildcard in the sidebar Explorer to instantly populate the Monaco Prompt Editor buffer
 
 ### ⚡ Hybrid AI Provider Engine
 - **Unified Provider Interface** — single API surface over Ollama, KoboldCpp, Gemini, OpenAI, and Anthropic
 - **Automatic Fallback Chain** — intelligent priority failover across providers without interrupting requests
 - **Local-First Design** — prefers local LLMs (Ollama, KoboldCpp) with cloud APIs as fallback
-
-### 🧠 Async RAG Knowledge Base
-- **Vector Embeddings** — `SentenceTransformer`-powered semantic search over your prompt library
-- **Non-Blocking Processing** — background thread offloading prevents event loop blocking
-- **Knowledge Inspector UI** — browse, query, and inject domain knowledge into generation pipelines
 
 ### 🎯 Aesthetic Ranker & Genetic Optimizer
 - **Aesthetic Scoring** — rate and rank prompts against target style distributions
@@ -116,7 +131,7 @@ Built for power users who need:
 │                       BACKEND API  (FastAPI)                                │
 │                                                                             │
 │   /api/v1/ai · /api/v1/wildcards · /api/v1/generate · /api/v1/danbooru      │
-│   /api/v1/prompts · /api/v1/tags · /api/v1/comfyui · /api/v1/system         │
+│   /api/v1/prompts · /api/v1/tags · /api/v1/images · /api/v1/comfyui · /system│
 │                                                                             │
 │  ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────────────────┐ │
 │  │ Krea2/ANIMA      │ │ Wildcard AST     │ │ Danbooru SQLite Lexicon      │ │

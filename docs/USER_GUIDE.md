@@ -19,11 +19,18 @@ Welcome to the **Wildcard Prompt Studio V2 User Guide**. This document provides 
    - [Configuring Local LLMs (Ollama / KoboldCpp)](#configuring-local-llms-ollama--koboldcpp)
    - [Configuring Cloud Provider APIs (Gemini, OpenAI, Anthropic)](#configuring-cloud-provider-apis-gemini-openai-anthropic)
    - [Provider Priority Fallback Logic](#provider-priority-fallback-logic)
-5. [RAG Knowledge Base & Inspector](#5-rag-knowledge-base--inspector)
+5. [Persistent Unified RAG Knowledge Base](#5-persistent-unified-rag-knowledge-base)
 6. [Aesthetic Ranker & Genetic Optimizer](#6-aesthetic-ranker--genetic-optimizer)
 7. [ComfyUI Integration & Generation Simulator](#7-comfyui-integration--generation-simulator)
 8. [Civitai Cloud Sync & Dynamic Import](#8-civitai-cloud-sync--dynamic-import)
 9. [Settings, Custom Themes & Internationalization (i18n)](#9-settings-custom-themes--internationalization-i18n)
+10. [Tag Studio & Danbooru Lexicon Explorer](#10-tag-studio--danbooru-lexicon-explorer)
+11. [Collapsible Context Panel & Smart Synergy Recommendations](#11-collapsible-context-panel--smart-synergy-recommendations)
+12. [Wildcard Deletion & Management](#12-wildcard-deletion--management)
+13. [Database Administration & System Reset in Settings](#13-database-administration--system-reset-in-settings)
+14. [Overhauled Gallery Studio & Roundtrip Production Flow](#14-overhauled-gallery-studio--roundtrip-production-flow)
+15. [Cross-Tab RAG Controls & Vision Integration](#15-cross-tab-rag-controls--vision-integration)
+16. [Matrix Studio Resolution & Permutation Controls](#16-matrix-studio-resolution--permutation-controls)
 
 ---
 
@@ -231,3 +238,85 @@ Navigate to **Settings** and scroll down to the **Database Management & Maintena
 ### Protected Factory Reset
 - Click **"Factory Reset Database"** to reset all application data back to a clean state.
 - **Safety Safeguard**: Requires typing `"RESET"` in uppercase before the action can be executed.
+
+---
+
+## 14. Overhauled Gallery Studio & Roundtrip Production Flow
+
+Access the **Gallery Studio** from the left navigation bar to manage, inspect, and evaluate generated image outputs.
+
+### Filtering, Searching & Sorting
+- **Real-Time Search**: Search by full or partial prompt text and image filenames.
+- **Sampler Filtering**: Drill down into generations created with specific samplers (e.g. `er_sde`, `euler`, `dpmpp_2m`).
+- **Favorites & Star Ratings**: Filter exclusively for favorited images or generations meeting a minimum star rating threshold (1–5 stars).
+- **Multi-Mode Sorting**: Sort your collection by **Newest**, **Oldest**, **Rating (Highest First)**, or **Aesthetic Score (Highest First)**.
+
+### Interactive Generation Cards
+- Each card provides instant visual feedback with parameter badges:
+  - **Seed** chip (e.g., `420815`)
+  - **Resolution** chip (e.g., `896×1152`)
+  - **Steps & CFG** badges (e.g., `10 steps`, `1.0 cfg`)
+  - **Sampler** badge (e.g., `er_sde`)
+  - **Aesthetic Quality** rating badge
+  - **Interactive 1–5 Star Rating** control
+  - **Favorite Bookmark** toggle button
+
+### Floating Batch Actions Bar
+- Select multiple images using card checkboxes to reveal the floating action toolbar:
+  - **Batch Favorite / Unfavorite**: Bookmark collections in bulk.
+  - **Batch Delete**: Safely purges database records and removes corresponding PNG files from local disk storage.
+  - **Batch Index to RAG**: Converts image prompts and metadata into structured documents inside the Unified RAG knowledge base.
+
+### Roundtrip Lightbox Modal
+- Click any image card to open the **Roundtrip Lightbox**:
+  - **High-Resolution Inspection**: View original renders in pristine detail with zoom controls.
+  - **Full Metadata Breakdown**: Inspect prompt text, seed, dimensions, sampler, scheduler, and model checkpoints.
+  - **1-Click Copy Prompt**: Copy clean prompt text to clipboard.
+  - **1-Click Send to Editor**: Loads the exact prompt into the Monaco Prompt Editor buffer to iterate immediately.
+  - **1-Click Send to ComfyUI**: Populates ComfyUI dispatch parameters with the image's original settings.
+  - **Find Similar Generations**: Queries `pgvector` for other images created with semantically related prompt concepts.
+
+### Side-by-Side A/B Comparison Modal
+- Select two images and click **"Compare"** to launch the side-by-side A/B evaluator:
+  - Synchronized zoom and pan controls to inspect micro-details and textures.
+  - Parameter diff table highlighting differences in seed, steps, sampler, resolution, and prompt wording.
+
+### Automatic Metadata Auto-Healing
+- When loading gallery records or creating images, the studio automatically scans local PNG chunks on disk for embedded ComfyUI workflows and generation prompts.
+- If database associations were lost or broken, the studio automatically heals prompt linkages and backfills parameter fields without manual user intervention.
+
+---
+
+## 15. Cross-Tab RAG Controls & Vision Integration
+
+The **Persistent Unified RAG System** grounds your prompt engineering across all studio panels.
+
+### Cross-Tab RAG Toggles
+- **Krea 2 Studio**: Enable **Use RAG Knowledge** to ground prompt expansions in official Krea 2 model guidelines, optical camera techniques, and composition rules.
+- **ANIMA Studio**: Toggle RAG to ground anime prompts in Danbooru synergy pairings, artist stylizations, and Qwen text encoder guidelines.
+- **Tags Studio**: Utilize RAG semantic similarity to discover conceptually related tags beyond direct text keyword matching.
+
+### Vision Inspector & Style Extraction
+- Upload reference images to the **Vision Inspector** panel.
+- **Image Description**: Generates natural language prompts matching the uploaded image.
+- **Style Descriptor Extraction**: Automatically isolates camera angle, lighting setup, color palette, and artistic medium.
+- **1-Click Index to RAG**: Embed extracted style descriptors directly into your persistent RAG knowledge base for future prompt grounding.
+
+---
+
+## 16. Matrix Studio Resolution & Permutation Controls
+
+The **Wildcard Matrix Panel** provides systematic prompt sweep capabilities with modern defaults and safety guards.
+
+### Modern Resolution Controls
+- Defaults to modern **896×1152** resolution (standard for SDXL and Kea2 portrait rendering).
+- Explicit **Width** and **Height** number steppers allow customizing aspect ratios before dispatching sweeps.
+
+### Queue Limits & Permutation Picker
+- **Queue Limits**: Set safety caps on the maximum number of prompts queued to prevent overwhelming ComfyUI.
+- **Permutation Checklist**: Preview generated Cartesian combinations in a table and selectively check or uncheck individual prompts to queue only desired variations.
+
+### OOM Freeze Prevention & High-Performance Listing
+- Built-in combinatorial safety limits prevent browser freezes and server out-of-memory errors on massive wildcard combinations.
+- Wildcard listings query with `include_content=false` by default, ensuring fast rendering and low latency even with thousands of wildcard files.
+- Clicking any wildcard in the sidebar Explorer automatically populates the Monaco Prompt Editor.

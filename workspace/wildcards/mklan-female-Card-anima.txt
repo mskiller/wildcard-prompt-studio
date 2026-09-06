@@ -1,0 +1,104 @@
+dora marquez (dora_the_explorer), black hair, short hair, bob cut, hispanic, tanned skin
+pocahontas, black hair, long hair, black eyes, dark skin
+moana, black hair, long hair, brown eyes, curly hair, dark skin
+elsa_disney, single braid, blonde hair, blue eyes, hair over shoulder
+anna_disney, ginger hair, twin braids, blue eyes
+esmeraldanotredame, bangle, single earring, dark skin
+princessjasminealaddin, very long black hair
+janeportertarzan, {1::tied hair|1::messy hair|1::hair down}
+arielthelittlemermaid{1::|1::, mermaid body}
+violet parr (the incredibles), purple streaked hair, young adult, mask
+hatsune miku
+hakurei reimu
+kirisame marisa
+flandre scarlet
+chen
+princess zelda
+tifa Lockhart
+2b_(nier:automata)
+aerith_gainsborough
+nami_(one_piece)
+rem_(re:zero)
+mona_(genshin_impact)
+nagato_(kancolle)
+lillie_(pokemon)
+pyra_(xenoblade)
+ryuujou_(kancolle)
+may_(pokemon)
+chun-li
+princess_peach
+texas_(arknights)
+kaku_seiga, touhou
+takamachi_nanoha
+takamachi_nanoha (lyrical_nanoha)
+asuna_(sao)
+plana_(blue_archive)
+lum (urusei yatsura)
+samus aran (super_smash_bros.)
+palutena (super_smash_bros.)
+Bowsette (super_smash_bros.)
+rosalina (super_smash_bros.)
+tsukino usagi, sailor moon (sailor moon)
+mizuno_ami, sailor_mercury (sailor moon)
+aino minako, sailor_venus (sailor moon)
+hino_rei, sailor_mars (sailor moon)
+kino_makoto, sailor_jupiter (sailor moon)
+morrigan_aensland
+maleficent, Disney
+chi-chi_(dragon_ball)
+android_18 (dragon_ball)
+bulma (dragon_ball)
+nico_robin
+sakura_kyoko_(magical_girl)
+wakaba_mutsumi
+nishizumi_maho
+watanabe_you
+darjeeling_(girls_und_panzer)
+sekibanki
+mordred_(fate)
+shishiro_botan
+shenhe_(genshin_impact)
+ganyu_(genshin_impact)
+alice_margatroid
+shameimaru_aya
+mash_kyrielight
+lumine_(genshin_impact)
+gotoh_hitori, bocchi_the_rock!
+houshou_marine, hololive
+koakuma
+sakura_kyoko
+hijiri_byakuren
+usami_renko
+itsumi_erika, girls_und_panzer
+kal'tsit_(arknights)
+nanami_chiaki
+yae_miko
+mori_calliope
+yor_briar
+illyasviel_von_einzbern
+megumin
+ayanami_rei
+chihaya_anon, aged up, mature
+nanashi_mumei, hololive, aged up, mature
+cammy_white, street_fighter
+han_juri
+kasugano_sakura, street_fighter
+daiwa_scarlet_(umamusume)
+hilda_(pokemon)
+rosa_(pokemon)
+sonoda_umi, love_live!
+shibuya_rin, idolmaster
+iseri_nina, girls_band_cry
+atson_amelia, hololive
+saotome_ranma, ranma_1/2
+shampoo_(ranma_1/2)
+sakamata_chloe, hololive
+meiko_(vocaloid)
+lappland_(arknights)
+hasumi_(blue_archive)
+hk416_(girls'_frontline)
+kisaragi_chihaya, idolmaster
+morgan_le_fay_(fate)
+c.c., code_geass
+minami_kotori, love_live!
+serena_(pokemon)

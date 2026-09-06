@@ -1,0 +1,15 @@
+android 18 (dragon_ball)
+bulma (dragon_ball)
+chi-chi (dragon_ball)
+videl (dragon_ball)
+Good Launch (character) (dragon_ball), long hair, blue eyes, blue hair{1::|1::, Good Launch default outfit, midriff, green tank top, yellow shorts, gloves, crop top, navel, tank top, fingerless gloves, red hairband}
+Bad Launch (character) (dragon_ball), green eyes, long hair, blonde hair{1::|1::, Bad Launch default outfit, green tank top, yellow shorts, midriff, crop top, gloves, red hairband, tank top, navel, breasts, cleavage}
+android 21 (dragon_ball_z), human, long hair, curly hair, brown hair, blue eyes
+android 21 (dragon_ball_z), majin \(good\), long hair, white hair, blue eyes, tail, pointy ears, colored skin, pink skin
+android 21 (dragon_ball_z), majin, long hair, white hair, colored sclera, red eyes, pointy ears, tail, colored skin, pink skin
+android 21 (dragon_ball_z), majin \(evil\), long hair, white hair, colored sclera, red eyes, tail, tail spots, pointy ears, colored skin, blue skin, spotted skin
+bulma (dragon_ball_z), bulmail
+bulma (dragon_ball_z), young Bulma
+chichi (dragon_ball_z), ch1ch1, black eyes
+videl (dragon_ball_z), black hair, {1::long hair, twintails, hair tubes|1::long hair, hair down|1::bob cut, short hair|1::very short hair, spiked hair},  blue eyes
+android 18 (dragon_ball_z)

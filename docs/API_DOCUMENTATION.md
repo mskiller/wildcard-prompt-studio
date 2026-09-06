@@ -78,22 +78,27 @@ Lists all supported AI providers and their current connectivity status.
 ## 3. Wildcards & AST Engine (`/api/v1/wildcards`)
 
 ### `GET /api/v1/wildcards`
-Returns all registered wildcard files and categories in hierarchical tree format.
+Returns all registered wildcard files and categories. Optimized with lightweight projection by default (`include_content=false`) to prevent high memory consumption when loading large wildcard libraries.
+
+#### Query Parameters
+- `include_content` (bool, default: `false`): When `false`, returns lightweight records without loading the full text content or entries arrays into memory.
+- `skip` (int, default: 0)
+- `limit` (int, default: 10000)
 
 #### Response `200 OK`
 ```json
-{
-  "categories": [
-    {
-      "name": "character",
-      "files": ["fantasy_hero.txt", "cyberpunk_hacker.txt"]
-    },
-    {
-      "name": "lighting",
-      "files": ["studio_lights.txt", "cinematic_sunlight.txt"]
-    }
-  ]
-}
+[
+  {
+    "id": 1,
+    "filename": "character/fantasy_hero.txt",
+    "file_path": "wildcards/character/fantasy_hero.txt",
+    "type": "txt",
+    "content": "",
+    "entries": [],
+    "created_at": "2026-09-06T12:00:00",
+    "updated_at": "2026-09-06T12:00:00"
+  }
+]
 ```
 
 ---
@@ -223,21 +228,31 @@ Check WebSocket connectivity to target ComfyUI backend server (`ws://localhost:8
 Queue a batch list of expanded prompts into a ComfyUI text node workflow.
 
 ### `POST /api/v1/comfyui/execute-sweep`
-Dispatches a matrix sweep generation job across ComfyUI with optional Discord webhook forwarding.
+Dispatches a matrix sweep generation job across ComfyUI with modern resolution controls and optional Discord webhook forwarding.
 
 #### Request Body
 ```json
 {
   "prompts": ["a cyberpunk cat in neon city", "a steampunk fox in forest"],
-  "steps": 25,
-  "cfg": 7.0,
-  "sampler": "euler",
+  "steps": 10,
+  "cfg": 1.0,
+  "sampler_name": "er_sde",
   "scheduler": "beta",
   "model": "Mklan_Kea2_V1.safetensors",
+  "clip": "qwen3-vl-4b-heretic.safetensors",
+  "vae": "qwen_image_vae.safetensors",
+  "width": 896,
+  "height": 1152,
+  "base_seed": 42,
+  "seed_strategy": "increment",
   "send_to_discord": true,
   "discord_webhook_url": "https://discord.com/api/webhooks/..."
 }
 ```
+- `width` (int, default: 896): Target generation width (defaults to modern SDXL/Kea2 standard).
+- `height` (int, default: 1152): Target generation height (defaults to modern 896×1152 aspect ratio).
+- `seed_strategy` (string): `"increment"` (seed + index), `"fixed"` (same seed for all), or `"random"` (new random seed per prompt).
+- `workflow` (dict, optional): Custom ComfyUI JSON graph. Automatically updates `EmptyLatentImage` dimensions to match requested width/height.
 
 #### Response `200 OK`
 ```json
@@ -446,14 +461,254 @@ Performs selective or complete database cleanup with foreign-key safety.
 
 ---
 
-## 10. RAG Knowledge & Simulator (`/api/v1/ai/rag` & `/api/v1/simulator`)
+## 10. Gallery Studio & Image Management (`/api/v1/images`)
 
-- `POST /api/v1/ai/rag/query`: Perform semantic similarity search over stored prompt knowledge vectors.
-- `POST /api/v1/simulator/run`: Run simulation of prompt execution flow and inspect node stage timings.
+### `GET /api/v1/images/gallery`
+Retrieves gallery images with full-text search, sampler/favorite/rating filters, and multi-mode sorting.
+
+#### Query Parameters
+- `search` (string, optional): Search keyword matched against filenames and prompt text.
+- `sampler` (string, optional): Filter by sampler name (e.g. `er_sde`, `euler`).
+- `is_favorite` (bool, optional): Filter by favorite bookmark status (`true` / `false`).
+- `min_rating` (int, optional): Minimum star rating threshold (1–5).
+- `sort_by` (string, default: `"newest"`): Sort ordering (`"newest"`, `"oldest"`, `"rating"`, or `"aesthetic_score"`).
+- `skip` (int, default: 0)
+- `limit` (int, default: 50, max: 100)
+
+#### Response `200 OK`
+```json
+[
+  {
+    "id": 14,
+    "filename": "MatrixSweep_00014_.png",
+    "prompt_id": 8,
+    "prompt_content": "A cinematic portrait of a cyberpunk hacker in rain, neon reflections",
+    "seed": 420815,
+    "cfg_scale": 1.0,
+    "steps": 10,
+    "sampler_name": "er_sde",
+    "width": 896,
+    "height": 1152,
+    "comfy_workflow_id": null,
+    "is_favorite": true,
+    "rating": 5,
+    "aesthetic_score": 8.42,
+    "created_at": "2026-09-06T12:30:00"
+  }
+]
+```
 
 ---
 
-## 11. Aesthetic Ranker (`/api/v1/aesthetic`)
+### `GET /api/v1/images/file/{filename}`
+Streams image file binary (`image/png`) directly. Automatically caches the file locally from ComfyUI if not yet present on local storage.
 
-- `POST /api/v1/aesthetic/score`: Compute aesthetic quality score for a given prompt string.
+---
+
+### `GET /api/v1/images/{image_id}`
+Returns complete metadata and prompt content for an image. Automatically performs PNG chunk auto-healing if the parent Prompt record is unlinked.
+
+---
+
+### `PATCH /api/v1/images/{image_id}/favorite`
+Toggles the favorite bookmark state of the target image.
+
+#### Response `200 OK`
+Returns the updated `GalleryItemResponse` with toggled `is_favorite`.
+
+---
+
+### `PATCH /api/v1/images/{image_id}/rating`
+Updates the 1–5 star rating for the image.
+
+#### Request Body
+```json
+{
+  "rating": 5
+}
+```
+
+---
+
+### `POST /api/v1/images/{image_id}/score-aesthetic`
+Computes an aesthetic quality score for the image based on its prompt complexity and parameters, updating the `aesthetic_score` field in the database.
+
+---
+
+### `GET /api/v1/images/{image_id}/similar`
+Discovers conceptually and visually related image generations using `pgvector` cosine distance over prompt embedding vectors.
+
+#### Query Parameters
+- `limit` (int, default: 10, max: 200)
+
+#### Response `200 OK`
+```json
+[
+  {
+    "id": 9,
+    "filename": "MatrixSweep_00009_.png",
+    "prompt_content": "A close-up portrait of a neon android in rain",
+    "aesthetic_score": 8.15,
+    "rating": 4
+  }
+]
+```
+
+---
+
+### `POST /api/v1/images/batch/delete`
+Safely deletes multiple images, purging database rows and removing cached image files from static disk storage.
+
+#### Request Body
+```json
+{
+  "image_ids": [12, 14, 15]
+}
+```
+
+#### Response `200 OK`
+```json
+{
+  "status": "deleted",
+  "deleted_count": 3
+}
+```
+
+---
+
+### `POST /api/v1/images/batch/index-rag`
+Indexes prompt text and generation metadata from selected images directly into the Unified RAG knowledge vault.
+
+#### Request Body
+```json
+{
+  "image_ids": [12, 14],
+  "category": "gallery_generations",
+  "tags": ["portrait", "cyberpunk"]
+}
+```
+
+#### Response `200 OK`
+```json
+{
+  "status": "indexed",
+  "indexed_count": 2
+}
+```
+
+---
+
+## 11. Persistent Unified RAG & Vision Intelligence (`/api/v1/ai`)
+
+### `POST /api/v1/ai/rag/search`
+Queries the persistent `pgvector` knowledge store using 384-dimensional `all-MiniLM-L6-v2` embeddings.
+
+#### Request Body
+```json
+{
+  "query": "photorealistic lighting and depth of field",
+  "top_k": 3,
+  "category": "krea2",
+  "tag": "lighting"
+}
+```
+
+#### Response `200 OK`
+```json
+{
+  "query": "photorealistic lighting and depth of field",
+  "results": [
+    {
+      "id": 2,
+      "title": "Krea 2 Lighting Best Practices",
+      "content": "For Large variant photorealism, specify lens aperture, focal length, and physical light sources...",
+      "category": "krea2",
+      "tags": ["lighting", "optics", "photorealism"],
+      "similarity": 0.892
+    }
+  ]
+}
+```
+
+---
+
+### `POST /api/v1/ai/rag/index`
+Embeds and stores a new knowledge document into PostgreSQL with `pgvector`.
+
+#### Request Body
+```json
+{
+  "title": "Custom Cinematic Prompting Guide",
+  "content": "Use anamorphic lenses, teal and orange rim lighting, and subtle film grain.",
+  "category": "style",
+  "tags": ["cinematic", "lighting"]
+}
+```
+
+---
+
+### `GET /api/v1/ai/rag/stats`
+Returns system statistics for the persistent vector knowledge base.
+
+#### Response `200 OK`
+```json
+{
+  "total_documents": 28,
+  "total_tags": 34,
+  "model_name": "all-MiniLM-L6-v2",
+  "categories": ["krea2", "anima", "comfyui", "wildcards", "style", "gallery_generations"]
+}
+```
+
+---
+
+### `GET /api/v1/ai/rag/documents`
+Lists stored RAG knowledge documents with optional `query`, `category`, and `tag` filters.
+
+---
+
+### `DELETE /api/v1/ai/rag/documents/{doc_id}`
+Deletes a knowledge document and its associated pgvector embedding.
+
+---
+
+### `POST /api/v1/ai/vision/describe`
+Analyzes an uploaded image and generates structured prompt descriptions.
+
+#### Form Data
+- `file`: Image file binary
+- `variant` (string): `"turbo"`, `"medium"`, or `"large"`
+- `provider` (string): `"auto"` or specific provider
+
+---
+
+### `POST /api/v1/ai/vision/extract-style`
+Extracts visual descriptors (lighting, medium, color palette, camera style) with optional 1-click indexing into RAG.
+
+#### Form Data
+- `file`: Image file binary
+- `provider` (string): `"auto"`
+- `index_rag` (bool, default: `false`): When `true`, automatically formats descriptors and indexes them into the RAG knowledge base under category `"vision"`.
+
+---
+
+### `POST /api/v1/ai/chat-refine`
+Conversational prompt refinement assistant with RAG domain grounding.
+
+#### Request Body
+```json
+{
+  "current_prompt": "A cyber girl in rain",
+  "user_message": "Make it more dramatic with cinematic lighting and volumetric fog",
+  "use_rag": true,
+  "provider": "auto"
+}
+```
+
+---
+
+## 12. Aesthetic Ranker & Simulator (`/api/v1/aesthetic` & `/api/v1/simulator`)
+
+- `POST /api/v1/aesthetic/score`: Compute aesthetic quality score for a prompt string.
 - `POST /api/v1/aesthetic/mutate`: Perform genetic mutation sweep to optimize aesthetic prompt score.
+- `POST /api/v1/simulator/run`: Run simulation of prompt execution flow and inspect node stage timings.

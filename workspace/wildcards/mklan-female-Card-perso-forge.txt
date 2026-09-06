@@ -1,0 +1,21 @@
+mature_female, bimbo, muscular_female, blonde_hair, very_long_hair, american, {pale|white}_skin
+mature_female, petite, short_girl, black_hair, bob_cut, italian, tan
+long_hair, two-tone_hair, purple_hair, black_hair, hair_highlights, dark_eyes, black_eyes, purple_lipstick, makeup, eyeshadow, eyeliner, mascara, tan
+milf, mature, obese, body_freckles, wrinkled_skin, red_hair, short_hair, fat, curvy, {huge|large|medium|small}_breasts, thick_thighs, huge_ass
+asian, dark-skinned_female, black_hair, long_hair, petite, mature_female, bimbofication, puckered_lips, pursed_lips, black_lips, skinny, makeup, eyeshadow, black_eyeshadow, goth_fashion{1::|3::, gothic_lolita}, eyeliner, black_eyeliner, mascara
+black woman, dark_skin, puckered_lips, afro, thin, large_ass
+skinny, narrow_waist, hip_bones, ribs, very_dark_skin, dark-skinned_female, tan, big_hair, long_hair, twin_braids, multicolored_hair, gradient_hair, black_hair, purple_hair, slit_pupils, purple_eyes{1::, sunglasses, heart-shaped_eyewear, purple-framed_eyewear|1::, glasses, round_eyewear, purple-framed_eyewear}, thick_lips, black_lips, neck_tattoo, chest_tattoo, arm_tattoo
+skinny, narrow_waist, pale_skin, mole, freckles, big_hair, long_hair, twintails, red_hair, bright_pupils, brown_eyes, mole_under_eye, puckered_lips, red_lips, makeup, eyeshadow, eyeliner, mascara
+curvy, narrow_waist, thick_thighs, square_face, big_eyes, small_pupils, small_nosepiercing, face_piercing, eyebrow_piercing, jewelry, ear_piercing, short_hair, messy_hair, pixie_cut, multicolored_hair, gradient_hair, blue_hair, pink_hair, hair_ornament_flower, hairclip, parallel_hairclips, blue_lips, thick_lips, makeup, eyeshadow, eyeliner, mascara
+mature_female, indian, skinny, narrow_waist, dark_skin, dark-skinned_female, freckles, feather_headband, ovale_face, black_hair, long_hair, very_long_hair, multi-tied_hair, braid, single_braid, slit_pupils, small_pupils, black_eyes
+mature_female, tall_female, skinny, narrow_waist, muscular, muscular_female, wrinkled_skin, cowgirl, cowboy_hat, round_face, long_hair, low_ponytail, multicolored_hair, two-tone_hair, grey_hair, blond_hair, fringe, bangs, parted_bangs
+Seccotine, pale_skin, tall_female, skinny, narrow_waist, brown_eyes, bright_blonde_hair, long_hair, high_side_ponytail, red_bow, short_straight_bangs
+3::Melle_Jeanne, mature_female, pale_skin, freckles, wrinkled_skin, tall_female, skinny, narrow_waist, hip_bones, brown_eyes, red_hair, very_long_hair, low_ponytail, round_glasses, long_nose, red_lips
+elf, dark_elf, mature_female, dark_skin, very_dark_skin, dark-skinned_female, narrow_waist, thick_thighs, curvy, very_long_hair, dreadlocks, two-tone_hair, pink_hair, hair_ornament, hair_ribbon, brown_eyes, pointy_nose, pursed_lips, pointy_ears
+mature_female, asian, pointy_nose, hip_bones, narrow_waist, ribs, dark_skin, very_dark_skin, dark-skinned_female, slit_pupils, brown_eyes, long_hair, bangs, swept_bangs, multicolored_hair, streaked_hair, two-tone_hair, black_hair, red_streaks, red_hair, red_hairband, thick_lips, makeup, eyeshadow, eyeliner, mascara
+goblin, female_goblin, green_skin{1::|1::, bald, bald_female}, long_pointy_ears, petite, skinny, narrow_waist, curvy, thick_thighs
+mature_female, curvy, tan, long_hair, curly_hair, brown_hair, hair_ornament, magatama, forked_eyebrows, aqua_eyes, eyeshadow, glowing_eyes, dot_nose, split_mouth, parted_lips, aqua_lips
+mature_female, skinny, tan, short_hair, curly_hair, black_hair, forked_eyebrows, black_eyes, eyeshadow, dot_nose, split_mouth, parted_lips, black_lips, gothic_punk, emo_fashion
+mature_female, skinny, pale_skin, punk, mohawk, spiked_hair, multicolored_hair, gradient_hair, black_hair, red_hair, spikes, forked_eyebrows, black_eyes, eyeshadow, big_nose, puckered_lips, black_lips
+mature_female, muscular_female, red_skin, oni, oni_horns, colored_skin, smooth_horns, black_horns, straight_horns, long_hair, multicolored_hair, gradient_hair, red_hair, black_hair, spiked_hair, thick_eyebrows, red_eyes, glowing_eyes, pionty_nose, puckered_lips, red_lips, black_wings, feathered_wings, demon_wings, narrow_waist, thick_thighs
+troll, blue_skin, minigirl, shortstack, multicolored_hair, gradient_hair, blond_hair, brown_hair, puckered_lips, red_lips
