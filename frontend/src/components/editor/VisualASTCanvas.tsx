@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { ZoomIn, ZoomOut, Maximize2, RefreshCw, AlertTriangle } from 'lucide-react';
+import { WildcardSearchPicker } from './WildcardSearchPicker';
 import './VisualASTCanvas.css';
 
 export interface ASTCanvasNodeData {
@@ -386,36 +387,17 @@ export const VisualASTCanvas: React.FC<VisualASTCanvasProps> = ({
                   </div>
                 ) : node.type === 'wildcard' ? (
                   <div className="canvas-wildcard-preview-box" onMouseDown={e => e.stopPropagation()}>
-                    {availableWildcards && availableWildcards.length > 0 ? (
-                      <select
-                        className="canvas-node-wildcard-select"
-                        value={availableWildcards.includes(node.value) ? node.value : ''}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val && onUpdateNode) {
-                            onUpdateNode(node.id, { value: val, title: val });
-                          }
-                        }}
-                        title={`Select wildcard (${availableWildcards.length} available)`}
-                        aria-label="Select wildcard"
-                      >
-                        <option value="" disabled>
-                          -- Choose Wildcard ({availableWildcards.length}) --
-                        </option>
-                        {availableWildcards.map(w => (
-                          <option key={w} value={w}>
-                            __{w}__
-                          </option>
-                        ))}
-                        {node.value && !availableWildcards.includes(node.value) && (
-                          <option value={node.value}>{node.value} (custom)</option>
-                        )}
-                      </select>
-                    ) : (
-                      <div className="node-value-preview" title={node.value}>
-                        __{node.value || 'wildcard_name'}__
-                      </div>
-                    )}
+                    <WildcardSearchPicker
+                      variant="canvas-node"
+                      value={node.value}
+                      availableWildcards={availableWildcards}
+                      placeholder="-- Choose Wildcard --"
+                      onSelect={(val) => {
+                        if (onUpdateNode) {
+                          onUpdateNode(node.id, { value: val, title: val });
+                        }
+                      }}
+                    />
                   </div>
                 ) : (
                   <div className="node-value-preview" title={node.value}>
