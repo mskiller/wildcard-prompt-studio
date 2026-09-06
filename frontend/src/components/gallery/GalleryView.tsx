@@ -754,6 +754,7 @@ export const GalleryView: React.FC = () => {
                     {renderAestheticBadge(img)}
 
                     <div className="card-param-chips">
+                      {img.seed && <span className="param-chip">Seed: {img.seed}</span>}
                       {img.sampler_name && <span className="param-chip">{img.sampler_name}</span>}
                       {img.steps && <span className="param-chip">{img.steps} steps</span>}
                       {img.cfg_scale && <span className="param-chip">CFG {img.cfg_scale}</span>}
