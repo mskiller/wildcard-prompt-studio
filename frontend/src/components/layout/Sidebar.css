@@ -113,6 +113,19 @@
   opacity: 0.9;
 }
 
+.sidebar-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.sidebar-tree-item:hover .sidebar-item-actions {
+  opacity: 1;
+}
+
 .icon-action-btn {
   background: transparent;
   border: none;
@@ -122,12 +135,18 @@
   align-items: center;
   justify-content: center;
   padding: 2px 4px;
-  border-radius: 3px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
 }
 
 .icon-action-btn:hover {
   color: var(--fg-primary);
   background: var(--bg-surface-hover);
+}
+
+.icon-action-btn.delete-btn:hover {
+  color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.15) !important;
 }
 
 .tree-icon {

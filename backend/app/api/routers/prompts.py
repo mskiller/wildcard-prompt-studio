@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from app.dependencies import get_db
 from app.models.prompt import Prompt
 from app.models.version import PromptVersion
+from app.models.image import Image
 from app.schemas.prompt import PromptCreate, PromptUpdate, PromptResponse
 from app.schemas.version import PromptVersionBase, PromptVersionCreate, PromptVersionResponse
 from app.services.sync_service import export_prompt_to_file
@@ -108,6 +109,8 @@ def delete_prompt(prompt_id: int, db: Session = Depends(get_db)):
     if not db_prompt:
         raise HTTPException(status_code=404, detail="Prompt not found")
     
+    # Detach any images pointing to this prompt so gallery images survive without broken foreign keys
+    db.query(Image).filter(Image.prompt_id == prompt_id).update({Image.prompt_id: None}, synchronize_session=False)
     db.delete(db_prompt)
     db.commit()
     return {"message": "Prompt deleted"}

@@ -9,6 +9,8 @@ from .simulator import router as simulator_router
 from .profiles import router as profiles_router
 from .comfyui import router as comfyui_router
 from .aesthetic import router as aesthetic_router
+from .danbooru import router as danbooru_router
+from .system import router as system_router
 
 router = APIRouter()
 
@@ -22,5 +24,7 @@ router.include_router(simulator_router, prefix="/simulator", tags=["simulator"])
 router.include_router(profiles_router, prefix="/profiles", tags=["profiles"])
 router.include_router(comfyui_router, prefix="/comfyui", tags=["comfyui"])
 router.include_router(aesthetic_router, prefix="/aesthetic", tags=["aesthetic"])
+router.include_router(danbooru_router, prefix="/danbooru", tags=["danbooru"])
+router.include_router(system_router, prefix="/system", tags=["system"])
 
 

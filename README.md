@@ -65,10 +65,31 @@ Built for power users who need:
 - **Aesthetic Scoring** — rate and rank prompts against target style distributions
 - **Genetic Evolution** — evolve high-scoring prompts across generations with mutation and crossover
 
-### 🔌 Real-Time ComfyUI Integration
+#### ⛩️ Danbooru Lexicon & Co-occurrence Synergy Engine
+- **31,000+ Curated Tags** — categorized into `General`, `Character`, `Copyright`, `Artist`, and `Meta`
+- **3.23M Co-Occurrence Graph** — dedicated SQLite B-tree index delivering sub-millisecond (0.22ms) relation lookups
+- **Smart Prompt Synergy** — analyzes current prompt text to recommend complementary tags ranked by co-occurrence synergy (e.g., `1girl` → `solo`, `long_hair`, `looking_at_viewer`, `blush`, `smile`)
+- **Interactive Co-Occurrence Explorer** — click-to-expand "Frequently Paired With" relationship drawers
+- **Direct Prompt Injection** — 1-click append into the Monaco prompt editor buffer
+- **PostgreSQL Tag Ingestion** — bulk-import top Danbooru tags directly into the local PostgreSQL ontology
+
+### 🏷️ Intelligent Tag Studio & AST Sanitizer
+- **Categorized Tag Palette** — explore 48,000+ active tags filtered by Character, Clothing, Lighting, Style, Camera, Quality/Score, and General
+- **Automated AST Tag Extraction** — extracts atomic tags from wildcards on creation, update, and batch import
+- **Database Tag Sanitizer** — strips syntax leftovers (`{4::`, `:1.3)`, brackets), deduplicates, and re-classifies categories
+- **Tag Resync Tool** — re-parses all registered wildcards via AST to backfill tags and category taxonomies
+
+### 🛡️ System Administration & Database Maintenance Suite
+- **Granular Database Cleanup** — selective reset targets for Tags, Wildcards, Prompts, and Gallery
+- **Factory Reset Safeguard** — protected full reset requiring explicit `"RESET"` confirmation keyword
+- **Foreign Key Integrity** — `ondelete="CASCADE"` on prompt tags and `SET NULL` on gallery images to prevent broken links
+- **System Health & Stats** — unified API overview of entity counts across all tables and Danbooru ready state
+
+### 🔌 Real-Time ComfyUI Integration & Discord Sweeps
 - **Live WebSocket Bridge** — real-time job status, queue progress, and node execution tracking
 - **Batch Dispatch** — send matrix-generated prompt lists directly to ComfyUI workflows
 - **Generation Simulator** — debug complex multi-node workflows before submitting heavy render batches
+- **Automated Discord Webhooks** — automatically dispatch downloaded sweep images and prompt text to Discord channels upon completion
 
 ### 🔄 Civitai Cloud Sync
 - **Model Import** — browse and import wildcard files, trigger words, and presets from Civitai
@@ -79,45 +100,46 @@ Built for power users who need:
 ## 🏗 Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                    FRONTEND  (React 18 + Vite + TypeScript)          │
-│                                                                      │
-│  ┌─────────────────┐  ┌──────────────────┐  ┌────────────────────┐  │
-│  │  Krea2 / ANIMA  │  │ Wildcard Matrix  │  │  Monaco Prompt     │  │
-│  │  Studio Panels  │  │  Panel (AST)     │  │  Editor + Diff     │  │
-│  └────────┬────────┘  └────────┬─────────┘  └─────────┬──────────┘  │
-│           │  Zustand State     │                      │              │
-│           └────────────────────┴──────────────────────┘              │
-└────────────────────────────┬─────────────────────────────────────────┘
-                             │  REST + WebSocket
-                             ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│                      BACKEND API  (FastAPI)                          │
-│                                                                      │
-│   /api/v1/ai  ·  /api/v1/wildcards  ·  /api/v1/generate             │
-│   /api/v1/prompts  ·  /api/v1/comfyui  ·  /api/v1/aesthetic         │
-│                                                                      │
-│  ┌──────────────────┐  ┌─────────────────┐  ┌────────────────────┐  │
-│  │ Krea2/ANIMA      │  │ Wildcard AST    │  │ Async RAG          │  │
-│  │ Optimizer        │  │ Engine + Matrix │  │ (pgvector)         │  │
-│  └────────┬─────────┘  └─────────────────┘  └────────────────────┘  │
-│           ▼                                                          │
-│  ┌─────────────────────────────────────────────────────────────────┐ │
-│  │               AI Provider Manager (Fallback Chain)              │ │
-│  │   [Ollama] ──► [KoboldCpp] ──► [Gemini] ──► [OpenAI/Anthropic] │ │
-│  └─────────────────────────────────────────────────────────────────┘ │
-│                                                                      │
-│  ┌──────────────┐  ┌───────────┐  ┌──────────────────────────────┐  │
-│  │ Celery Worker│  │  Redis    │  │ PostgreSQL + pgvector         │  │
-│  │ (async tasks)│  │  (broker) │  │ (prompts, embeddings, models) │  │
-│  └──────────────┘  └───────────┘  └──────────────────────────────┘  │
-└──────────────────────────────────────────────────────────────────────┘
-                             │  WebSocket
-                             ▼
-                    ┌─────────────────┐
-                    │    ComfyUI      │
-                    │  (ws:8188)      │
-                    └─────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    FRONTEND  (React 18 + Vite + TypeScript)                 │
+│                                                                             │
+│  ┌─────────────────┐ ┌──────────────────┐ ┌───────────────────────────────┐ │
+│  │  Krea2 / ANIMA  │ │ Wildcard Matrix  │ │ Monaco Editor + Tags Studio   │ │
+│  │  Studio Panels  │ │ Panel (AST/Sweep)│ │ & Danbooru Co-Occurrence Graph│ │
+│  └────────┬────────┘ └────────┬─────────┘ └───────────────┬───────────────┘ │
+│           │  Zustand State    │                           │                 │
+│           └───────────────────┴───────────────────────────┘                 │
+└──────────────────────────────┬──────────────────────────────────────────────┘
+                               │  REST + WebSocket
+                               ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       BACKEND API  (FastAPI)                                │
+│                                                                             │
+│   /api/v1/ai · /api/v1/wildcards · /api/v1/generate · /api/v1/danbooru      │
+│   /api/v1/prompts · /api/v1/tags · /api/v1/comfyui · /api/v1/system         │
+│                                                                             │
+│  ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────────────────┐ │
+│  │ Krea2/ANIMA      │ │ Wildcard AST     │ │ Danbooru SQLite Lexicon      │ │
+│  │ Optimizer        │ │ Engine + Matrix  │ │ (31k tags, 3.2M co-occurs)   │ │
+│  └────────┬─────────┘ └────────┬─────────┘ └──────────────────────────────┘ │
+│           │                    │                                            │
+│           ▼                    ▼                                            │
+│  ┌────────────────────────────────────────────────────────────────────────┐ │
+│  │               AI Provider Manager (Fallback Chain)                     │ │
+│  │   [Ollama] ──► [KoboldCpp] ──► [Gemini] ──► [OpenAI/Anthropic]        │ │
+│  └────────────────────────────────────────────────────────────────────────┘ │
+│                                                                             │
+│  ┌──────────────┐ ┌───────────┐ ┌─────────────────────────────────────────┐ │
+│  │ Celery Worker│ │  Redis    │ │ PostgreSQL + pgvector                   │ │
+│  │ (async tasks)│ │  (broker) │ │ (prompts, embeddings, tags, models)     │ │
+│  └──────────────┘ └───────────┘ └─────────────────────────────────────────┘ │
+└──────────────────────────────┬──────────────────────────────────────────────┘
+                               │ WebSocket / HTTP / Webhook
+                               ▼
+                 ┌───────────────────────────┐
+                 │ ComfyUI (ws:8188)         │
+                 │ └──► Discord Webhook Bot  │
+                 └───────────────────────────┘
 ```
 
 ### Tech Stack
@@ -131,10 +153,13 @@ Built for power users who need:
 | Backend Framework | FastAPI (Python 3.10+) |
 | Task Queue | Celery + Redis |
 | Database | PostgreSQL with pgvector extension |
+| Lexicon & Co-occurrence Index | SQLite3 B-tree (sub-millisecond queries) |
 | ORM / Migrations | SQLAlchemy + Alembic |
 | AI Embeddings | `sentence-transformers` |
+| Notifications / Sweeps | Discord Webhook (`httpx`) |
 | Deployment | Docker Compose |
 | File Watching | Watchdog |
+
 
 ---
 
@@ -209,6 +234,9 @@ ANTHROPIC_API_KEY=your_anthropic_api_key
 # ComfyUI
 COMFYUI_WS_URL=ws://localhost:8188/ws
 COMFYUI_HTTP_URL=http://localhost:8188
+
+# Discord Sweep Webhook (optional)
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
 ```
 
 ---

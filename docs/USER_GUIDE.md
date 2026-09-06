@@ -164,3 +164,70 @@ The **RAG Knowledge Inspector** allows semantic grounding for prompt generation:
 - **UI Themes**: Switch between **Dark (Default)**, **Cyberpunk (Vibrant)**, and **Slate (Light)** color themes.
 - **i18n Languages**: Built-in support for **English (EN)**, **Chinese (ZH)**, and **Japanese (JP)**.
 - **API Base URL**: Dynamically adjust backend API endpoints (`http://localhost:8000/api/v1` or custom remote server host).
+- **Discord Integration**: Configure Discord Webhook URLs for automatic sweep image and prompt dispatch.
+
+---
+
+## 10. Tag Studio & Danbooru Lexicon Explorer
+
+Access the **Tag Studio** by clicking the tag icon on the left navigation sidebar.
+
+### Browsing & Filtering
+- **Category Tabs**: Filter between **All**, **Character**, **Clothing**, **Lighting**, **Style**, **Camera**, **Quality / Score**, and **General**, with live counts per category.
+- **Fast Search**: Search in real-time across 48,000+ local tags and 31,000+ Danbooru tags.
+- **Tag Cards**: Each tag card displays its category badge and usage count.
+
+### Co-occurrence Relationships ("Frequently Paired With")
+- Click any tag to open its **Frequently Paired With** relationship drawer.
+- View top related Danbooru tags ranked by empirical co-occurrence frequency across millions of anime/art generations.
+- Click **"Add to Prompt"** on any card or related tag to append it cleanly to your active Monaco editor buffer.
+
+### Database Tag Sanitizer & Ingestion
+- **Sanitize Database**: Strips syntax noise (`{4::`, `:1.3)`, brackets), deduplicates tags, and re-classifies them into semantic categories.
+- **Import Danbooru**: Import top Danbooru tags (e.g. top 5,000) directly into your local PostgreSQL tag ontology.
+- **Resync Wildcard Tags**: Scans all wildcards and extracts new atomic tags via the AST engine.
+
+---
+
+## 11. Collapsible Context Panel & Smart Synergy Recommendations
+
+### Collapsible Layout
+- Click the collapse toggle button (`ChevronRight` / `ChevronLeft`) on the top-right of the **Context Panel** to minimize it, giving maximum screen width to the Monaco Editor or Matrix Sweep grid.
+- State is automatically remembered and persisted in your local workspace settings.
+
+### Danbooru Smart Synergy Feed
+- When editing prompts in the Monaco editor, the Context Panel automatically analyzes active prompt tokens in real time.
+- Displays recommended complementary Danbooru tags ranked by synergy (e.g., typing `1girl, glowing` suggests `solo`, `looking_at_viewer`, `neon`, and `cyberpunk`).
+- Click any recommended tag chip to instantly append it to the prompt.
+
+---
+
+## 12. Wildcard Deletion & Management
+
+- **Sidebar Hover-to-Delete**: Hover over any wildcard entry in the sidebar to reveal the delete button. A confirmation modal prevents accidental deletions.
+- **Editor Delete Action**: When a wildcard file is open in the Prompt Editor, click the red **Delete Wildcard** button in the top toolbar to remove it from disk and database.
+- **Batch Deletion**: Automated support for batch-deleting multiple wildcards via the REST API.
+
+---
+
+## 13. Database Administration & System Reset in Settings
+
+Navigate to **Settings** and scroll down to the **Database Management & Maintenance** section:
+
+### Live Entity Statistics
+- Real-time status cards show the count of:
+  - **Tags** (active ontology count)
+  - **Wildcards** (registered files)
+  - **Prompts & Versions**
+  - **Gallery Images** (generated outputs)
+  - **Danbooru Status** (ready state, total tags, co-occurrences, SQLite DB size)
+
+### Selective Section Reset
+- **Reset Tags**: Cleans all user tags while safely removing association links.
+- **Reset Wildcards**: Deletes all wildcard records from the database.
+- **Reset Prompts**: Deletes saved prompts and version history while preserving all generated gallery images by detaching foreign keys (`SET NULL`).
+- **Clear Gallery**: Purges generated image records from the database.
+
+### Protected Factory Reset
+- Click **"Factory Reset Database"** to reset all application data back to a clean state.
+- **Safety Safeguard**: Requires typing `"RESET"` in uppercase before the action can be executed.

@@ -481,3 +481,180 @@ def deserialize_graph_to_ast(graph: Dict[str, Any]) -> ASTNode:
 
     return RootNode()
 
+
+def sanitize_single_tag(raw: str) -> Optional[str]:
+    """
+    Cleans raw prompt/wildcard tokens into atomic, standardized tags:
+    - Strips dynamic prompt choice syntax (e.g. {1::1::, {4::, etc.)
+    - Strips SD-style weight syntax (e.g. :1.3), (tag:1.2), ((tag)) )
+    - Removes punctuation and control characters
+    - Discards long natural-language sentences and purely numeric tokens
+    """
+    if not raw:
+        return None
+    s = str(raw).replace('\x00', '').strip()
+    if not s or s.startswith('#'):
+        return None
+
+    # Strip choice/count prefixes e.g. {1::1::, 1::, 4::, 1$$, 0.1::, etc.
+    s = re.sub(r'^[\|\s]+', '', s)
+    s = re.sub(r'[\|\s]+$', '', s)
+    s = re.sub(r'^[\{\[\(\s]*(?:\d+(?:\.\d+)?)(?:::|\$\$|\#)', '', s)
+    # Strip dangling choice syntax e.g. {4::, {1::
+    s = re.sub(r'\{\d+(?:\.\d+)?::.*$', '', s)
+    # Strip curly braces and pipes
+    s = re.sub(r'[\{\}\|]+', '', s)
+
+    # Strip (tag:1.2) or [tag:1.2] weight syntax
+    s = re.sub(r'\(([^:)]+):\d+(?:\.\d+)?\)', r'\1', s)
+    s = re.sub(r'\[([^:\]]+):\d+(?:\.\d+)?\]', r'\1', s)
+    # Strip trailing weight syntax: tag:1.3) or tag:1.3
+    s = re.sub(r':\d+(?:\.\d+)?\)?$', '', s)
+    # Strip outer parens/brackets
+    s = re.sub(r'^\(+([^\(\)]+)\)+$', r'\1', s)
+    s = re.sub(r'^\[+([^\[\]]+)\]+$', r'\1', s)
+    
+    # Strip boundary noise
+    s = s.strip('()[]{}<>"\'`;:.,~`*?!| \t\r\n')
+
+    # Wildcard invocations (e.g. __wildcard/name__) are wildcards, not atomic prompt tags
+    if re.fullmatch(r'__[^_]+__', s) or s.startswith('__') and s.endswith('__'):
+        return None
+
+    # Ignore common single English connector/stop words
+    STOP_WORDS = {
+        "a", "an", "the", "in", "on", "at", "by", "for", "with", "about", "against",
+        "between", "into", "through", "during", "before", "after", "above", "below",
+        "to", "from", "up", "down", "out", "off", "over", "under", "again", "further", "then", "once", "and", "or"
+    }
+    if s.lower() in STOP_WORDS:
+        return None
+
+    # Ignore tags that are too long (>60 chars) or have too many words (>7 words)
+    words = s.split()
+    if not s or len(s) > 65 or len(words) > 7:
+        return None
+
+
+    # Ignore if no letters (e.g. pure numbers, dates, punctuation)
+    if not re.search(r'[a-zA-Z\u00C0-\u024F\u3040-\u30FF\u4E00-\u9FFF]', s):
+        return None
+
+    return s.strip()
+
+
+def classify_tag_category(tag: str) -> str:
+    """
+    Classifies a tag into a domain category:
+    - Character
+    - Clothing
+    - Lighting
+    - Style
+    - Camera
+    - Quality / Score
+    - General
+    """
+    lower = tag.lower().strip()
+
+    # Quality / Score keywords
+    if any(k in lower for k in [
+        'masterpiece', 'best quality', 'high quality', 'ultra-detailed', 'absurdres',
+        'highres', 'photorealistic', 'hyperrealistic', '8k', '4k', 'score_', 'aesthetic',
+        'trending on artstation', 'award winning'
+    ]):
+        return 'Quality / Score'
+
+    # Camera / Angle / Shot
+    if any(k in lower for k in [
+        'view', 'angle', 'shot', 'focus', 'depth of field', 'dof', 'bokeh',
+        'close-up', 'close up', 'wide shot', 'cowboy shot', 'portrait', 'full body',
+        'upper body', 'macro', 'fisheye', 'telephoto', 'isometric', 'lens', 'shutter'
+    ]):
+        return 'Camera'
+
+    # Lighting keywords
+    if any(k in lower for k in [
+        'light', 'glow', 'shadow', 'illumination', 'sunlight', 'moonlight',
+        'neon', 'backlight', 'rim light', 'cinematic lighting', 'volumetric',
+        'soft lighting', 'golden hour', 'ray tracing', 'radiance', 'bloom'
+    ]):
+        return 'Lighting'
+
+    # Style / Medium / Artist keywords
+    if any(k in lower for k in [
+        'cyberpunk', 'steampunk', 'synthwave', 'anime', 'manga', 'comic', 'oil painting',
+        'watercolor', 'digital illustration', 'concept art', 'minimalist', 'retro',
+        'surrealism', 'line art', 'vintage', 'dark fantasy', 'render', 'unreal engine',
+        'octane render', 'by ', 'art by'
+    ]):
+        return 'Style'
+
+    # Clothing / Fashion keywords
+    if any(k in lower for k in [
+        'dress', 'shirt', 'jacket', 'coat', 'pants', 'jeans', 'skirt', 'boots',
+        'shoes', 'hat', 'hoodie', 'suit', 'armor', 'uniform', 'robe', 'gloves',
+        'collar', 'necklace', 'kimono', 'sweater', 'bikini', 'socks', 'stockings'
+    ]):
+        return 'Clothing'
+
+    # Character / Subject keywords
+    if any(k in lower for k in [
+        'girl', 'boy', 'woman', 'man', 'solo', 'female', 'male', 'hair', 'eyes',
+        'skin', 'smile', 'face', 'gaze', 'pose', 'standing', 'sitting', 'looking at viewer',
+        'expression', 'breasts', 'muscular', 'wings', 'horns', 'tail', 'ears'
+    ]):
+        return 'Character'
+
+    return 'General'
+
+
+def extract_atomic_tags_from_text(text: str) -> List[Tuple[str, str]]:
+    """
+    Parses prompt/wildcard text through the AST engine, collects text leaves
+    and choice option contents, splits by comma or pipe, sanitizes each tag,
+    classifies its category, and returns deduplicated (tag_name, category) pairs.
+    """
+    if not text:
+        return []
+
+    lines = [l.strip() for l in text.splitlines() if l.strip() and not l.strip().startswith('#')]
+    if not lines:
+        return []
+
+    engine = WildcardASTEngine()
+    collected_strings: List[str] = []
+
+    def collect_from_ast(node: ASTNode):
+        if isinstance(node, TextNode):
+            collected_strings.append(node.text)
+        elif isinstance(node, RootNode):
+            for child in node.children:
+                collect_from_ast(child)
+        elif isinstance(node, ChoiceNode):
+            for opt in node.options:
+                collect_from_ast(opt.content)
+        elif isinstance(node, VarAssignmentNode):
+            collect_from_ast(node.value_node)
+
+    for line in lines:
+        try:
+            root = engine.parse(line)
+            collect_from_ast(root)
+        except Exception:
+            collected_strings.append(line)
+
+    seen_lower = set()
+    result: List[Tuple[str, str]] = []
+
+    for chunk in collected_strings:
+        # Split chunk on comma or pipe
+        parts = re.split(r'[,\|]', chunk)
+        for p in parts:
+            clean = sanitize_single_tag(p)
+            if clean and clean.lower() not in seen_lower:
+                seen_lower.add(clean.lower())
+                cat = classify_tag_category(clean)
+                result.append((clean, cat))
+
+    return result
+

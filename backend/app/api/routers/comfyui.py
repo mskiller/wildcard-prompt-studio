@@ -5,6 +5,8 @@ import logging
 import random
 import os
 import aiofiles
+import configparser
+import httpx
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException, Response, Depends, BackgroundTasks
 from pydantic import BaseModel
 from typing import Dict, Any, Optional, List
@@ -19,6 +21,59 @@ from app.models.prompt import Prompt
 from app.api.routers.images import STATIC_IMAGES_DIR
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Discord webhook helpers — reads from ComfyUI-SendToDiscord/config.ini
+# ---------------------------------------------------------------------------
+
+_DISCORD_CONFIG_PATH = r"E:\Comfy\ComfyUI\custom_nodes\ComfyUI-SendToDiscord\config.ini"
+
+
+def _get_discord_webhook_url() -> Optional[str]:
+    """Read the Discord webhook URL from the ComfyUI-SendToDiscord config.ini."""
+    try:
+        cfg = configparser.ConfigParser()
+        cfg.read(_DISCORD_CONFIG_PATH, encoding="utf-8")
+        url = cfg.get("Discord", "webhook_url", fallback="").strip()
+        return url if url and "your-webhook-url-here" not in url else None
+    except Exception as e:
+        logger.warning(f"Could not read Discord config: {e}")
+        return None
+
+
+async def _send_image_to_discord(
+    image_path: str,
+    filename: str,
+    prompt_text: str = "",
+    webhook_url_override: Optional[str] = None,
+) -> bool:
+    """Send a downloaded sweep image (+ optional prompt .txt) to Discord via webhook."""
+    webhook_url = webhook_url_override or _get_discord_webhook_url()
+    if not webhook_url:
+        logger.warning("Discord webhook URL not configured — skipping Discord send.")
+        return False
+
+    try:
+        files: dict = {}
+        with open(image_path, "rb") as f:
+            img_data = f.read()
+        files["file"] = (filename, img_data, "image/png")
+
+        if prompt_text and prompt_text.strip():
+            files["file1"] = ("prompt.txt", prompt_text.strip().encode("utf-8"), "text/plain")
+
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.post(webhook_url, files=files)
+
+        if response.status_code in (200, 204):
+            logger.info(f"Discord: sent {filename} successfully.")
+            return True
+        else:
+            logger.warning(f"Discord webhook returned {response.status_code}: {response.text[:200]}")
+            return False
+    except Exception as e:
+        logger.error(f"Discord send error for {filename}: {e}")
+        return False
 
 router = APIRouter()
 connector = ComfyUIConnector()
@@ -246,6 +301,8 @@ class SweepExecutionRequest(BaseModel):
     model: Optional[str] = "Mklan_Kea2_V1.safetensors"
     clip: Optional[str] = "qwen3-vl-4b-heretic.safetensors"
     vae: Optional[str] = "qwen_image_vae.safetensors"
+    send_to_discord: Optional[bool] = False
+    discord_webhook_url: Optional[str] = None
 
 @router.post("/execute-sweep")
 async def execute_sweep(req: SweepExecutionRequest, background_tasks: BackgroundTasks):
@@ -331,7 +388,13 @@ async def execute_sweep(req: SweepExecutionRequest, background_tasks: Background
 
         queued_pids = [r["prompt_id"] for r in results if isinstance(r, dict) and "prompt_id" in r]
         if queued_pids:
-            background_tasks.add_task(background_poll_sweep_prompts, queued_pids, req.base_url)
+            background_tasks.add_task(
+                background_poll_sweep_prompts,
+                queued_pids,
+                req.base_url,
+                bool(req.send_to_discord),
+                req.discord_webhook_url or None,
+            )
 
         return {
             "queued_count": len(results),
@@ -454,7 +517,12 @@ async def process_and_save_comfy_output(
                 })
     return saved_items
 
-async def background_poll_sweep_prompts(prompt_ids: List[str], base_url: Optional[str] = None):
+async def background_poll_sweep_prompts(
+    prompt_ids: List[str],
+    base_url: Optional[str] = None,
+    send_to_discord: bool = False,
+    discord_webhook_url: Optional[str] = None,
+):
     """Monitors queued sweep prompt IDs until completion and saves images to DB/storage."""
     if os.environ.get("PYTEST_CURRENT_TEST"):
         return
@@ -482,8 +550,20 @@ async def background_poll_sweep_prompts(prompt_ids: List[str], base_url: Optiona
                     if isinstance(hist_data, dict) and pid in hist_data:
                         job_info = hist_data[pid]
                         if job_info.get("outputs"):
-                            await process_and_save_comfy_output(pid, job_info, db, base_url=base_url)
+                            saved = await process_and_save_comfy_output(pid, job_info, db, base_url=base_url)
                             pending.discard(pid)
+
+                            # Send each saved image to Discord if requested
+                            if send_to_discord and saved:
+                                for item in saved:
+                                    fn = item.get("filename", "")
+                                    prompt_txt = item.get("prompt_content", "")
+                                    local_path = os.path.join(STATIC_IMAGES_DIR, fn)
+                                    if fn and os.path.exists(local_path):
+                                        await _send_image_to_discord(
+                                            local_path, fn, prompt_txt,
+                                            webhook_url_override=discord_webhook_url,
+                                        )
                 except Exception as e:
                     consecutive_errors += 1
                     logger.debug(f"Sweep background poll for {pid} pending: {e}")

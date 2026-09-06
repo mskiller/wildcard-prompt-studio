@@ -8,7 +8,7 @@ class Image(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     filename = Column(String, unique=True, nullable=False)
-    prompt_id = Column(Integer, ForeignKey("prompts.id"), nullable=True)
+    prompt_id = Column(Integer, ForeignKey("prompts.id", ondelete="SET NULL"), nullable=True)
     
     seed = Column(BigInteger, nullable=True)
     cfg_scale = Column(Float, nullable=True)

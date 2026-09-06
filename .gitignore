@@ -43,6 +43,15 @@ Thumbs.db
 # Alembic
 # (alembic/versions is tracked intentionally)
 
+# SQLite Databases & Local Data Caches
+*.db
+*.sqlite
+*.sqlite3
+backend/app/data/
+
+# Generated Sweep Images (new generations)
+backend/app/static/images/MatrixSweep_*.png
+
 # Temp files
 color.txt
 diff_output.txt

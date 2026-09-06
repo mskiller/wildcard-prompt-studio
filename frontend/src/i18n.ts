@@ -7,6 +7,7 @@ export const translationsEn = {
   aiPromptImprovement: "AI & Prompt Improvement",
   apiConnections: "API Connections",
   modelProfiles: "Model Profiles",
+  databaseStorage: "Database & Storage",
 
   // General & Theme
   theme: "Theme",
@@ -60,6 +61,7 @@ export const translations: Record<Language, Record<TranslationKeys, string>> = {
     aiPromptImprovement: "IA et Amélioration de Prompt",
     apiConnections: "Connexions API",
     modelProfiles: "Profils de Modèles",
+    databaseStorage: "Base de Données & Stockage",
 
     // General & Theme
     theme: "Thème",

@@ -41,6 +41,9 @@ ANTHROPIC_API_KEY=your_anthropic_api_key_here
 # ComfyUI Integration
 COMFYUI_WS_URL=ws://localhost:8188/ws
 COMFYUI_HTTP_URL=http://localhost:8188
+
+# Discord Sweep Webhook (optional)
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
 ```
 
 ### Frontend Environment Variables (`frontend/.env`)
@@ -56,7 +59,7 @@ VITE_API_BASE=http://localhost:8000/api/v1
 
 ### Step 1: Clone Repository
 ```bash
-git clone https://github.com/wildcard-prompt-studio/wildcard-prompt-studio.git
+git clone https://github.com/mskiller/wildcard-prompt-studio.git
 cd wildcard-prompt-studio
 ```
 
@@ -78,6 +81,9 @@ source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
+# (Optional) Build Danbooru Lexicon SQLite database from docs/ CSV
+python scripts/build_danbooru_db.py
+
 # Start backend server with live reload
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
@@ -95,7 +101,7 @@ npm install
 # Start Vite dev server
 npm run dev
 ```
-Open `http://localhost:3000` in your web browser.
+Open `http://localhost:5173` in your web browser.
 
 ---
 

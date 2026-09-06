@@ -447,13 +447,175 @@ export async function searchPrompts(query: string): Promise<any[]> {
   return Array.isArray(data) ? data : [];
 }
 
-export async function getTags(): Promise<any[]> {
-  const res = await fetch(`${API_BASE}/tags/`);
+export interface TagItem {
+  id: number;
+  name: string;
+  category: string;
+}
+
+export interface TagCategoriesResponse {
+  total: number;
+  categories: { name: string; count: number }[];
+}
+
+export async function getTags(params?: { q?: string; category?: string; skip?: number; limit?: number }): Promise<TagItem[]> {
+  const query = new URLSearchParams();
+  if (params?.q) query.set('q', params.q);
+  if (params?.category && params.category !== 'All') query.set('category', params.category);
+  if (params?.skip !== undefined) query.set('skip', params.skip.toString());
+  if (params?.limit !== undefined) query.set('limit', params.limit.toString());
+
+  const qs = query.toString();
+  const res = await fetch(`${API_BASE}/tags/${qs ? `?${qs}` : ''}`);
   if (!res.ok) {
     throw new Error(`Failed to fetch tags: ${res.statusText}`);
   }
   const data = await res.json();
   return Array.isArray(data) ? data : [];
+}
+
+export async function getTagCategories(): Promise<TagCategoriesResponse> {
+  const res = await fetch(`${API_BASE}/tags/categories`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch tag categories: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function sanitizeTags(): Promise<{ ok: boolean; tags_cleaned: number; tags_deleted: number; total_remaining: number }> {
+  const res = await fetch(`${API_BASE}/tags/sanitize`, {
+    method: 'POST'
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to sanitize tags: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function resyncWildcardTags(): Promise<{ ok: boolean; total_tags_found: number; new_tags_added: number; total_tags_in_db: number }> {
+  const res = await fetch(`${API_BASE}/wildcards/resync-tags`, {
+    method: 'POST'
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to resync tags: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+// Danbooru Lexicon & Co-occurrence API
+export interface DanbooruTagItem {
+  tag: string;
+  category: string;
+  total_count: number;
+}
+
+export interface DanbooruCooccurrence {
+  tag: string;
+  category: string;
+  count: number;
+}
+
+export interface DanbooruRecommendation {
+  tag: string;
+  category: string;
+  score: number;
+  reason: string;
+}
+
+export interface DanbooruStats {
+  ready: boolean;
+  total_tags: number;
+  total_cooccurrences: number;
+  db_size_mb: number;
+  categories: { category: string; count: number }[];
+}
+
+export async function getDanbooruStats(): Promise<DanbooruStats> {
+  const res = await fetch(`${API_BASE}/danbooru/stats`);
+  if (!res.ok) throw new Error(`Failed to fetch Danbooru stats: ${res.statusText}`);
+  return res.json();
+}
+
+export async function getDanbooruTags(params?: { q?: string; category?: string; skip?: number; limit?: number }): Promise<DanbooruTagItem[]> {
+  const query = new URLSearchParams();
+  if (params?.q) query.set('q', params.q);
+  if (params?.category && params.category !== 'All') query.set('category', params.category);
+  if (params?.skip !== undefined) query.set('skip', params.skip.toString());
+  if (params?.limit !== undefined) query.set('limit', params.limit.toString());
+
+  const qs = query.toString();
+  const res = await fetch(`${API_BASE}/danbooru/tags${qs ? `?${qs}` : ''}`);
+  if (!res.ok) throw new Error(`Failed to fetch Danbooru tags: ${res.statusText}`);
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
+}
+
+export async function getDanbooruCooccurrences(tag: string, limit: number = 20): Promise<DanbooruCooccurrence[]> {
+  const res = await fetch(`${API_BASE}/danbooru/cooccurrences?tag=${encodeURIComponent(tag)}&limit=${limit}`);
+  if (!res.ok) throw new Error(`Failed to fetch cooccurrences for ${tag}: ${res.statusText}`);
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
+}
+
+export async function getDanbooruRecommendations(prompt?: string, currentTags?: string[], limit: number = 15): Promise<DanbooruRecommendation[]> {
+  const res = await fetch(`${API_BASE}/danbooru/recommend`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, current_tags: currentTags, limit })
+  });
+  if (!res.ok) throw new Error(`Failed to fetch recommendations: ${res.statusText}`);
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
+}
+
+export async function importDanbooruToTags(limit: number = 5000): Promise<{ imported: number; already_existing: number; total_requested: number }> {
+  const res = await fetch(`${API_BASE}/danbooru/import-to-tags`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ limit })
+  });
+  if (!res.ok) throw new Error(`Failed to import Danbooru tags: ${res.statusText}`);
+  return res.json();
+}
+
+// System Maintenance & Reset API
+export interface SystemStats {
+  tags_count: number;
+  wildcards_count: number;
+  prompts_count: number;
+  versions_count: number;
+  images_count: number;
+  profiles_count: number;
+  danbooru: DanbooruStats;
+}
+
+export async function getSystemStats(): Promise<SystemStats> {
+  const res = await fetch(`${API_BASE}/system/stats`);
+  if (!res.ok) throw new Error(`Failed to fetch system stats: ${res.statusText}`);
+  return res.json();
+}
+
+export async function resetDatabase(target: 'tags' | 'wildcards' | 'prompts' | 'gallery' | 'all', confirm?: string): Promise<{ ok: boolean; message: string }> {
+  const res = await fetch(`${API_BASE}/system/reset`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ target, confirm })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to reset ${target}`);
+  }
+  return res.json();
+}
+
+export async function batchDeleteWildcards(ids: number[]): Promise<{ ok: boolean; deleted_count: number }> {
+  const res = await fetch(`${API_BASE}/wildcards/batch-delete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids })
+  });
+  if (!res.ok) throw new Error(`Failed to batch delete wildcards: ${res.statusText}`);
+  return res.json();
 }
 
 export async function getProfiles(): Promise<any[]> {
@@ -559,6 +721,8 @@ export interface SweepExecuteOptions {
   model?: string;
   clip?: string;
   vae?: string;
+  sendToDiscord?: boolean;
+  discordWebhookUrl?: string;
 }
 
 export async function executeComfyUISweep(options: SweepExecuteOptions): Promise<{ queued_count: number; job_results: any[] }> {
@@ -575,7 +739,9 @@ export async function executeComfyUISweep(options: SweepExecuteOptions): Promise
     scheduler: options.scheduler ?? 'beta',
     model: options.model ?? 'Mklan_Kea2_V1.safetensors',
     clip: options.clip ?? 'qwen3-vl-4b-heretic.safetensors',
-    vae: options.vae ?? 'qwen_image_vae.safetensors'
+    vae: options.vae ?? 'qwen_image_vae.safetensors',
+    send_to_discord: options.sendToDiscord ?? false,
+    discord_webhook_url: options.discordWebhookUrl ?? '',
   };
 
   const res = await fetch(`${API_BASE}/comfyui/execute-sweep`, {

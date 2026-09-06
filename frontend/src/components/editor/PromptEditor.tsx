@@ -5,8 +5,8 @@ import { MonacoPromptEditor } from './MonacoPromptEditor';
 import { VisualBuilder } from './VisualBuilder';
 import { GalleryView } from '../gallery/GalleryView';
 import { GenerationSettings } from './GenerationSettings';
-import { generateImage, createImage, updatePrompt, updateWildcard, createPrompt, createWildcard, GenerationSettings as ISettings } from '../../api';
-import { Code, LayoutTemplate, FileText, Sparkles, Image as ImageIcon, SlidersHorizontal, Wand2, Save, MessageSquare, Download } from 'lucide-react';
+import { generateImage, createImage, updatePrompt, updateWildcard, createPrompt, createWildcard, deleteWildcard, deletePrompt, GenerationSettings as ISettings } from '../../api';
+import { Code, LayoutTemplate, FileText, Sparkles, Image as ImageIcon, SlidersHorizontal, Wand2, Save, MessageSquare, Download, Trash2 } from 'lucide-react';
 import { exportAsTxtFile } from '../../utils/fileExporter';
 import { useDeviceDetect } from '../../store/useDeviceDetect';
 import { MobilePromptToolbar } from './MobilePromptToolbar';
@@ -170,6 +170,27 @@ export const PromptEditor: React.FC = () => {
     }
   };
 
+  const handleDeleteActiveDoc = async () => {
+    if (!activeDocument) return;
+    const docTypeLabel = activeDocument.type === 'wildcard' ? 'wildcard' : 'prompt';
+    if (window.confirm(`Are you sure you want to delete ${docTypeLabel} "${activeDocument.name}"? This cannot be undone.`)) {
+      try {
+        if (activeDocument.type === 'wildcard') {
+          await deleteWildcard(activeDocument.id);
+        } else if (activeDocument.type === 'prompt') {
+          await deletePrompt(activeDocument.id);
+        }
+        showToast(`Deleted ${activeDocument.name}!`, 'success');
+        setActiveDocument(null);
+        setPromptText('');
+        triggerRefresh();
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : 'Delete failed';
+        showToast(`Failed to delete: ${errorMsg}`, 'error');
+      }
+    }
+  };
+
   return (
     <div className="prompt-editor-container" style={{ display: 'flex', height: '100%', position: 'relative' }}>
       {toast && (
@@ -204,6 +225,16 @@ export const PromptEditor: React.FC = () => {
             >
               <Download size={16} /> Export .txt
             </button>
+            {activeDocument && (
+              <button 
+                className="tab-btn"
+                onClick={handleDeleteActiveDoc}
+                style={{ color: '#ef4444' }}
+                title={`Delete current ${activeDocument.type}`}
+              >
+                <Trash2 size={16} /> Delete
+              </button>
+            )}
             <button 
               className={`tab-btn ${viewMode === 'code' ? 'active' : ''}`}
               onClick={() => setViewMode('code')}

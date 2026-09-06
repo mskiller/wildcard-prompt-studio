@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bot, Play, Sparkles, Image as ImageIcon } from 'lucide-react';
+import { Bot, Play, Sparkles, Image as ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import './ContextPanel.css';
 import { usePromptStore } from '../../store/usePromptStore';
 import { useAppStore } from '../../store/useAppStore';
@@ -9,7 +9,7 @@ import { PromptChatDrawer } from '../editor/PromptChatDrawer';
 
 export const ContextPanel: React.FC = () => {
   const { promptText, setPromptText, expandedPromptText, setExpandedPromptText } = usePromptStore();
-  const { koboldCppUrl, comfyUIUrl, rightPanelTab, setRightPanelTab, refreshKey } = useAppStore();
+  const { koboldCppUrl, comfyUIUrl, rightPanelTab, setRightPanelTab, refreshKey, isContextPanelCollapsed, toggleContextPanel } = useAppStore();
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [genLoading, setGenLoading] = useState(false);
@@ -105,8 +105,41 @@ export const ContextPanel: React.FC = () => {
     }
   };
 
+  if (isContextPanelCollapsed) {
+    return (
+      <aside className="context-panel collapsed glass-panel" aria-label="Quick Tools and AI Assistant (Collapsed)">
+        <div className="collapsed-rail">
+          <button 
+            className="collapsed-toggle-btn"
+            onClick={toggleContextPanel} 
+            title="Expand Context Panel"
+            aria-label="Expand Context Panel"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button 
+            className={`collapsed-action-btn ${rightPanelTab === 'chat' ? 'active' : ''}`}
+            onClick={() => { setRightPanelTab('chat'); toggleContextPanel(); }}
+            title="Open AI Chat"
+            aria-label="Open AI Chat"
+          >
+            <Sparkles size={16} />
+          </button>
+          <button 
+            className={`collapsed-action-btn ${rightPanelTab === 'tools' ? 'active' : ''}`}
+            onClick={() => { setRightPanelTab('tools'); toggleContextPanel(); }}
+            title="Open Quick Tools"
+            aria-label="Open Quick Tools"
+          >
+            <Bot size={16} />
+          </button>
+        </div>
+      </aside>
+    );
+  }
+
   return (
-    <div className="context-panel glass-panel">
+    <aside className="context-panel glass-panel" aria-label="Quick Tools and AI Assistant">
       <div className="context-panel-header">
         <button
           className={`panel-tab-btn ${rightPanelTab === 'chat' ? 'active' : ''}`}
@@ -119,6 +152,14 @@ export const ContextPanel: React.FC = () => {
           onClick={() => setRightPanelTab('tools')}
         >
           <Bot size={14} /> Quick Tools
+        </button>
+        <button
+          className="panel-collapse-btn"
+          onClick={toggleContextPanel}
+          title="Collapse Context Panel"
+          aria-label="Collapse Context Panel"
+        >
+          <ChevronRight size={16} />
         </button>
       </div>
 
@@ -202,6 +243,6 @@ export const ContextPanel: React.FC = () => {
           <TimelinePanel />
         </div>
       )}
-    </div>
+    </aside>
   );
 };

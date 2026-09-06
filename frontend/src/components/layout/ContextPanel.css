@@ -6,6 +6,67 @@
   flex-direction: column;
   backdrop-filter: var(--backdrop-blur);
   overflow: hidden;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.context-panel.collapsed {
+  width: 44px;
+  min-width: 44px;
+}
+
+.collapsed-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 4px;
+  height: 100%;
+}
+
+.collapsed-toggle-btn, .collapsed-action-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--fg-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.collapsed-toggle-btn:hover, .collapsed-action-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--fg-primary);
+  border-color: var(--glass-border);
+}
+
+.collapsed-action-btn.active {
+  background: rgba(99, 102, 241, 0.2);
+  color: #c084fc;
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.panel-collapse-btn {
+  width: 30px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 2px;
+}
+
+.panel-collapse-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--fg-primary);
 }
 
 .context-panel-header {

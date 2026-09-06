@@ -125,7 +125,7 @@ const ASTTreeNodeView: React.FC<ASTNodeProps> = ({ node, depth = 0 }) => {
 };
 
 export const WildcardMatrixPanel: React.FC = () => {
-  const { matrixPrompt: storedPrompt, setMatrixPrompt, activeDocument } = useAppStore();
+  const { matrixPrompt: storedPrompt, setMatrixPrompt, activeDocument, discordWebhookUrl } = useAppStore();
   const [prompt, setPromptLocal] = useState<string>(storedPrompt);
   const setPrompt = (val: string) => { setPromptLocal(val); setMatrixPrompt(val); };
   const [combinations, setCombinations] = useState<string[]>([]);
@@ -192,6 +192,7 @@ export const WildcardMatrixPanel: React.FC = () => {
   const [seedStrategy, setSeedStrategy] = useState<'fixed' | 'sequential' | 'random'>('sequential');
   const [baseSeed, setBaseSeed] = useState<number>(42);
   const [expandWildcards, setExpandWildcards] = useState<boolean>(true);
+  const [sendToDiscord, setSendToDiscord] = useState<boolean>(false);
 
   // Live ComfyUI Availabilities
   const [comfyOptions, setComfyOptions] = useState<GenerationOptionsData>({
@@ -374,7 +375,9 @@ export const WildcardMatrixPanel: React.FC = () => {
         scheduler,
         model,
         clip,
-        vae
+        vae,
+        sendToDiscord,
+        discordWebhookUrl: sendToDiscord ? discordWebhookUrl : undefined,
       });
       setStatus(`Successfully queued ${res.queued_count} batch sweep jobs in ComfyUI! Generating...`);
 
@@ -733,6 +736,19 @@ export const WildcardMatrixPanel: React.FC = () => {
             />
             <Sparkles size={12} className="toggle-icon" />
             <span>Expand Wildcards</span>
+          </label>
+        </div>
+
+        {/* Send to Discord */}
+        <div className="batch-field batch-checkbox-field">
+          <label className="expand-wildcards-toggle-sm" title="Send each generated image + prompt to your Discord channel when done">
+            <input
+              type="checkbox"
+              checked={sendToDiscord}
+              onChange={(e) => setSendToDiscord(e.target.checked)}
+            />
+            <span style={{ fontSize: 12 }}>📨</span>
+            <span>Send to Discord</span>
           </label>
         </div>
 

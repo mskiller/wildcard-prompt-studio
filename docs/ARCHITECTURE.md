@@ -94,6 +94,46 @@ Unified async provider management with failover support:
 
 ---
 
+### 2.5 Danbooru Lexicon & Co-occurrence Synergy Graph (`app/services/danbooru_service.py`)
+- **Dedicated SQLite B-Tree Index**: Stores 31,060 curated Danbooru tags and 3,236,959 co-occurrence edges at `backend/app/data/danbooru_lexicon.db`.
+- **Sub-Millisecond Traversal**: Composite index on `(tag_a, count DESC)` allows querying top co-occurring tags in **0.22ms**.
+- **Prompt Synergy Algorithm**:
+  1. Tokenizes incoming prompt string, strips SD weights and punctuation, ignores wildcard syntax (`__tag__`).
+  2. Traverses co-occurrence edges for each token up to top 40 relations.
+  3. Computes cumulative synergy score across all token pairings.
+  4. Returns top candidates with domain categories (`artist`, `character`, `copyright`, `meta`, `general`) and pairing explanations (e.g., `"Pairs with 1girl"`).
+- **PostgreSQL Ingestion**: Provides optional one-click ingestion into the main PostgreSQL `tags` table without bloating primary database transactions with 3.2M edge rows.
+
+---
+
+### 2.6 AST Tag Extraction & Sanitization Pipeline (`app/services/wildcard_ast.py`)
+- **Automated Extraction**: Traverses `TextNode`, `ChoiceNode`, and `VarAssignmentNode` trees to extract atomic leaves when wildcards are created, edited, or imported.
+- **Heuristic Cleaner (`sanitize_single_tag`)**:
+  - Strips dynamic prompt choice syntax (`{4::`, `{1::1::`, `1$$`).
+  - Strips Stable Diffusion weights (`(tag:1.3)`, `[tag:1.2]`, `:1.2)`).
+  - Filters punctuation noise, English stop words, and lengthy natural-language sentence fragments (>60 chars / >7 words).
+- **Semantic Domain Classifier (`classify_tag_category`)**: Automatically sorts tags into `Character`, `Clothing`, `Lighting`, `Style`, `Camera`, `Quality / Score`, or `General`.
+
+---
+
+### 2.7 Database Integrity & Foreign Key Safeguards (`app/api/routers/system.py`)
+- **System Administration**: Provides unified counts of tags, wildcards, prompts, versions, images, and model profiles.
+- **Foreign Key Safeguards**:
+  - `prompt_tags`: `ondelete="CASCADE"` deletes association links cleanly.
+  - `images.prompt_id`: `ondelete="SET NULL"` detaches images when parent prompts are deleted, ensuring generated gallery images remain intact and accessible without orphaned foreign key errors.
+- **Protected Factory Reset**: Guarded endpoint requiring confirmation code `"RESET"` before purging all user data.
+
+---
+
+### 2.8 ComfyUI Sweep Dispatch & Discord Webhook Integration (`app/api/routers/comfyui.py`)
+- **Background Task Poller**: Asynchronously tracks batch sweep job IDs on ComfyUI via HTTP/WebSocket without blocking client requests.
+- **Discord Bot Webhook Dispatch**:
+  - Automatically loads webhook URL from `ComfyUI-SendToDiscord/config.ini` or user settings.
+  - Transmits rendered PNG files with companion `prompt.txt` as multi-part form data to Discord channels using `httpx.AsyncClient`.
+
+
+---
+
 ## 3. Frontend Architecture (`frontend/src/`)
 
 The frontend is a single-page React 18 application built with Vite:

@@ -38,10 +38,12 @@ services:
     volumes:
       - ./backend:/app
       - ./workspace:/workspace
+      - ./docs:/docs:ro
     healthcheck:
       test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\")' || exit 1"]
-      interval: 3s
-      timeout: 3s
+      interval: 10s
+      timeout: 10s
+      start_period: 15s
       retries: 5
     depends_on:
       db:

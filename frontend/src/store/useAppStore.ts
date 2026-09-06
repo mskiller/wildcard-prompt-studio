@@ -61,6 +61,8 @@ interface AppState {
   setOllamaUrl: (url: string) => void;
   geminiApiKey: string;
   setGeminiApiKey: (key: string) => void;
+  discordWebhookUrl: string;
+  setDiscordWebhookUrl: (url: string) => void;
 
   // Prompt Improvement Defaults
   defaultKreaVariant: KreaVariant;
@@ -95,6 +97,11 @@ interface AppState {
   matrixPrompt: string;
   setMatrixPrompt: (prompt: string) => void;
 
+  // Context Panel collapsed state
+  isContextPanelCollapsed: boolean;
+  setContextPanelCollapsed: (collapsed: boolean) => void;
+  toggleContextPanel: () => void;
+
   // Mobile navigation state
   isMobileMenuOpen: boolean;
   setMobileMenuOpen: (open: boolean) => void;
@@ -124,6 +131,8 @@ export const useAppStore = create<AppState>()(
       setOllamaUrl: (url) => set({ ollamaUrl: url }),
       geminiApiKey: '',
       setGeminiApiKey: (key) => set({ geminiApiKey: key }),
+      discordWebhookUrl: '',
+      setDiscordWebhookUrl: (url) => set({ discordWebhookUrl: url }),
 
       defaultKreaVariant: 'medium',
       setDefaultKreaVariant: (defaultKreaVariant) => set({ defaultKreaVariant }),
@@ -174,6 +183,10 @@ export const useAppStore = create<AppState>()(
       matrixPrompt: 'a {cyberpunk|steampunk|fantasy} {cat|dog|fox} in a {neon city|forest}',
       setMatrixPrompt: (matrixPrompt) => set({ matrixPrompt }),
 
+      isContextPanelCollapsed: false,
+      setContextPanelCollapsed: (collapsed) => set({ isContextPanelCollapsed: collapsed }),
+      toggleContextPanel: () => set((state) => ({ isContextPanelCollapsed: !state.isContextPanelCollapsed })),
+
       isMobileMenuOpen: false,
       setMobileMenuOpen: (open) => set({ isMobileMenuOpen: open }),
       toggleMobileMenu: () => set((state) => ({ isMobileMenuOpen: !state.isMobileMenuOpen })),
@@ -187,6 +200,7 @@ export const useAppStore = create<AppState>()(
         koboldCppUrl: state.koboldCppUrl,
         ollamaUrl: state.ollamaUrl,
         geminiApiKey: state.geminiApiKey,
+        discordWebhookUrl: state.discordWebhookUrl,
         defaultKreaVariant: state.defaultKreaVariant,
         defaultAIProvider: state.defaultAIProvider,
         autoCleanBuzzwords: state.autoCleanBuzzwords,
@@ -196,6 +210,7 @@ export const useAppStore = create<AppState>()(
         activeModelProfileId: state.activeModelProfileId,
         comfySettings: state.comfySettings,
         matrixPrompt: state.matrixPrompt,
+        isContextPanelCollapsed: state.isContextPanelCollapsed,
       }),
     }
   )

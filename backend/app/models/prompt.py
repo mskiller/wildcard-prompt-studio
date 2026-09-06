@@ -9,8 +9,8 @@ from app.database import Base
 prompt_tag_association = Table(
     'prompt_tags',
     Base.metadata,
-    Column('prompt_id', Integer, ForeignKey('prompts.id'), primary_key=True),
-    Column('tag_id', Integer, ForeignKey('tags.id'), primary_key=True)
+    Column('prompt_id', Integer, ForeignKey('prompts.id', ondelete="CASCADE"), primary_key=True),
+    Column('tag_id', Integer, ForeignKey('tags.id', ondelete="CASCADE"), primary_key=True)
 )
 
 class Prompt(Base):
