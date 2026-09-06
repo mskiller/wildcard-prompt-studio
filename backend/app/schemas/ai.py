@@ -14,6 +14,7 @@ class Krea2ImproveRequest(BaseModel):
     quote_targets: Optional[List[str]] = None
     clean_buzzwords: bool = True
     provider: str = "kobold"
+    use_rag: Optional[bool] = False
     max_tokens: Optional[int] = 4096
 
 class AnimaImproveRequest(BaseModel):
@@ -24,6 +25,7 @@ class AnimaImproveRequest(BaseModel):
     negative_prompt: Optional[str] = None
     provider: Optional[str] = None
     model: Optional[str] = None
+    use_rag: Optional[bool] = False
     max_tokens: Optional[int] = 4096
 
 

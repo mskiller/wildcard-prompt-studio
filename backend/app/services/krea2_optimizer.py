@@ -1,9 +1,11 @@
 import re
 import logging
 from typing import List, Optional
+from sqlalchemy.orm import Session
 
 from app.services.ai.provider_manager import AIProviderManager
 from app.services.ai.thinking_parser import extract_final_prompt
+from app.services.unified_rag import unified_rag_service
 
 logger = logging.getLogger(__name__)
 
@@ -118,12 +120,40 @@ class Krea2Optimizer:
         key = variant.lower().strip() if variant else "turbo"
         return self._presets.get(key, TURBO_PRESET)
 
+    async def enrich_prompt_with_rag(self, db: Session, prompt: str) -> str:
+        """Enrich prompt with Krea 2 model guidelines retrieved via Unified RAG service."""
+        try:
+            docs = await unified_rag_service.search_knowledge_async(
+                db=db,
+                query=prompt,
+                top_k=2,
+                category="model_guide",
+            )
+            if not docs:
+                docs = await unified_rag_service.search_knowledge_async(
+                    db=db,
+                    query=prompt,
+                    top_k=2,
+                )
+            if not docs:
+                return prompt
+
+            guidelines = "\n\nRAG Formatting & Style Guidelines:\n" + "\n".join(
+                f"- {doc['title']}: {doc['content']}" for doc in docs
+            )
+            return f"{prompt}{guidelines}"
+        except Exception as e:
+            logger.warning(f"RAG enrichment failed during Krea2 optimization: {e}")
+            return prompt
+
     async def improve_prompt(
         self,
         prompt: str,
         variant: str = "turbo",
         quote_targets: Optional[List[str]] = None,
         clean_buzzwords_flag: bool = True,
+        use_rag: bool = False,
+        db: Optional[Session] = None,
         provider_manager: Optional[AIProviderManager] = None,
         max_tokens: Optional[int] = 4096,
     ) -> str:
@@ -135,6 +165,9 @@ class Krea2Optimizer:
 
         if quote_targets:
             processed_prompt = format_quotes(processed_prompt, quote_targets)
+
+        if use_rag and db:
+            processed_prompt = await self.enrich_prompt_with_rag(db, processed_prompt)
 
         system_prompt = self.get_system_prompt(variant)
 

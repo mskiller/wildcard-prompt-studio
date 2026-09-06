@@ -57,6 +57,7 @@ async def improve_prompt_endpoint(request: PromptImproveRequest, db: Session = D
 @router.post("/krea2-improve", response_model=PromptImproveResponse)
 async def krea2_improve_prompt_endpoint(
     request: Krea2ImproveRequest,
+    db: Session = Depends(get_db),
     optimizer: Krea2Optimizer = Depends(get_krea2_optimizer),
     provider_manager: AIProviderManager = Depends(get_provider_manager),
 ):
@@ -79,6 +80,8 @@ async def krea2_improve_prompt_endpoint(
         variant=request.variant,
         quote_targets=request.quote_targets,
         clean_buzzwords_flag=request.clean_buzzwords,
+        use_rag=bool(request.use_rag),
+        db=db,
         provider_manager=provider_manager,
         max_tokens=request.max_tokens,
     )
@@ -87,6 +90,7 @@ async def krea2_improve_prompt_endpoint(
 @router.post("/anima-improve", response_model=PromptImproveResponse)
 async def anima_improve_prompt_endpoint(
     request: AnimaImproveRequest,
+    db: Session = Depends(get_db),
     optimizer: AnimaOptimizer = Depends(get_anima_optimizer),
     provider_manager: AIProviderManager = Depends(get_provider_manager),
 ):
@@ -114,6 +118,8 @@ async def anima_improve_prompt_endpoint(
         variant=request.variant or "hybrid",
         clean_weights_flag=request.clean_weights if request.clean_weights is not None else True,
         inject_scores_flag=request.add_quality_tags if request.add_quality_tags is not None else True,
+        use_rag=bool(request.use_rag),
+        db=db,
         provider_manager=provider_manager,
         max_tokens=request.max_tokens,
     )

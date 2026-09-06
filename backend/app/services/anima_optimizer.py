@@ -1,9 +1,11 @@
 import re
 import logging
 from typing import Optional
+from sqlalchemy.orm import Session
 
 from app.services.ai.provider_manager import AIProviderManager
 from app.services.ai.thinking_parser import extract_final_prompt
+from app.services.unified_rag import unified_rag_service
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +107,32 @@ class AnimaOptimizer:
         key = variant.lower().strip() if variant else "anime"
         return self._presets.get(key, ANIME_PRESET)
 
+    async def enrich_prompt_with_rag(self, db: Session, prompt: str) -> str:
+        """Enrich prompt with ANIMA model guidelines retrieved via Unified RAG service."""
+        try:
+            docs = await unified_rag_service.search_knowledge_async(
+                db=db,
+                query=prompt,
+                top_k=2,
+                category="anime_style",
+            )
+            if not docs:
+                docs = await unified_rag_service.search_knowledge_async(
+                    db=db,
+                    query=prompt,
+                    top_k=2,
+                )
+            if not docs:
+                return prompt
+
+            guidelines = "\n\nRAG Formatting & Style Guidelines:\n" + "\n".join(
+                f"- {doc['title']}: {doc['content']}" for doc in docs
+            )
+            return f"{prompt}{guidelines}"
+        except Exception as e:
+            logger.warning(f"RAG enrichment failed during ANIMA optimization: {e}")
+            return prompt
+
     async def improve_prompt(
         self,
         prompt: str,
@@ -112,6 +140,8 @@ class AnimaOptimizer:
         clean_weights_flag: bool = True,
         format_artist_flag: bool = True,
         inject_scores_flag: bool = True,
+        use_rag: bool = False,
+        db: Optional[Session] = None,
         provider_manager: Optional[AIProviderManager] = None,
         max_tokens: Optional[int] = 4096,
     ) -> str:
@@ -126,6 +156,9 @@ class AnimaOptimizer:
 
         if inject_scores_flag:
             processed_prompt = inject_quality_scores(processed_prompt)
+
+        if use_rag and db:
+            processed_prompt = await self.enrich_prompt_with_rag(db, processed_prompt)
 
         system_prompt = self.get_system_prompt(variant)
 
