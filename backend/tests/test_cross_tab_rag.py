@@ -34,20 +34,45 @@ async def test_anima_enrichment_with_rag():
     finally:
         db.close()
 
-def test_krea2_endpoint_with_rag():
+from unittest.mock import AsyncMock
+from app.dependencies import get_provider_manager
+from app.services.ai.provider_manager import AIProviderManager
+
+@pytest.fixture
+def mock_provider_manager():
+    mock = AsyncMock(spec=AIProviderManager)
+    mock.list_providers.return_value = ["mock_ai"]
+    mock.generate.return_value = "improved output prompt"
+    app.dependency_overrides[get_provider_manager] = lambda: mock
+    yield mock
+    app.dependency_overrides.pop(get_provider_manager, None)
+
+def test_krea2_endpoint_with_rag(mock_provider_manager):
     res = client.post("/api/v1/ai/krea2-improve", json={
         "prompt": "neon cyberpunk car driving through rain",
         "variant": "turbo",
         "use_rag": True
     })
     assert res.status_code == 200
-    assert "improved_prompt" in res.json()
+    assert res.json()["improved_prompt"] == "improved output prompt"
+    # Verify RAG guidelines were passed in system_prompt
+    called_kwargs = mock_provider_manager.generate.call_args.kwargs
+    assert "RAG Formatting & Style Guidelines:" in called_kwargs["system_prompt"]
 
-def test_anima_endpoint_with_rag():
+def test_anima_endpoint_with_rag(mock_provider_manager):
     res = client.post("/api/v1/ai/anima-improve", json={
         "prompt": "1girl, silver hair, cat ears",
         "variant": "hybrid",
         "use_rag": True
     })
     assert res.status_code == 200
-    assert "improved_prompt" in res.json()
+    assert res.json()["improved_prompt"] == "improved output prompt"
+    called_kwargs = mock_provider_manager.generate.call_args.kwargs
+    assert "RAG Formatting & Style Guidelines:" in called_kwargs["system_prompt"]
+
+@pytest.mark.asyncio
+async def test_rag_exception_resilience():
+    # Test that optimizer recovers cleanly if RAG search encounters an error
+    optimizer = Krea2Optimizer()
+    guidelines = await optimizer.get_rag_guidelines(None, "sample prompt")
+    assert guidelines == ""

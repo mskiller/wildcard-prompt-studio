@@ -107,8 +107,8 @@ class AnimaOptimizer:
         key = variant.lower().strip() if variant else "anime"
         return self._presets.get(key, ANIME_PRESET)
 
-    async def enrich_prompt_with_rag(self, db: Session, prompt: str) -> str:
-        """Enrich prompt with ANIMA model guidelines retrieved via Unified RAG service."""
+    async def get_rag_guidelines(self, db: Session, prompt: str) -> str:
+        """Retrieves and formats RAG guidelines for ANIMA prompt optimization without altering user prompt."""
         try:
             docs = await unified_rag_service.search_knowledge_async(
                 db=db,
@@ -122,16 +122,22 @@ class AnimaOptimizer:
                     query=prompt,
                     top_k=2,
                 )
-            if not docs:
-                return prompt
-
-            guidelines = "\n\nRAG Formatting & Style Guidelines:\n" + "\n".join(
-                f"- {doc['title']}: {doc['content']}" for doc in docs
-            )
-            return f"{prompt}{guidelines}"
+            if docs:
+                guidelines = []
+                for doc in docs:
+                    guidelines.append(f"- {doc['title']}: {doc['content']}")
+                if guidelines:
+                    return "RAG Formatting & Style Guidelines:\n" + "\n".join(guidelines)
         except Exception as e:
-            logger.warning(f"RAG enrichment failed during ANIMA optimization: {e}")
-            return prompt
+            logger.warning(f"RAG enrichment failed in AnimaOptimizer: {e}")
+        return ""
+
+    async def enrich_prompt_with_rag(self, db: Session, prompt: str) -> str:
+        """Enriches prompt with RAG guidance for backward compatibility."""
+        guidelines = await self.get_rag_guidelines(db, prompt)
+        if guidelines:
+            return f"{prompt}\n\n{guidelines}"
+        return prompt
 
     async def improve_prompt(
         self,
@@ -157,10 +163,12 @@ class AnimaOptimizer:
         if inject_scores_flag:
             processed_prompt = inject_quality_scores(processed_prompt)
 
-        if use_rag and db:
-            processed_prompt = await self.enrich_prompt_with_rag(db, processed_prompt)
-
         system_prompt = self.get_system_prompt(variant)
+
+        if use_rag and db:
+            rag_guidelines = await self.get_rag_guidelines(db, processed_prompt)
+            if rag_guidelines:
+                system_prompt = f"{system_prompt}\n\n{rag_guidelines}"
 
         if provider_manager:
             try:

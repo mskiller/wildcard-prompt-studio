@@ -120,31 +120,39 @@ class Krea2Optimizer:
         key = variant.lower().strip() if variant else "turbo"
         return self._presets.get(key, TURBO_PRESET)
 
-    async def enrich_prompt_with_rag(self, db: Session, prompt: str) -> str:
-        """Enrich prompt with Krea 2 model guidelines retrieved via Unified RAG service."""
+    async def get_rag_guidelines(self, db: Session, prompt: str) -> str:
+        """Retrieves and formats RAG guidelines for prompt optimization without altering user prompt."""
         try:
-            docs = await unified_rag_service.search_knowledge_async(
+            results = await unified_rag_service.search_knowledge_async(
                 db=db,
                 query=prompt,
                 top_k=2,
-                category="model_guide",
+                category="model_guide"
             )
-            if not docs:
-                docs = await unified_rag_service.search_knowledge_async(
+            if not results:
+                results = await unified_rag_service.search_knowledge_async(
                     db=db,
                     query=prompt,
-                    top_k=2,
+                    top_k=2
                 )
-            if not docs:
-                return prompt
-
-            guidelines = "\n\nRAG Formatting & Style Guidelines:\n" + "\n".join(
-                f"- {doc['title']}: {doc['content']}" for doc in docs
-            )
-            return f"{prompt}{guidelines}"
+            if results:
+                guidelines = []
+                for item in results:
+                    title = item.get("title", "")
+                    content = item.get("content", "")
+                    guidelines.append(f"- {title}: {content}")
+                if guidelines:
+                    return "RAG Formatting & Style Guidelines:\n" + "\n".join(guidelines)
         except Exception as e:
-            logger.warning(f"RAG enrichment failed during Krea2 optimization: {e}")
-            return prompt
+            logger.warning(f"RAG enrichment failed in Krea2Optimizer: {e}")
+        return ""
+
+    async def enrich_prompt_with_rag(self, db: Session, prompt: str) -> str:
+        """Enriches prompt with RAG guidance for backward compatibility."""
+        guidelines = await self.get_rag_guidelines(db, prompt)
+        if guidelines:
+            return f"{prompt}\n\n{guidelines}"
+        return prompt
 
     async def improve_prompt(
         self,
@@ -166,10 +174,12 @@ class Krea2Optimizer:
         if quote_targets:
             processed_prompt = format_quotes(processed_prompt, quote_targets)
 
-        if use_rag and db:
-            processed_prompt = await self.enrich_prompt_with_rag(db, processed_prompt)
-
         system_prompt = self.get_system_prompt(variant)
+
+        if use_rag and db:
+            rag_guidelines = await self.get_rag_guidelines(db, processed_prompt)
+            if rag_guidelines:
+                system_prompt = f"{system_prompt}\n\n{rag_guidelines}"
 
         if provider_manager:
             try:
