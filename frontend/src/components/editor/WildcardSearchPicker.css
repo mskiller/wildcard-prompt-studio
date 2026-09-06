@@ -1,0 +1,403 @@
+/* WildcardSearchPicker.css - Dark Glassmorphism Wildcard Picker */
+
+.wildcard-search-picker {
+  position: relative;
+  box-sizing: border-box;
+  font-family: var(--font-sans, system-ui, sans-serif);
+  user-select: none;
+}
+
+/* ==========================================================================
+   Trigger Button Styles
+   ========================================================================== */
+.wildcard-picker-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.wildcard-picker-trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wildcard-picker-trigger-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.wildcard-picker-icon {
+  flex-shrink: 0;
+  color: #c084fc;
+  transition: color 0.15s ease;
+}
+
+.wildcard-picker-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: inherit;
+  font-family: inherit;
+  font-weight: inherit;
+}
+
+.wildcard-picker-chevron {
+  flex-shrink: 0;
+  color: #94a3b8;
+  transition: transform 0.2s ease, color 0.15s ease;
+}
+
+.wildcard-picker-chevron.is-open {
+  transform: rotate(180deg);
+  color: #c084fc;
+}
+
+/* ==========================================================================
+   Variant: Toolbar
+   ========================================================================== */
+.wildcard-search-picker-toolbar {
+  display: inline-flex;
+}
+
+.wildcard-search-picker-toolbar .wildcard-picker-trigger {
+  height: 30px;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: #cdd6f4;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.wildcard-search-picker-toolbar .wildcard-picker-trigger:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(192, 132, 252, 0.45);
+  color: #ffffff;
+}
+
+.wildcard-search-picker-toolbar .wildcard-picker-trigger.is-placeholder .wildcard-picker-label {
+  color: #94a3b8;
+}
+
+.wildcard-search-picker-toolbar .wildcard-search-picker-popover {
+  width: 320px;
+  min-width: 280px;
+  max-width: 400px;
+}
+
+/* ==========================================================================
+   Variant: Canvas Node
+   ========================================================================== */
+.wildcard-search-picker-canvas-node {
+  display: flex;
+  width: 100%;
+}
+
+.wildcard-search-picker-canvas-node .wildcard-picker-trigger {
+  height: 32px;
+  width: 100%;
+  padding: 5px 8px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: #c084fc;
+  font-size: 12px;
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.wildcard-search-picker-canvas-node .wildcard-picker-trigger:hover:not(:disabled) {
+  border-color: #c084fc;
+  background: rgba(18, 22, 34, 0.85);
+  box-shadow: 0 0 8px rgba(192, 132, 252, 0.25);
+}
+
+.wildcard-search-picker-canvas-node .wildcard-picker-trigger:focus-visible {
+  border-color: #c084fc;
+  box-shadow: 0 0 0 1px rgba(192, 132, 252, 0.4);
+}
+
+.wildcard-search-picker-canvas-node .wildcard-picker-trigger.is-placeholder .wildcard-picker-label {
+  color: #94a3b8;
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-weight: normal;
+}
+
+.wildcard-search-picker-canvas-node .wildcard-search-picker-popover {
+  width: 100%;
+  min-width: 280px;
+  max-width: 380px;
+}
+
+/* ==========================================================================
+   Variant: Inspector
+   ========================================================================== */
+.wildcard-search-picker-inspector {
+  display: flex;
+  width: 100%;
+}
+
+.wildcard-search-picker-inspector .wildcard-picker-trigger {
+  height: 34px;
+  width: 100%;
+  padding: 6px 10px;
+  background: rgba(18, 22, 34, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  color: #f1f5f9;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.wildcard-search-picker-inspector .wildcard-picker-trigger:hover:not(:disabled) {
+  border-color: rgba(192, 132, 252, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.wildcard-search-picker-inspector .wildcard-picker-trigger:focus-visible {
+  border-color: #c084fc;
+  box-shadow: 0 0 0 1px rgba(192, 132, 252, 0.35);
+}
+
+.wildcard-search-picker-inspector .wildcard-picker-trigger.is-placeholder .wildcard-picker-label {
+  color: #64748b;
+}
+
+.wildcard-search-picker-inspector .wildcard-search-picker-popover {
+  width: 100%;
+  min-width: 280px;
+}
+
+/* ==========================================================================
+   Floating Popover (Dark Glassmorphism Theme)
+   ========================================================================== */
+.wildcard-search-picker-popover {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 1000;
+  background: #111420;
+  background: rgba(17, 20, 32, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(192, 132, 252, 0.35);
+  border-radius: 8px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65), 0 0 16px rgba(192, 132, 252, 0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: wildcard-picker-fade-in 0.15s ease-out;
+}
+
+@keyframes wildcard-picker-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
+   Search Input Header
+   ========================================================================== */
+.wildcard-picker-search-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.wildcard-picker-search-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.wildcard-picker-search-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 12px;
+  color: #f1f5f9;
+  font-family: var(--font-sans, system-ui, sans-serif);
+}
+
+.wildcard-picker-search-input::placeholder {
+  color: #64748b;
+}
+
+.wildcard-picker-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 4px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.12s ease;
+  flex-shrink: 0;
+}
+
+.wildcard-picker-clear-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+}
+
+/* ==========================================================================
+   List of Items & Custom Scrollbar
+   ========================================================================== */
+.wildcard-picker-list {
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wildcard-picker-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.wildcard-picker-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.wildcard-picker-list::-webkit-scrollbar-thumb {
+  background: rgba(192, 132, 252, 0.25);
+  border-radius: 4px;
+}
+
+.wildcard-picker-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(192, 132, 252, 0.5);
+}
+
+.wildcard-picker-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: var(--font-mono, monospace);
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.wildcard-picker-item.is-highlighted {
+  background: rgba(192, 132, 252, 0.18);
+  color: #ffffff;
+}
+
+.wildcard-picker-item.is-selected {
+  background: rgba(192, 132, 252, 0.28);
+  color: #f3e8ff;
+  font-weight: 600;
+}
+
+.wildcard-picker-item-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.wildcard-picker-highlight-match {
+  color: #f0abfc;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.wildcard-picker-check-icon {
+  color: #c084fc;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Custom Value Option
+   ========================================================================== */
+.wildcard-picker-item-custom {
+  margin-top: 4px;
+  border-top: 1px dashed rgba(192, 132, 252, 0.35);
+  padding-top: 8px;
+}
+
+.wildcard-picker-custom-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #e9d5ff;
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: 11px;
+}
+
+.wildcard-picker-custom-content strong {
+  font-family: var(--font-mono, monospace);
+  color: #f0abfc;
+  font-weight: 600;
+}
+
+.wildcard-picker-custom-icon {
+  color: #c084fc;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Empty State
+   ========================================================================== */
+.wildcard-picker-empty {
+  padding: 16px 12px;
+  text-align: center;
+  color: #64748b;
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+.wildcard-picker-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.wildcard-picker-footer-count {
+  font-weight: 500;
+}
+
+.wildcard-picker-footer-hint {
+  font-size: 10px;
+  color: #64748b;
+  letter-spacing: 0.2px;
+}
