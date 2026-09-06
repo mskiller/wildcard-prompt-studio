@@ -241,7 +241,7 @@
   color: var(--fg-primary);
 }
 
-.rag-active-pill {
+.krea2-controls-grid .rag-active-pill {
   display: inline-flex;
   align-items: center;
   font-size: 10px;

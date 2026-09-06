@@ -148,6 +148,19 @@ pre {
   color: #a5b4fc;
 }
 
+.vision-error-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 6px;
+  color: #f87171;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
 /* Modal Overlay & Card */
 .rag-save-modal-overlay {
   position: fixed;
@@ -162,8 +175,8 @@ pre {
 }
 
 .rag-save-modal {
-  background: #181825;
-  border: 1px solid #313244;
+  background: var(--bg-card, #181825);
+  border: 1px solid var(--border-color, #313244);
   border-radius: 12px;
   width: 100%;
   max-width: 480px;
@@ -188,8 +201,8 @@ pre {
   justify-content: space-between;
   align-items: center;
   padding: 14px 18px;
-  background: #11111b;
-  border-bottom: 1px solid #313244;
+  background: var(--bg-surface, #11111b);
+  border-bottom: 1px solid var(--border-color, #313244);
 }
 
 .rag-modal-title {
@@ -198,13 +211,13 @@ pre {
   gap: 8px;
   font-weight: 600;
   font-size: 14px;
-  color: #cdd6f4;
+  color: var(--text-color, #cdd6f4);
 }
 
 .rag-modal-close {
   background: transparent;
   border: none;
-  color: #a6adc8;
+  color: var(--fg-muted, #a6adc8);
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
@@ -214,7 +227,7 @@ pre {
 }
 
 .rag-modal-close:hover {
-  color: #cdd6f4;
+  color: var(--text-color, #cdd6f4);
   background: rgba(255, 255, 255, 0.08);
 }
 
@@ -233,24 +246,24 @@ pre {
 
 .rag-modal-body label {
   font-size: 12px;
-  color: #a6adc8;
+  color: var(--fg-muted, #a6adc8);
   font-weight: 500;
 }
 
 .rag-modal-body input,
 .rag-modal-body select {
-  background: #11111b;
-  border: 1px solid #45475a;
+  background: var(--bg-surface, #11111b);
+  border: 1px solid var(--glass-border, #45475a);
   border-radius: 6px;
   padding: 8px 12px;
-  color: #cdd6f4;
+  color: var(--text-color, #cdd6f4);
   font-size: 13px;
   outline: none;
 }
 
 .rag-modal-body input:focus,
 .rag-modal-body select:focus {
-  border-color: #89b4fa;
+  border-color: var(--accent-primary, #89b4fa);
 }
 
 .rag-modal-status {
@@ -280,13 +293,13 @@ pre {
   justify-content: flex-end;
   gap: 8px;
   padding: 12px 18px;
-  background: #11111b;
-  border-top: 1px solid #313244;
+  background: var(--bg-surface, #11111b);
+  border-top: 1px solid var(--border-color, #313244);
 }
 
 .rag-modal-cancel {
-  background: #313244;
-  color: #cdd6f4;
+  background: var(--bg-panel, #313244);
+  color: var(--text-color, #cdd6f4);
   border: none;
   border-radius: 6px;
   padding: 8px 14px;

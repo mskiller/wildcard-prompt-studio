@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { indexRAGKnowledge } from '../../api';
-import { BookOpen, Check, X, BookmarkPlus } from 'lucide-react';
+import { BookOpen, Check, X, BookmarkPlus, AlertCircle } from 'lucide-react';
 import './VisionInspectorPanel.css';
 
 interface VisionInspectorPanelProps {
@@ -21,6 +21,7 @@ export const VisionInspectorPanel: React.FC<VisionInspectorPanelProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [resultPrompt, setResultPrompt] = useState<string>('');
   const [extractedStyle, setExtractedStyle] = useState<any>(null);
+  const [extractError, setExtractError] = useState<string | null>(null);
 
   // RAG Save Modal state
   const [showRAGModal, setShowRAGModal] = useState<boolean>(false);
@@ -30,6 +31,16 @@ export const VisionInspectorPanel: React.FC<VisionInspectorPanelProps> = ({
   const [isSavingRAG, setIsSavingRAG] = useState<boolean>(false);
   const [ragStatusMsg, setRagStatusMsg] = useState<string | null>(null);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showRAGModal) {
+        setShowRAGModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showRAGModal]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -37,12 +48,14 @@ export const VisionInspectorPanel: React.FC<VisionInspectorPanelProps> = ({
       setPreviewUrl(URL.createObjectURL(file));
       const baseName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
       setRagTitle(`Style: ${baseName}`);
+      setExtractError(null);
     }
   };
 
   const handleDescribe = async () => {
     if (!selectedFile) return;
     setLoading(true);
+    setExtractError(null);
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
@@ -54,12 +67,16 @@ export const VisionInspectorPanel: React.FC<VisionInspectorPanelProps> = ({
         method: 'POST',
         body: formData
       });
+      if (!response.ok) {
+        throw new Error(`Vision describe failed (${response.status}): ${response.statusText || response.status}`);
+      }
       const data = await response.json();
       if (data.prompt) {
         setResultPrompt(data.prompt);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Vision describe error:', err);
+      setExtractError(err.message || 'Vision analysis failed');
     } finally {
       setLoading(false);
     }
@@ -68,6 +85,7 @@ export const VisionInspectorPanel: React.FC<VisionInspectorPanelProps> = ({
   const handleExtractStyle = async () => {
     if (!selectedFile) return;
     setLoading(true);
+    setExtractError(null);
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
@@ -78,13 +96,17 @@ export const VisionInspectorPanel: React.FC<VisionInspectorPanelProps> = ({
         method: 'POST',
         body: formData
       });
+      if (!response.ok) {
+        throw new Error(`Vision style extraction failed (${response.status}): ${response.statusText || response.status}`);
+      }
       const data = await response.json();
       if (data.descriptors) {
         setExtractedStyle(data.descriptors);
         setShowRAGModal(true);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Vision style extraction error:', err);
+      setExtractError(err.message || 'Style extraction failed');
     } finally {
       setLoading(false);
     }
@@ -166,6 +188,13 @@ export const VisionInspectorPanel: React.FC<VisionInspectorPanelProps> = ({
         </button>
       </div>
 
+      {extractError && (
+        <div className="vision-error-alert">
+          <AlertCircle size={15} />
+          <span>{extractError}</span>
+        </div>
+      )}
+
       {resultPrompt && (
         <div className="result-box">
           <h4>Generated Krea 2 Prompt:</h4>
@@ -201,68 +230,74 @@ export const VisionInspectorPanel: React.FC<VisionInspectorPanelProps> = ({
                 <BookOpen size={18} color="var(--accent-primary)" />
                 <span>Save Style to RAG Knowledge Vault</span>
               </div>
-              <button className="rag-modal-close" onClick={() => setShowRAGModal(false)}>
+              <button className="rag-modal-close" type="button" onClick={() => setShowRAGModal(false)} aria-label="Close modal">
                 <X size={16} />
               </button>
             </div>
 
-            <div className="rag-modal-body">
-              <div className="form-group">
-                <label>Document Title</label>
-                <input
-                  type="text"
-                  value={ragTitle}
-                  onChange={e => setRagTitle(e.target.value)}
-                  placeholder="e.g. Cyberpunk Rainy Neon Style"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Category</label>
-                <select value={ragCategory} onChange={e => setRagCategory(e.target.value)}>
-                  <option value="optics">Optics & Lenses</option>
-                  <option value="lighting">Lighting & Mood</option>
-                  <option value="palette">Color Palette</option>
-                  <option value="model_guide">Model Guide</option>
-                  <option value="anime_style">Anime Style</option>
-                  <option value="general">General Aesthetics</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Tags (comma separated)</label>
-                <input
-                  type="text"
-                  value={ragTags}
-                  onChange={e => setRagTags(e.target.value)}
-                  placeholder="e.g. lighting, volumetric, 85mm, cyber"
-                />
-              </div>
-
-              {ragStatusMsg && (
-                <div className={`rag-modal-status ${ragStatusMsg.startsWith('Error') ? 'error' : 'success'}`}>
-                  {ragStatusMsg.startsWith('Error') ? null : <Check size={14} />}
-                  <span>{ragStatusMsg}</span>
+            <form onSubmit={(e) => { e.preventDefault(); handleConfirmSaveRAG(); }}>
+              <div className="rag-modal-body">
+                <div className="form-group">
+                  <label htmlFor="rag-doc-title">Document Title</label>
+                  <input
+                    id="rag-doc-title"
+                    type="text"
+                    value={ragTitle}
+                    onChange={e => setRagTitle(e.target.value)}
+                    placeholder="e.g. Cyberpunk Rainy Neon Style"
+                    autoFocus
+                  />
                 </div>
-              )}
-            </div>
 
-            <div className="rag-modal-actions">
-              <button
-                className="rag-modal-cancel"
-                onClick={() => setShowRAGModal(false)}
-                disabled={isSavingRAG}
-              >
-                Cancel
-              </button>
-              <button
-                className="rag-modal-confirm"
-                onClick={handleConfirmSaveRAG}
-                disabled={isSavingRAG || !ragTitle.trim()}
-              >
-                {isSavingRAG ? 'Indexing...' : 'Save & Index Vector'}
-              </button>
-            </div>
+                <div className="form-group">
+                  <label htmlFor="rag-doc-category">Category</label>
+                  <select id="rag-doc-category" value={ragCategory} onChange={e => setRagCategory(e.target.value)}>
+                    <option value="optics">Optics & Lenses</option>
+                    <option value="lighting">Lighting & Mood</option>
+                    <option value="palette">Color Palette</option>
+                    <option value="model_guide">Model Guide</option>
+                    <option value="anime_style">Anime Style</option>
+                    <option value="general">General Aesthetics</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="rag-doc-tags">Tags (comma separated)</label>
+                  <input
+                    id="rag-doc-tags"
+                    type="text"
+                    value={ragTags}
+                    onChange={e => setRagTags(e.target.value)}
+                    placeholder="e.g. lighting, volumetric, 85mm, cyber"
+                  />
+                </div>
+
+                {ragStatusMsg && (
+                  <div className={`rag-modal-status ${ragStatusMsg.startsWith('Error') ? 'error' : 'success'}`}>
+                    {ragStatusMsg.startsWith('Error') ? null : <Check size={14} />}
+                    <span>{ragStatusMsg}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="rag-modal-actions">
+                <button
+                  type="button"
+                  className="rag-modal-cancel"
+                  onClick={() => setShowRAGModal(false)}
+                  disabled={isSavingRAG}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rag-modal-confirm"
+                  disabled={isSavingRAG || !ragTitle.trim()}
+                >
+                  {isSavingRAG ? 'Indexing...' : 'Save & Index Vector'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
