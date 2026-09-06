@@ -33,6 +33,7 @@ services:
       - KOBOLDCPP_HOST=http://host.docker.internal:5001
       - OLLAMA_HOST=http://host.docker.internal:11434
       - COMFYUI_URL=http://host.docker.internal:8188
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -58,6 +59,7 @@ services:
       - KOBOLDCPP_HOST=http://host.docker.internal:5001
       - OLLAMA_HOST=http://host.docker.internal:11434
       - COMFYUI_URL=http://host.docker.internal:8188
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:

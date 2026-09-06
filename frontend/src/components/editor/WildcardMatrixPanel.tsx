@@ -126,9 +126,16 @@ const ASTTreeNodeView: React.FC<ASTNodeProps> = ({ node, depth = 0 }) => {
 };
 
 export const WildcardMatrixPanel: React.FC = () => {
-  const { matrixPrompt: storedPrompt, setMatrixPrompt, activeDocument, discordWebhookUrl } = useAppStore();
+  const { matrixPrompt: storedPrompt, setMatrixPrompt, activeDocument, discordWebhookUrl, syncDiscordConfig } = useAppStore();
   const [prompt, setPromptLocal] = useState<string>(storedPrompt);
   const setPrompt = (val: string) => { setPromptLocal(val); setMatrixPrompt(val); };
+
+  // Sync Discord configuration from backend on mount
+  useEffect(() => {
+    if (syncDiscordConfig) {
+      syncDiscordConfig();
+    }
+  }, [syncDiscordConfig]);
   const [combinations, setCombinations] = useState<string[]>([]);
   const [graphTree, setGraphTree] = useState<any | null>(null);
   const [heatmapScores, setHeatmapScores] = useState<any | null>(null);
@@ -458,7 +465,8 @@ export const WildcardMatrixPanel: React.FC = () => {
         sendToDiscord,
         discordWebhookUrl: sendToDiscord ? discordWebhookUrl : undefined,
       });
-      setStatus(`Successfully queued ${res.queued_count} batch sweep jobs in ComfyUI (${width}x${height})! Generating...`);
+      const discordMsg = sendToDiscord ? ' (with live Discord delivery)' : '';
+      setStatus(`Successfully queued ${res.queued_count} batch sweep jobs in ComfyUI (${width}x${height})${discordMsg}! Generating...`);
 
       // Poll periodically to stream completed images into the results space
       let pollCount = 0;
@@ -916,7 +924,14 @@ export const WildcardMatrixPanel: React.FC = () => {
 
         {/* Send to Discord */}
         <div className="batch-field batch-checkbox-field">
-          <label className="expand-wildcards-toggle-sm" title="Send each generated image + prompt to your Discord channel when done">
+          <label
+            className="expand-wildcards-toggle-sm"
+            title={
+              discordWebhookUrl
+                ? "Send each generated image + prompt to Discord (Webhook connected)"
+                : "Send each generated image + prompt to Discord (Configure in Settings > Integrations)"
+            }
+          >
             <input
               type="checkbox"
               checked={sendToDiscord}
@@ -924,6 +939,25 @@ export const WildcardMatrixPanel: React.FC = () => {
             />
             <span style={{ fontSize: 12 }}>📨</span>
             <span>Send to Discord</span>
+            {discordWebhookUrl ? (
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '3px',
+                  fontSize: '10px',
+                  color: '#4ade80',
+                  background: 'rgba(74, 222, 128, 0.15)',
+                  padding: '1px 5px',
+                  borderRadius: '10px',
+                  fontWeight: 600,
+                  marginLeft: '4px'
+                }}
+                title="Discord Webhook Active"
+              >
+                ● Connected
+              </span>
+            ) : null}
           </label>
         </div>
 

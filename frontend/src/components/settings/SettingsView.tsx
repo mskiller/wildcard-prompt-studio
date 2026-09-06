@@ -6,7 +6,14 @@ import {
   Sparkles, Tag, FileText, Image as ImageIcon 
 } from 'lucide-react';
 import { ModelProfileEditor } from './ModelProfileEditor';
-import { testIntegrationConnection, getSystemStats, resetDatabase, SystemStats } from '../../api';
+import { 
+  testIntegrationConnection, 
+  getSystemStats, 
+  resetDatabase, 
+  SystemStats,
+  saveDiscordConfig,
+  resendRecentToDiscord
+} from '../../api';
 import './SettingsView.css';
 
 export const SettingsView: React.FC = () => {
@@ -20,6 +27,7 @@ export const SettingsView: React.FC = () => {
     ollamaUrl, setOllamaUrl,
     geminiApiKey, setGeminiApiKey,
     discordWebhookUrl, setDiscordWebhookUrl,
+    syncDiscordConfig,
     defaultKreaVariant, setDefaultKreaVariant,
     defaultAIProvider, setDefaultAIProvider,
     autoCleanBuzzwords, setAutoCleanBuzzwords,
@@ -30,6 +38,17 @@ export const SettingsView: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'appearance' | 'prompt' | 'integrations' | 'profiles' | 'database'>('appearance');
   const [testStatus, setTestStatus] = useState<Record<string, 'idle' | 'testing' | 'success' | 'failed'>>({});
+  const [isSavingDiscord, setIsSavingDiscord] = useState(false);
+  const [saveDiscordFeedback, setSaveDiscordFeedback] = useState<string | null>(null);
+  const [isResendingDiscord, setIsResendingDiscord] = useState(false);
+  const [resendDiscordFeedback, setResendDiscordFeedback] = useState<string | null>(null);
+
+  // Sync Discord configuration from backend when integrations tab opens
+  useEffect(() => {
+    if (activeTab === 'integrations' && syncDiscordConfig) {
+      syncDiscordConfig();
+    }
+  }, [activeTab, syncDiscordConfig]);
 
   // Database & Storage state
   const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
@@ -106,6 +125,34 @@ export const SettingsView: React.FC = () => {
     setTestStatus(prev => ({ ...prev, [type]: 'testing' }));
     const success = await testIntegrationConnection(type, url);
     setTestStatus(prev => ({ ...prev, [type]: success ? 'success' : 'failed' }));
+  };
+
+  const handleSaveDiscord = async () => {
+    setIsSavingDiscord(true);
+    setSaveDiscordFeedback(null);
+    try {
+      await saveDiscordConfig(discordWebhookUrl);
+      setSaveDiscordFeedback('Saved to server config!');
+      setTimeout(() => setSaveDiscordFeedback(null), 4000);
+    } catch (e: any) {
+      setSaveDiscordFeedback(`Error: ${e.message}`);
+    } finally {
+      setIsSavingDiscord(false);
+    }
+  };
+
+  const handleResendRecentDiscord = async () => {
+    setIsResendingDiscord(true);
+    setResendDiscordFeedback(null);
+    try {
+      const res = await resendRecentToDiscord(10);
+      setResendDiscordFeedback(`Dispatched ${res.sent} of ${res.attempted} images to Discord!`);
+      setTimeout(() => setResendDiscordFeedback(null), 5000);
+    } catch (e: any) {
+      setResendDiscordFeedback(`Error: ${e.message}`);
+    } finally {
+      setIsResendingDiscord(false);
+    }
   };
 
   return (
@@ -300,6 +347,46 @@ export const SettingsView: React.FC = () => {
               <p className="form-help">
                 Webhook used by the Matrix Studio "Send to Discord" option. Each generated image + prompt will be posted to this channel when the batch finishes.
               </p>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="test-btn"
+                  onClick={() => handleTestConnection('discord', discordWebhookUrl)}
+                >
+                  {testStatus['discord'] === 'testing' ? t('testing') : t('testConnection')}
+                </button>
+                <button
+                  type="button"
+                  className="test-btn"
+                  onClick={handleSaveDiscord}
+                  disabled={isSavingDiscord || !discordWebhookUrl}
+                  style={{ background: 'rgba(168, 85, 247, 0.2)', borderColor: 'rgba(168, 85, 247, 0.4)' }}
+                >
+                  {isSavingDiscord ? 'Saving...' : 'Save to Server'}
+                </button>
+                <button
+                  type="button"
+                  className="test-btn"
+                  onClick={handleResendRecentDiscord}
+                  disabled={isResendingDiscord}
+                  title="Resend the last 10 generated images and prompts to Discord"
+                  style={{ background: 'rgba(59, 130, 246, 0.15)', borderColor: 'rgba(59, 130, 246, 0.3)' }}
+                >
+                  {isResendingDiscord ? 'Resending...' : 'Resend Last 10 to Discord'}
+                </button>
+                {testStatus['discord'] === 'success' && <span className="test-status success"><Check size={14} /> {t('connected')}</span>}
+                {testStatus['discord'] === 'failed' && <span className="test-status failed"><AlertCircle size={14} /> {t('connectionFailed')}</span>}
+                {saveDiscordFeedback && (
+                  <span style={{ fontSize: '0.8rem', color: saveDiscordFeedback.startsWith('Error') ? '#ef4444' : '#4ade80' }}>
+                    {saveDiscordFeedback}
+                  </span>
+                )}
+                {resendDiscordFeedback && (
+                  <span style={{ fontSize: '0.8rem', color: resendDiscordFeedback.startsWith('Error') ? '#ef4444' : '#60a5fa' }}>
+                    {resendDiscordFeedback}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         )}

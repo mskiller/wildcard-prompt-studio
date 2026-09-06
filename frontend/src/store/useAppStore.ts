@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Language, translations } from '../i18n';
+import { getDiscordStatus } from '../api';
 
 export type ViewType =
   | 'explorer'
@@ -63,6 +64,7 @@ interface AppState {
   setGeminiApiKey: (key: string) => void;
   discordWebhookUrl: string;
   setDiscordWebhookUrl: (url: string) => void;
+  syncDiscordConfig?: () => Promise<void>;
 
   // Prompt Improvement Defaults
   defaultKreaVariant: KreaVariant;
@@ -133,6 +135,16 @@ export const useAppStore = create<AppState>()(
       setGeminiApiKey: (key) => set({ geminiApiKey: key }),
       discordWebhookUrl: '',
       setDiscordWebhookUrl: (url) => set({ discordWebhookUrl: url }),
+      syncDiscordConfig: async () => {
+        try {
+          const status = await getDiscordStatus();
+          if (status.configured && status.webhook_url) {
+            set({ discordWebhookUrl: status.webhook_url });
+          }
+        } catch {
+          // ignore
+        }
+      },
 
       defaultKreaVariant: 'medium',
       setDefaultKreaVariant: (defaultKreaVariant) => set({ defaultKreaVariant }),

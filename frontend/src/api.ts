@@ -992,5 +992,41 @@ export async function syncRecentComfyOutputs(
   return res.json();
 }
 
+export interface DiscordStatusResponse {
+  configured: boolean;
+  webhook_url?: string;
+  masked_url?: string;
+}
+
+export async function getDiscordStatus(): Promise<DiscordStatusResponse> {
+  try {
+    const res = await fetch(`${API_BASE}/comfyui/discord-status`);
+    if (res.ok) return await res.json();
+  } catch {
+    // fallback gracefully
+  }
+  return { configured: false, webhook_url: '' };
+}
+
+export async function saveDiscordConfig(webhookUrl: string): Promise<{ ok: boolean; configured: boolean; webhook_url: string }> {
+  const res = await fetch(`${API_BASE}/comfyui/discord-config`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ webhook_url: webhookUrl })
+  });
+  if (!res.ok) throw new Error(`Failed to save Discord config: ${res.statusText}`);
+  return res.json();
+}
+
+export async function resendRecentToDiscord(limit: number = 10): Promise<{ attempted: number; sent: number; failed: number; errors: string[] }> {
+  const res = await fetch(`${API_BASE}/comfyui/resend-recent-discord`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ limit })
+  });
+  if (!res.ok) throw new Error(`Failed to resend to Discord: ${res.statusText}`);
+  return res.json();
+}
+
 
 

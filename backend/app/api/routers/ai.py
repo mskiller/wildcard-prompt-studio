@@ -159,7 +159,19 @@ async def test_integration_connection(req: ConnectionTestRequest):
                             return {"status": "ok", "provider": "ollama", "models": r.json().get("models", [])}
                 except Exception:
                     continue
-            raise HTTPException(status_code=502, detail="Ollama server unreachable")
+        elif provider == "discord":
+            from app.api.routers.comfyui import _get_discord_webhook_url
+            target_url = (req.url or "").strip() or _get_discord_webhook_url()
+            if not target_url:
+                raise HTTPException(status_code=400, detail="Discord webhook URL is not configured.")
+            if "discord.com/api/webhooks" not in target_url:
+                raise HTTPException(status_code=400, detail="Invalid Discord webhook URL format.")
+            async with httpx.AsyncClient(timeout=6.0) as client:
+                r = await client.get(target_url)
+                if r.status_code == 200:
+                    data = r.json()
+                    return {"status": "ok", "provider": "discord", "name": data.get("name"), "channel_id": data.get("channel_id")}
+                raise HTTPException(status_code=502, detail=f"Discord webhook verification returned HTTP {r.status_code}")
         else:
             raise HTTPException(status_code=400, detail=f"Unknown provider '{provider}'")
     except HTTPException:
