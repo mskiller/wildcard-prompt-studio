@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  expandMatrixPrompt,
+  fetchMatrixSlice,
+  MatrixPermutationItem,
   serializeASTToGraph,
   analyzeMatrixHeatmap,
   executeComfyUISweep,
@@ -136,7 +137,24 @@ export const WildcardMatrixPanel: React.FC = () => {
       syncDiscordConfig();
     }
   }, [syncDiscordConfig]);
+  const [sliceItems, setSliceItems] = useState<MatrixPermutationItem[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [currentOffset, setCurrentOffset] = useState<number>(0);
+  const [pageSize, setPageSize] = useState<number>(250);
+  const [isSampleMode, setIsSampleMode] = useState<boolean>(false);
+  const [sampleCount, setSampleCount] = useState<number>(100);
+  const [jumpIndexInput, setJumpIndexInput] = useState<string>('');
+  const [pageInput, setPageInput] = useState<string>('1');
   const [combinations, setCombinations] = useState<string[]>([]);
+  const selectedPromptsMap = useRef<Map<number, string>>(new Map());
+
+  // Synchronize combinations with sliceItems
+  useEffect(() => {
+    setCombinations(sliceItems.map((item) => item.prompt));
+  }, [sliceItems]);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const currentPage = Math.floor(currentOffset / pageSize) + 1;
   const [graphTree, setGraphTree] = useState<any | null>(null);
   const [heatmapScores, setHeatmapScores] = useState<any | null>(null);
   const [workspaceMode, setWorkspaceMode] = useState<'split' | 'canvas' | 'grid' | 'heatmap' | 'tree' | 'results'>('split');
@@ -144,7 +162,6 @@ export const WildcardMatrixPanel: React.FC = () => {
   const [status, setStatus] = useState<string>('');
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [availableWildcards, setAvailableWildcards] = useState<string[]>([]);
-  const [visibleLimit, setVisibleLimit] = useState<number>(250);
 
   // Batch Sweep Results & Lightbox
   const [sweepResults, setSweepResults] = useState<SweepResultItem[]>([]);
@@ -211,48 +228,59 @@ export const WildcardMatrixPanel: React.FC = () => {
   const [queueAll, setQueueAll] = useState<boolean>(false);
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
 
-  const handleToggleSelectPrompt = (idx: number) => {
+  const handleToggleSelectPrompt = (item: MatrixPermutationItem) => {
     setSelectedIndices((prev) => {
       const next = new Set(prev);
-      if (next.has(idx)) {
-        next.delete(idx);
+      if (next.has(item.index)) {
+        next.delete(item.index);
+        selectedPromptsMap.current.delete(item.index);
       } else {
-        next.add(idx);
+        next.add(item.index);
+        selectedPromptsMap.current.set(item.index, item.prompt);
       }
       return next;
     });
   };
 
   const handleSelectFirstN = (n: number) => {
-    const count = Math.min(n, combinations.length);
-    const newSet = new Set<number>();
+    const count = Math.min(n, sliceItems.length);
+    const newSet = new Set(selectedIndices);
     for (let i = 0; i < count; i++) {
-      newSet.add(i);
+      const it = sliceItems[i];
+      newSet.add(it.index);
+      selectedPromptsMap.current.set(it.index, it.prompt);
     }
     setSelectedIndices(newSet);
   };
 
   const handleSelectRandomN = (n: number) => {
-    const count = Math.min(n, combinations.length);
-    const indices = Array.from({ length: combinations.length }, (_, i) => i);
+    const count = Math.min(n, sliceItems.length);
+    const indices = Array.from({ length: sliceItems.length }, (_, i) => i);
     for (let i = indices.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [indices[i], indices[j]] = [indices[j], indices[i]];
     }
-    setSelectedIndices(new Set(indices.slice(0, count)));
+    const newSet = new Set(selectedIndices);
+    for (let i = 0; i < count; i++) {
+      const it = sliceItems[indices[i]];
+      newSet.add(it.index);
+      selectedPromptsMap.current.set(it.index, it.prompt);
+    }
+    setSelectedIndices(newSet);
   };
 
   const handleSelectAllShown = () => {
-    const count = Math.min(visibleLimit, combinations.length);
-    const newSet = new Set<number>();
-    for (let i = 0; i < count; i++) {
-      newSet.add(i);
+    const newSet = new Set(selectedIndices);
+    for (const it of sliceItems) {
+      newSet.add(it.index);
+      selectedPromptsMap.current.set(it.index, it.prompt);
     }
     setSelectedIndices(newSet);
   };
 
   const handleClearSelection = () => {
     setSelectedIndices(new Set());
+    selectedPromptsMap.current.clear();
   };
 
   // Live ComfyUI Availabilities
@@ -317,30 +345,161 @@ export const WildcardMatrixPanel: React.FC = () => {
 
   const expandDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Debounced matrix expansion runner (unlimited permutations)
-  const triggerExpansion = useCallback((promptToExpand: string, expandWc: boolean = expandWildcards) => {
-    if (expandDebounceRef.current) {
-      clearTimeout(expandDebounceRef.current);
+  const loadSlice = useCallback(
+    async (
+      offset: number = 0,
+      limit: number = pageSize,
+      sampleSize?: number,
+      promptOverride?: string,
+      expandWcOverride?: boolean
+    ) => {
+      const targetPrompt = promptOverride !== undefined ? promptOverride : prompt;
+      const targetExpandWc = expandWcOverride !== undefined ? expandWcOverride : expandWildcards;
+
+      if (!targetPrompt.trim()) {
+        setSliceItems([]);
+        setCombinations([]);
+        setTotalCount(0);
+        setCurrentOffset(0);
+        setIsSampleMode(false);
+        setPageInput('1');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const res = await fetchMatrixSlice({
+          prompt: targetPrompt,
+          offset,
+          limit,
+          expandWildcards: targetExpandWc,
+          sampleSize,
+        });
+
+        setSliceItems(res.items);
+        setCombinations(res.items.map((it) => it.prompt));
+        setTotalCount(res.total_count);
+        setCurrentOffset(res.offset);
+        setIsSampleMode(res.is_sample);
+
+        const effectiveLimit = limit || pageSize || 250;
+        const computedPage = Math.floor(res.offset / effectiveLimit) + 1;
+        setPageInput(String(computedPage));
+
+        if (res.is_sample) {
+          setStatus(`Sampled ${res.items.length} random variants (out of ${res.total_count.toLocaleString()} total).`);
+        } else {
+          const start = res.total_count > 0 ? res.offset + 1 : 0;
+          const end = Math.min(res.offset + res.items.length, res.total_count);
+          setStatus(
+            `Generated ${res.total_count.toLocaleString()} permutations (viewing #${start.toLocaleString()} - #${end.toLocaleString()} of ${res.total_count.toLocaleString()}).`
+          );
+        }
+      } catch (e: any) {
+        setStatus(`Error loading permutations: ${e.message}`);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [prompt, pageSize, expandWildcards]
+  );
+
+  const handleFirstPage = () => {
+    if (currentPage > 1) {
+      loadSlice(0, pageSize);
     }
-    if (!promptToExpand.trim()) {
-      setCombinations([]);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      const newOffset = Math.max(0, currentOffset - pageSize);
+      loadSlice(newOffset, pageSize);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      const newOffset = currentOffset + pageSize;
+      if (newOffset < totalCount) {
+        loadSlice(newOffset, pageSize);
+      }
+    }
+  };
+
+  const handleLastPage = () => {
+    if (currentPage < totalPages) {
+      const lastOffset = Math.max(0, (totalPages - 1) * pageSize);
+      loadSlice(lastOffset, pageSize);
+    }
+  };
+
+  const handlePageInputSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const parsed = parseInt(pageInput.trim(), 10);
+    if (isNaN(parsed)) {
+      setPageInput(String(currentPage));
       return;
     }
-    expandDebounceRef.current = setTimeout(async () => {
-      try {
-        const combos = await expandMatrixPrompt(promptToExpand, 5000, expandWc);
-        setCombinations(combos);
-        setStatus(`Generated ${combos.length} permutations (wildcard expansion ${expandWc ? 'enabled' : 'disabled'}).`);
-      } catch (e: any) {
-        // Keep current status if syntax is mid-edit
-      }
-    }, 250);
-  }, [expandWildcards]);
+    const clampedPage = Math.max(1, Math.min(parsed, totalPages));
+    setPageInput(String(clampedPage));
+    const targetOffset = (clampedPage - 1) * pageSize;
+    loadSlice(targetOffset, pageSize);
+  };
+
+  const handleJumpToIndexSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!jumpIndexInput.trim()) return;
+    const parsed = parseInt(jumpIndexInput.replace(/,/g, '').trim(), 10);
+    if (isNaN(parsed)) return;
+    if (totalCount <= 0) return;
+    const targetOffset = Math.max(0, Math.min(parsed - 1, totalCount - 1));
+    loadSlice(targetOffset, pageSize);
+  };
+
+  const handleSampleRandom = (count: number = sampleCount) => {
+    loadSlice(0, pageSize, count);
+  };
+
+  const handleResetToSequential = () => {
+    setIsSampleMode(false);
+    loadSlice(currentOffset, pageSize);
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    loadSlice(0, newSize, undefined, prompt, expandWildcards);
+  };
 
   const handleToggleExpandWildcards = (enabled: boolean) => {
     setExpandWildcards(enabled);
-    triggerExpansion(prompt, enabled);
+    loadSlice(0, pageSize, undefined, prompt, enabled);
   };
+
+  // Debounced matrix expansion runner (unlimited permutations via slice)
+  const triggerExpansion = useCallback(
+    (promptToExpand: string, expandWc: boolean = expandWildcards) => {
+      if (expandDebounceRef.current) {
+        clearTimeout(expandDebounceRef.current);
+      }
+      if (!promptToExpand.trim()) {
+        setSliceItems([]);
+        setCombinations([]);
+        setTotalCount(0);
+        setCurrentOffset(0);
+        setIsSampleMode(false);
+        setPageInput('1');
+        return;
+      }
+      expandDebounceRef.current = setTimeout(async () => {
+        try {
+          await loadSlice(0, pageSize, undefined, promptToExpand, expandWc);
+        } catch {
+          // Keep current status if syntax is mid-edit
+        }
+      }, 300);
+    },
+    [expandWildcards, pageSize, loadSlice]
+  );
 
   // Bi-directional AST Graph Sync
   const {
@@ -398,19 +557,17 @@ export const WildcardMatrixPanel: React.FC = () => {
   const handlePreview = async () => {
     setLoading(true);
     try {
-      const [resCombos, resGraph, resHeatmap] = await Promise.all([
-        expandMatrixPrompt(prompt, 10000, expandWildcards),
+      const [, resGraph, resHeatmap] = await Promise.all([
+        loadSlice(0, pageSize, undefined, prompt, expandWildcards),
         serializeASTToGraph(prompt).catch(() => null),
         analyzeMatrixHeatmap(prompt, expandWildcards, 500).catch(() => null),
       ]);
-      setCombinations(resCombos);
       if (resGraph?.graph) {
         setGraphTree(resGraph.graph);
       }
       if (resHeatmap) {
         setHeatmapScores(resHeatmap);
       }
-      setStatus(`Generated ${resCombos.length} permutations (wildcard expansion ${expandWildcards ? 'enabled' : 'disabled'}).`);
     } catch (e: any) {
       setStatus(`Error: ${e.message}`);
     } finally {
@@ -419,7 +576,7 @@ export const WildcardMatrixPanel: React.FC = () => {
   };
 
   const handleExecuteBatchSweep = async () => {
-    if (combinations.length === 0) {
+    if (sliceItems.length === 0 && totalCount === 0) {
       setStatus('No permutations available to queue. Preview or edit template first.');
       return;
     }
@@ -430,15 +587,15 @@ export const WildcardMatrixPanel: React.FC = () => {
     if (selectedIndices.size > 0) {
       promptsToSend = Array.from(selectedIndices)
         .sort((a, b) => a - b)
-        .map((idx) => combinations[idx])
-        .filter(Boolean);
+        .map((idx) => selectedPromptsMap.current.get(idx) || sliceItems.find((it) => it.index === idx)?.prompt)
+        .filter((p): p is string => Boolean(p));
       queueModeDesc = `${promptsToSend.length} manually selected`;
     } else if (queueAll) {
       promptsToSend = combinations;
-      queueModeDesc = `all ${combinations.length}`;
+      queueModeDesc = `all ${combinations.length} in current slice`;
     } else {
       promptsToSend = combinations.slice(0, maxPromptsToQueue);
-      queueModeDesc = `${promptsToSend.length} (of ${combinations.length})`;
+      queueModeDesc = `${promptsToSend.length} (of ${totalCount.toLocaleString()})`;
     }
 
     if (promptsToSend.length === 0) {
@@ -884,8 +1041,8 @@ export const WildcardMatrixPanel: React.FC = () => {
               type="number"
               className="batch-input number-small"
               min={1}
-              max={combinations.length || 10000}
-              value={queueAll ? (combinations.length || 0) : maxPromptsToQueue}
+              max={totalCount || 10000}
+              value={queueAll ? (totalCount || 0) : maxPromptsToQueue}
               disabled={queueAll || selectedIndices.size > 0}
               onChange={(e) => setMaxPromptsToQueue(Math.max(1, parseInt(e.target.value, 10) || 1))}
               title={
@@ -902,7 +1059,7 @@ export const WildcardMatrixPanel: React.FC = () => {
                 setQueueAll(!queueAll);
                 if (selectedIndices.size > 0) setSelectedIndices(new Set());
               }}
-              title={queueAll ? 'Switch to limited queue count' : `Queue all ${combinations.length} permutations`}
+              title={queueAll ? 'Switch to limited queue count' : `Queue all ${totalCount.toLocaleString()} permutations`}
             >
               {queueAll ? 'All' : 'Limit'}
             </button>
@@ -966,29 +1123,183 @@ export const WildcardMatrixPanel: React.FC = () => {
           type="button"
           className="matrix-btn success"
           onClick={handleExecuteBatchSweep}
-          disabled={loading || combinations.length === 0}
+          disabled={loading || (sliceItems.length === 0 && totalCount === 0)}
           title={
             selectedIndices.size > 0
               ? `Queue ${selectedIndices.size} selected variants at ${width}x${height}`
               : queueAll
-              ? `Queue all ${combinations.length} variants at ${width}x${height}`
-              : `Queue first ${Math.min(maxPromptsToQueue, combinations.length)} of ${combinations.length} variants at ${width}x${height}`
+              ? `Queue all ${totalCount.toLocaleString()} variants at ${width}x${height}`
+              : `Queue first ${Math.min(maxPromptsToQueue, combinations.length)} of ${totalCount.toLocaleString()} variants at ${width}x${height}`
           }
         >
           <Play size={14} />{' '}
           {selectedIndices.size > 0
             ? `Queue ${selectedIndices.size} Selected (${width}×${height})`
             : queueAll
-            ? `Queue All (${combinations.length}) (${width}×${height})`
-            : `Queue ${Math.min(maxPromptsToQueue, combinations.length)} of ${combinations.length} (${width}×${height})`}
+            ? `Queue All (${totalCount.toLocaleString()}) (${width}×${height})`
+            : `Queue ${Math.min(maxPromptsToQueue, combinations.length)} of ${totalCount.toLocaleString()} (${width}×${height})`}
         </button>
       </div>
     </div>
   );
 
+  // Slice Navigator Bar Renderer
+  const renderSliceNavigator = () => {
+    const start = totalCount > 0 ? currentOffset + 1 : 0;
+    const end = Math.min(currentOffset + sliceItems.length, totalCount);
+
+    return (
+      <div className="matrix-slice-navigator">
+        {/* Status readout */}
+        <div className="slice-status-row">
+          <div className="slice-status-info">
+            {isSampleMode ? (
+              <span className="slice-badge sample">
+                🎲 Sampled <strong>{sliceItems.length}</strong> random variants of <strong>{totalCount.toLocaleString()}</strong> total
+              </span>
+            ) : (
+              <span className="slice-badge">
+                Total: <strong>{totalCount.toLocaleString()}</strong> Permutations | Viewing #{start.toLocaleString()} - #{end.toLocaleString()} of {totalCount.toLocaleString()}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Controls Row */}
+        <div className="slice-controls-row">
+          {/* Page Size Dropdown */}
+          <div className="slice-nav-group page-size-group">
+            <label className="slice-nav-label">Page Size:</label>
+            <select
+              className="slice-select"
+              value={pageSize}
+              onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+              disabled={loading}
+            >
+              <option value="50">50 / page</option>
+              <option value="100">100 / page</option>
+              <option value="250">250 / page</option>
+              <option value="500">500 / page</option>
+              <option value="1000">1000 / page</option>
+            </select>
+          </div>
+
+          {/* Paging Controls */}
+          <div className="slice-nav-group paging-controls">
+            <button
+              type="button"
+              className="slice-nav-btn"
+              onClick={handleFirstPage}
+              disabled={currentPage <= 1 || loading || isSampleMode}
+              title="First Page (<<)"
+            >
+              &laquo;
+            </button>
+            <button
+              type="button"
+              className="slice-nav-btn"
+              onClick={handlePrevPage}
+              disabled={currentPage <= 1 || loading || isSampleMode}
+              title="Previous Page (<)"
+            >
+              &lsaquo;
+            </button>
+
+            <form className="slice-page-form" onSubmit={handlePageInputSubmit}>
+              <span className="slice-nav-label">Page</span>
+              <input
+                type="text"
+                className="slice-page-input"
+                value={pageInput}
+                onChange={(e) => setPageInput(e.target.value)}
+                onBlur={handlePageInputSubmit}
+                disabled={loading || isSampleMode}
+                title="Press Enter to jump to page"
+              />
+              <span className="slice-nav-label">of {totalPages.toLocaleString()}</span>
+            </form>
+
+            <button
+              type="button"
+              className="slice-nav-btn"
+              onClick={handleNextPage}
+              disabled={currentPage >= totalPages || loading || isSampleMode}
+              title="Next Page (>)"
+            >
+              &rsaquo;
+            </button>
+            <button
+              type="button"
+              className="slice-nav-btn"
+              onClick={handleLastPage}
+              disabled={currentPage >= totalPages || loading || isSampleMode}
+              title="Last Page (>>)"
+            >
+              &raquo;
+            </button>
+          </div>
+
+          {/* Jump to Index */}
+          <form className="slice-nav-group slice-jump-container" onSubmit={handleJumpToIndexSubmit}>
+            <label className="slice-nav-label">Jump to #</label>
+            <input
+              type="text"
+              className="slice-jump-input"
+              placeholder="e.g. 25000"
+              value={jumpIndexInput}
+              onChange={(e) => setJumpIndexInput(e.target.value)}
+              disabled={loading}
+            />
+            <button
+              type="submit"
+              className="slice-nav-btn go-btn"
+              disabled={loading || !jumpIndexInput.trim()}
+            >
+              Go
+            </button>
+          </form>
+
+          {/* Random Sampling */}
+          <div className="slice-nav-group slice-sample-container">
+            <input
+              type="number"
+              className="slice-sample-input"
+              min={1}
+              max={2000}
+              value={sampleCount}
+              onChange={(e) => setSampleCount(Math.max(1, parseInt(e.target.value, 10) || 100))}
+              disabled={loading}
+              title="Number of random permutations to sample"
+            />
+            <button
+              type="button"
+              className="slice-nav-btn sample-btn"
+              onClick={() => handleSampleRandom(sampleCount)}
+              disabled={loading || totalCount === 0}
+              title="Sample random permutations uniformly across entire combinatorial space"
+            >
+              🎲 Sample {sampleCount} Random
+            </button>
+            {isSampleMode && (
+              <button
+                type="button"
+                className="slice-nav-btn sequential-btn"
+                onClick={handleResetToSequential}
+                disabled={loading}
+                title="Return to sequential paginated view"
+              >
+                Sequential View
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Matrix Permutations Grid Renderer
   const renderMatrixGrid = () => {
-    if (combinations.length === 0) {
+    if (sliceItems.length === 0 && totalCount === 0) {
       return (
         <div className="matrix-empty-state">
           <p>No permutations generated yet. Enter wildcard syntax or click "Preview Permutations".</p>
@@ -996,16 +1307,15 @@ export const WildcardMatrixPanel: React.FC = () => {
       );
     }
 
-    const displayedCombos = combinations.slice(0, visibleLimit);
-    const hasMore = combinations.length > visibleLimit;
-
     return (
       <div className="matrix-grid-container">
+        {renderSliceNavigator()}
+
         {/* Permutation Selection Bar */}
         <div className="matrix-selection-bar">
           <div className="selection-info">
             <span className="selection-badge">
-              Selected: <strong>{selectedIndices.size}</strong> / {combinations.length}
+              Selected: <strong>{selectedIndices.size}</strong> {totalCount > 0 ? `of ${totalCount.toLocaleString()}` : ''}
             </span>
             {selectedIndices.size > 0 && (
               <span className="selection-hint">
@@ -1034,9 +1344,9 @@ export const WildcardMatrixPanel: React.FC = () => {
               type="button"
               className="selection-btn"
               onClick={handleSelectAllShown}
-              title={`Select all currently visible (${displayedCombos.length}) permutations`}
+              title={`Select all currently visible (${sliceItems.length}) permutations`}
             >
-              Select Visible ({displayedCombos.length})
+              Select Visible ({sliceItems.length})
             </button>
             {selectedIndices.size > 0 && (
               <button
@@ -1052,15 +1362,15 @@ export const WildcardMatrixPanel: React.FC = () => {
         </div>
 
         <div className="matrix-grid">
-          {displayedCombos.map((variantPrompt, idx) => {
-            const score = getVariationTokenScore(variantPrompt);
-            const isCopied = copiedIdx === idx;
-            const isSelected = selectedIndices.has(idx);
+          {sliceItems.map((item) => {
+            const score = getVariationTokenScore(item.prompt);
+            const isCopied = copiedIdx === item.index;
+            const isSelected = selectedIndices.has(item.index);
             return (
               <div
-                key={idx}
+                key={item.index}
                 className={`matrix-card ${isSelected ? 'is-selected' : ''}`}
-                onClick={() => handleToggleSelectPrompt(idx)}
+                onClick={() => handleToggleSelectPrompt(item)}
                 title="Click card or checkbox to select for queue"
               >
                 <div className="matrix-card-header">
@@ -1069,11 +1379,11 @@ export const WildcardMatrixPanel: React.FC = () => {
                       type="checkbox"
                       className="matrix-card-checkbox"
                       checked={isSelected}
-                      onChange={() => handleToggleSelectPrompt(idx)}
-                      title={`Select variation #${idx + 1}`}
-                      aria-label={`Select variation #${idx + 1}`}
+                      onChange={() => handleToggleSelectPrompt(item)}
+                      title={`Select variation #${item.index}`}
+                      aria-label={`Select variation #${item.index}`}
                     />
-                    <span className="matrix-badge">Variation #{idx + 1}</span>
+                    <span className="matrix-badge">Variation #{item.index.toLocaleString()}</span>
                   </div>
                   <div className="card-header-actions" onClick={(e) => e.stopPropagation()}>
                     <span className={`heatmap-pill ${score.heatClass}`}>
@@ -1082,7 +1392,7 @@ export const WildcardMatrixPanel: React.FC = () => {
                     <button
                       type="button"
                       className={`card-copy-btn ${isCopied ? 'copied' : ''}`}
-                      onClick={() => handleCopyPrompt(variantPrompt, idx)}
+                      onClick={() => handleCopyPrompt(item.prompt, item.index)}
                       title="Copy variation prompt"
                       aria-label="Copy variation prompt"
                     >
@@ -1090,35 +1400,11 @@ export const WildcardMatrixPanel: React.FC = () => {
                     </button>
                   </div>
                 </div>
-                <div className="matrix-prompt-text">{variantPrompt}</div>
+                <div className="matrix-prompt-text">{item.prompt}</div>
               </div>
             );
           })}
         </div>
-
-        {hasMore && (
-          <div className="matrix-grid-pagination">
-            <span className="pagination-info">
-              Showing {displayedCombos.length} of {combinations.length} permutations
-            </span>
-            <div className="pagination-actions">
-              <button
-                type="button"
-                className="matrix-btn secondary"
-                onClick={() => setVisibleLimit((prev) => prev + 250)}
-              >
-                Show More (+250)
-              </button>
-              <button
-                type="button"
-                className="matrix-btn secondary"
-                onClick={() => setVisibleLimit(combinations.length)}
-              >
-                Show All ({combinations.length})
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     );
   };
@@ -1138,7 +1424,7 @@ export const WildcardMatrixPanel: React.FC = () => {
           <div className="metric-cards-row">
             <div className="metric-card">
               <span className="metric-title">Permutations Count</span>
-              <span className="metric-value">{heatmapScores.combinations_count || combinations.length}</span>
+              <span className="metric-value">{heatmapScores.combinations_count || totalCount}</span>
             </div>
             <div className="metric-card">
               <span className="metric-title">Avg Token Count</span>
@@ -1161,7 +1447,7 @@ export const WildcardMatrixPanel: React.FC = () => {
                       <div
                         className={`cat-fill cat-${cat}`}
                         style={{
-                          width: `${Math.min(100, ((count as number) / Math.max(1, heatmapScores.combinations_count || combinations.length || 1)) * 100)}%`
+                          width: `${Math.min(100, ((count as number) / Math.max(1, heatmapScores.combinations_count || totalCount || 1)) * 100)}%`
                         }}
                       ></div>
                     </div>
@@ -1459,7 +1745,7 @@ export const WildcardMatrixPanel: React.FC = () => {
             className={`pill-btn ${workspaceMode === 'grid' ? 'active' : ''}`}
             onClick={() => setWorkspaceMode('grid')}
           >
-            <Zap size={14} /> Grid ({combinations.length})
+            <Zap size={14} /> Grid ({totalCount.toLocaleString()})
           </button>
           <button
             type="button"
@@ -1598,7 +1884,7 @@ export const WildcardMatrixPanel: React.FC = () => {
 
           <div className="permutation-count-badge" title="Active permutations count">
             <Zap size={13} />
-            <span>{combinations.length} Permutations</span>
+            <span>{totalCount.toLocaleString()} Permutations</span>
           </div>
 
           {isCompiling && (

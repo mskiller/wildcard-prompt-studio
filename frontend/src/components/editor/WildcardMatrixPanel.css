@@ -1098,6 +1098,225 @@
   gap: 16px;
 }
 
+/* ==========================================================================
+   Matrix Slice Navigator & Permutation Pagination
+   ========================================================================== */
+
+.matrix-slice-navigator {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(17, 17, 27, 0.85);
+  border: 1px solid #313244;
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.slice-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.slice-status-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slice-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #cdd6f4;
+  background: rgba(137, 180, 250, 0.12);
+  border: 1px solid rgba(137, 180, 250, 0.28);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.slice-badge strong {
+  color: #89b4fa;
+}
+
+.slice-badge.sample {
+  background: rgba(203, 166, 247, 0.15);
+  border-color: rgba(203, 166, 247, 0.35);
+  color: #cba6f7;
+}
+
+.slice-badge.sample strong {
+  color: #f5c2e7;
+}
+
+.slice-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.slice-nav-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.slice-nav-label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #a6adc8;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.slice-select {
+  background: #181825;
+  border: 1px solid #313244;
+  color: #cdd6f4;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.slice-select:focus {
+  border-color: #89b4fa;
+}
+
+.slice-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  background: #232534;
+  border: 1px solid #3b3e52;
+  border-radius: 6px;
+  color: #cdd6f4;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.slice-nav-btn:hover:not(:disabled) {
+  background: #313548;
+  border-color: #89b4fa;
+  color: #fff;
+}
+
+.slice-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.slice-page-form {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.slice-page-input {
+  width: 52px;
+  text-align: center;
+  background: #181825;
+  border: 1px solid #313244;
+  color: #cdd6f4;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.slice-page-input:focus {
+  border-color: #89b4fa;
+}
+
+.slice-jump-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.slice-jump-input {
+  width: 90px;
+  background: #181825;
+  border: 1px solid #313244;
+  color: #cdd6f4;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.slice-jump-input:focus {
+  border-color: #89b4fa;
+}
+
+.slice-sample-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.slice-sample-input {
+  width: 65px;
+  background: #181825;
+  border: 1px solid #313244;
+  color: #cdd6f4;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  outline: none;
+  text-align: center;
+  transition: border-color 0.15s ease;
+}
+
+.slice-sample-input:focus {
+  border-color: #cba6f7;
+}
+
+.slice-nav-btn.sample-btn {
+  background: rgba(203, 166, 247, 0.15);
+  border-color: rgba(203, 166, 247, 0.35);
+  color: #cba6f7;
+}
+
+.slice-nav-btn.sample-btn:hover:not(:disabled) {
+  background: rgba(203, 166, 247, 0.28);
+  border-color: #cba6f7;
+  color: #fff;
+}
+
+.slice-nav-btn.sequential-btn {
+  background: rgba(137, 180, 250, 0.15);
+  border-color: rgba(137, 180, 250, 0.35);
+  color: #89b4fa;
+}
+
+.slice-nav-btn.sequential-btn:hover:not(:disabled) {
+  background: rgba(137, 180, 250, 0.28);
+  border-color: #89b4fa;
+  color: #fff;
+}
+
+.slice-nav-btn.go-btn {
+  padding: 0 10px;
+}
+
 .matrix-grid-pagination {
   display: flex;
   align-items: center;
