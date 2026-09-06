@@ -30,4 +30,10 @@ class AestheticScorer:
         final_score = round(max(1.0, min(10.0, base_score + variance)), 2)
         return final_score
 
+    def score_aesthetic_prompt(self, prompt: str, width: int = 512, height: int = 512) -> float:
+        return self.score_prompt_and_metadata(prompt, width=width, height=height)
+
 aesthetic_scorer = AestheticScorer()
+
+def score_aesthetic_prompt(prompt: str, width: int = 512, height: int = 512) -> float:
+    return aesthetic_scorer.score_prompt_and_metadata(prompt, width=width, height=height)

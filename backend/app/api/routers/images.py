@@ -1,15 +1,25 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import or_
 from typing import List, Optional
 import os
 import aiofiles
 from pydantic import BaseModel
 from app.models.image import Image
 from app.models.prompt import Prompt
-from app.schemas.image import ImageCreate, ImageUpdate, ImageResponse
+from app.schemas.image import (
+    ImageCreate, 
+    ImageUpdate, 
+    ImageResponse,
+    RatingUpdateRequest,
+    BatchDeleteRequest,
+    BatchRAGIndexRequest
+)
 from app.dependencies import get_db, get_comfyui_connector
 from app.services.comfyui_connector import ComfyUIConnector
+from app.services.aesthetic_scorer import score_aesthetic_prompt
+from app.services.unified_rag import unified_rag_service
 
 router = APIRouter()
 
@@ -24,17 +34,64 @@ class ImageCreateWithDownload(ImageCreate):
 STATIC_IMAGES_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "static", "images"))
 os.makedirs(STATIC_IMAGES_DIR, exist_ok=True)
 
+def _to_gallery_response(img: Image) -> GalleryItemResponse:
+    prompt_content = img.prompt.content if (img.prompt and img.prompt.content) else ""
+    return GalleryItemResponse(
+        id=img.id,
+        filename=img.filename,
+        prompt_id=img.prompt_id,
+        seed=img.seed,
+        cfg_scale=img.cfg_scale,
+        steps=img.steps,
+        sampler_name=img.sampler_name,
+        width=img.width,
+        height=img.height,
+        comfy_workflow_id=img.comfy_workflow_id,
+        is_favorite=img.is_favorite if img.is_favorite is not None else False,
+        rating=img.rating if img.rating is not None else 0,
+        aesthetic_score=img.aesthetic_score,
+        created_at=img.created_at,
+        prompt_content=prompt_content,
+    )
+
 @router.get("/gallery", response_model=List[GalleryItemResponse])
-def get_gallery(skip: int = 0, limit: int = Query(default=50, le=100), db: Session = Depends(get_db)):
-    images = db.query(Image).order_by(Image.created_at.desc()).offset(skip).limit(limit).all()
-    result = []
-    for img in images:
-        prompt = db.query(Prompt).filter(Prompt.id == img.prompt_id).first() if img.prompt_id else None
-        prompt_content = prompt.content if prompt else ""
-        item_dict = img.__dict__.copy()
-        item_dict['prompt_content'] = prompt_content
-        result.append(item_dict)
-    return result
+def get_gallery(
+    skip: int = 0,
+    limit: int = Query(default=50, le=100),
+    search: Optional[str] = None,
+    sampler: Optional[str] = None,
+    is_favorite: Optional[bool] = None,
+    min_rating: Optional[int] = None,
+    sort_by: str = "newest",
+    db: Session = Depends(get_db)
+):
+    query = db.query(Image).outerjoin(Prompt, Image.prompt_id == Prompt.id).options(joinedload(Image.prompt))
+
+    if search:
+        search_pattern = f"%{search}%"
+        query = query.filter(or_(Image.filename.ilike(search_pattern), Prompt.content.ilike(search_pattern)))
+
+    if sampler:
+        query = query.filter(Image.sampler_name == sampler)
+
+    if is_favorite is not None:
+        query = query.filter(Image.is_favorite == is_favorite)
+
+    if min_rating is not None:
+        query = query.filter(Image.rating >= min_rating)
+
+    sort_order = (sort_by or "newest").lower()
+    if sort_order == "oldest":
+        query = query.order_by(Image.created_at.asc(), Image.id.asc())
+    elif sort_order == "rating":
+        query = query.order_by(Image.rating.desc().nullslast(), Image.created_at.desc())
+    elif sort_order == "aesthetic_score":
+        query = query.order_by(Image.aesthetic_score.desc().nullslast(), Image.created_at.desc())
+    else:  # "newest"
+        query = query.order_by(Image.created_at.desc(), Image.id.desc())
+
+    images = query.offset(skip).limit(limit).all()
+    return [_to_gallery_response(img) for img in images]
 
 @router.get("/file/{filename}")
 async def get_image_file(
@@ -102,6 +159,63 @@ async def create_image(
         raise HTTPException(status_code=400, detail="Related entity does not exist or integrity error")
     return db_image
 
+@router.post("/batch/delete")
+def batch_delete_images(payload: BatchDeleteRequest, db: Session = Depends(get_db)):
+    if not payload.image_ids:
+        return {"status": "deleted", "deleted_count": 0}
+
+    images = db.query(Image).filter(Image.id.in_(payload.image_ids)).all()
+    deleted_count = 0
+    for img in images:
+        if img.filename:
+            file_path = os.path.join(STATIC_IMAGES_DIR, img.filename)
+            if os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                except Exception as e:
+                    print(f"Failed to remove static file {file_path}: {e}")
+        db.delete(img)
+        deleted_count += 1
+
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Cannot delete because of related entities")
+
+    return {"status": "deleted", "deleted_count": deleted_count}
+
+@router.post("/batch/index-rag")
+async def batch_index_rag(payload: BatchRAGIndexRequest, db: Session = Depends(get_db)):
+    if not payload.image_ids:
+        return {"status": "indexed", "indexed_count": 0}
+
+    images = (
+        db.query(Image)
+        .options(joinedload(Image.prompt))
+        .filter(Image.id.in_(payload.image_ids))
+        .all()
+    )
+    indexed_count = 0
+    category = payload.category or "gallery_generations"
+    tags = list(payload.tags or [])
+
+    for img in images:
+        prompt_content = img.prompt.content if (img.prompt and img.prompt.content) else ""
+        content = prompt_content or f"Generated image {img.filename}"
+        title = (img.prompt.name if (img.prompt and img.prompt.name) else None) or f"Image {img.filename}"
+
+        await unified_rag_service.index_document_async(
+            db=db,
+            title=title,
+            content=content,
+            category=category,
+            tags=tags,
+        )
+        indexed_count += 1
+
+    return {"status": "indexed", "indexed_count": indexed_count}
+
 @router.get("/{image_id}", response_model=ImageResponse)
 def get_image(image_id: int, db: Session = Depends(get_db)):
     image = db.query(Image).filter(Image.id == image_id).first()
@@ -140,3 +254,92 @@ def delete_image(image_id: int, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=400, detail="Cannot delete because of related entities")
     return {"ok": True}
+
+@router.patch("/{image_id}/favorite", response_model=GalleryItemResponse)
+def toggle_favorite(image_id: int, db: Session = Depends(get_db)):
+    img = db.query(Image).options(joinedload(Image.prompt)).filter(Image.id == image_id).first()
+    if not img:
+        raise HTTPException(status_code=404, detail="Image not found")
+    img.is_favorite = not bool(img.is_favorite)
+    db.commit()
+    db.refresh(img)
+    return _to_gallery_response(img)
+
+@router.patch("/{image_id}/rating", response_model=GalleryItemResponse)
+def update_image_rating(
+    image_id: int,
+    rating_update: RatingUpdateRequest,
+    db: Session = Depends(get_db),
+):
+    img = db.query(Image).options(joinedload(Image.prompt)).filter(Image.id == image_id).first()
+    if not img:
+        raise HTTPException(status_code=404, detail="Image not found")
+    img.rating = rating_update.rating
+    db.commit()
+    db.refresh(img)
+    return _to_gallery_response(img)
+
+@router.post("/{image_id}/score-aesthetic", response_model=GalleryItemResponse)
+def score_image_aesthetic(image_id: int, db: Session = Depends(get_db)):
+    img = db.query(Image).options(joinedload(Image.prompt)).filter(Image.id == image_id).first()
+    if not img:
+        raise HTTPException(status_code=404, detail="Image not found")
+
+    prompt_text = (img.prompt.content if (img.prompt and img.prompt.content) else "") or img.filename
+    width = img.width or 512
+    height = img.height or 512
+    score = score_aesthetic_prompt(prompt_text, width=width, height=height)
+    img.aesthetic_score = round(float(score), 2)
+    db.commit()
+    db.refresh(img)
+    return _to_gallery_response(img)
+
+@router.get("/{image_id}/similar", response_model=List[GalleryItemResponse])
+async def get_similar_images(
+    image_id: int,
+    limit: int = Query(default=10, le=50),
+    db: Session = Depends(get_db),
+):
+    img = db.query(Image).options(joinedload(Image.prompt)).filter(Image.id == image_id).first()
+    if not img:
+        raise HTTPException(status_code=404, detail="Image not found")
+
+    if not img.prompt or not img.prompt.content:
+        return []
+
+    if img.prompt.embedding is None:
+        img.prompt.embedding = await unified_rag_service.compute_embedding_async(img.prompt.content)
+        db.commit()
+        db.refresh(img.prompt)
+
+    target_vec = img.prompt.embedding
+    if hasattr(target_vec, "tolist"):
+        target_vec = target_vec.tolist()
+    elif hasattr(target_vec, "__iter__") and not isinstance(target_vec, list):
+        target_vec = list(target_vec)
+
+    # Compute missing embeddings for candidate images' prompts
+    unembedded_prompts = (
+        db.query(Prompt)
+        .join(Image, Image.prompt_id == Prompt.id)
+        .filter(Image.id != image_id, Prompt.embedding.is_(None))
+        .all()
+    )
+    if unembedded_prompts:
+        for p in unembedded_prompts:
+            if p.content:
+                p.embedding = await unified_rag_service.compute_embedding_async(p.content)
+        db.commit()
+
+    similar_images = (
+        db.query(Image)
+        .options(joinedload(Image.prompt))
+        .join(Prompt, Image.prompt_id == Prompt.id)
+        .filter(Image.id != image_id)
+        .filter(Prompt.embedding.isnot(None))
+        .order_by(Prompt.embedding.cosine_distance(target_vec))
+        .limit(limit)
+        .all()
+    )
+
+    return [_to_gallery_response(s_img) for s_img in similar_images]
