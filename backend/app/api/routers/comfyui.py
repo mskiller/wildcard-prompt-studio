@@ -19,6 +19,7 @@ from app.database import SessionLocal
 from app.models.image import Image
 from app.models.prompt import Prompt
 from app.api.routers.images import STATIC_IMAGES_DIR
+from app.services.image_metadata import extract_metadata_from_png
 
 logger = logging.getLogger(__name__)
 
@@ -485,22 +486,42 @@ async def process_and_save_comfy_output(
                     except Exception as e:
                         logger.warning(f"Could not download {fn} from ComfyUI: {e}")
 
+                # If prompt text or sampling parameters are missing, attempt fallback extraction from local PNG
+                img_w = 896
+                img_h = 1152
+                if os.path.exists(local_path):
+                    meta = extract_metadata_from_png(local_path)
+                    if not pos_text and meta.get("prompt_text"):
+                        pos_text = meta["prompt_text"]
+                    if seed is None and meta.get("seed") is not None:
+                        seed = meta["seed"]
+                    if steps is None and meta.get("steps") is not None:
+                        steps = meta["steps"]
+                    if cfg is None and meta.get("cfg") is not None:
+                        cfg = meta["cfg"]
+                    if not sampler_name and meta.get("sampler_name"):
+                        sampler_name = meta["sampler_name"]
+                    if meta.get("width"):
+                        img_w = meta["width"]
+                    if meta.get("height"):
+                        img_h = meta["height"]
+
                 # Find or create DB Image record
                 db_img = db.query(Image).filter(Image.filename == fn).first()
-                if not db_img:
-                    prompt_record = None
-                    if pos_text:
-                        prompt_record = db.query(Prompt).filter(Prompt.content == pos_text).first()
-                        if not prompt_record:
-                            prompt_record = Prompt(name=pos_text[:32].strip(), content=pos_text)
-                            db.add(prompt_record)
-                            try:
-                                db.commit()
-                                db.refresh(prompt_record)
-                            except Exception:
-                                db.rollback()
-                                prompt_record = db.query(Prompt).filter(Prompt.content == pos_text).first()
+                prompt_record = None
+                if pos_text:
+                    prompt_record = db.query(Prompt).filter(Prompt.content == pos_text).first()
+                    if not prompt_record:
+                        prompt_record = Prompt(name=pos_text[:32].strip(), content=pos_text)
+                        db.add(prompt_record)
+                        try:
+                            db.commit()
+                            db.refresh(prompt_record)
+                        except Exception:
+                            db.rollback()
+                            prompt_record = db.query(Prompt).filter(Prompt.content == pos_text).first()
 
+                if not db_img:
                     db_img = Image(
                         filename=fn,
                         prompt_id=prompt_record.id if prompt_record else None,
@@ -508,8 +529,8 @@ async def process_and_save_comfy_output(
                         cfg_scale=float(cfg) if cfg is not None else None,
                         steps=int(steps) if steps is not None else None,
                         sampler_name=sampler_name,
-                        width=1024,
-                        height=1024,
+                        width=img_w,
+                        height=img_h,
                         comfy_workflow_id=prompt_id
                     )
                     db.add(db_img)
@@ -519,6 +540,39 @@ async def process_and_save_comfy_output(
                     except Exception:
                         db.rollback()
                         db_img = db.query(Image).filter(Image.filename == fn).first()
+                else:
+                    # Update existing record if missing prompt or parameters
+                    updated = False
+                    if prompt_record and not db_img.prompt_id:
+                        db_img.prompt_id = prompt_record.id
+                        updated = True
+                    if seed is not None and db_img.seed is None:
+                        db_img.seed = seed
+                        updated = True
+                    if steps is not None and db_img.steps is None:
+                        db_img.steps = steps
+                        updated = True
+                    if cfg is not None and db_img.cfg_scale is None:
+                        db_img.cfg_scale = float(cfg)
+                        updated = True
+                    if sampler_name and not db_img.sampler_name:
+                        db_img.sampler_name = sampler_name
+                        updated = True
+                    if prompt_id and not db_img.comfy_workflow_id:
+                        db_img.comfy_workflow_id = prompt_id
+                        updated = True
+                    if img_w and (not db_img.width or db_img.width == 1024):
+                        db_img.width = img_w
+                        updated = True
+                    if img_h and (not db_img.height or db_img.height == 1024):
+                        db_img.height = img_h
+                        updated = True
+                    if updated:
+                        try:
+                            db.commit()
+                            db.refresh(db_img)
+                        except Exception:
+                            db.rollback()
 
                 saved_items.append({
                     "id": db_img.id if db_img else None,

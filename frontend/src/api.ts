@@ -373,6 +373,14 @@ export async function getWildcards(): Promise<any[]> {
   return Array.isArray(data) ? data : [];
 }
 
+export async function getWildcard(id: number): Promise<any> {
+  const res = await fetch(`${API_BASE}/wildcards/${id}`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch wildcard ${id}: ${res.statusText}`);
+  }
+  return res.json();
+}
+
 export async function createWildcard(data: { filename: string; content: string }): Promise<any> {
   const res = await fetch(`${API_BASE}/wildcards/`, {
     method: 'POST',

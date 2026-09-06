@@ -5,7 +5,7 @@ import { MonacoPromptEditor } from './MonacoPromptEditor';
 import { VisualBuilder } from './VisualBuilder';
 import { GalleryView } from '../gallery/GalleryView';
 import { GenerationSettings } from './GenerationSettings';
-import { generateImage, createImage, updatePrompt, updateWildcard, createPrompt, createWildcard, deleteWildcard, deletePrompt, GenerationSettings as ISettings } from '../../api';
+import { generateImage, createImage, updatePrompt, updateWildcard, createPrompt, createWildcard, deleteWildcard, deletePrompt, getWildcard, GenerationSettings as ISettings } from '../../api';
 import { Code, LayoutTemplate, FileText, Sparkles, Image as ImageIcon, SlidersHorizontal, Wand2, Save, MessageSquare, Download, Trash2 } from 'lucide-react';
 import { exportAsTxtFile } from '../../utils/fileExporter';
 import { useDeviceDetect } from '../../store/useDeviceDetect';
@@ -66,9 +66,27 @@ export const PromptEditor: React.FC = () => {
 
   useEffect(() => {
     if (activeDocument) {
-      setPromptText(activeDocument.content || '');
+      if (activeDocument.type === 'wildcard' && !activeDocument.content) {
+        getWildcard(activeDocument.id)
+          .then((fullWc) => {
+            if (fullWc) {
+              const fullContent = fullWc.content || (Array.isArray(fullWc.entries) && fullWc.entries.length > 0 ? fullWc.entries.join('\n') : '');
+              setPromptText(fullContent);
+              setActiveDocument({
+                ...activeDocument,
+                content: fullContent
+              });
+            }
+          })
+          .catch((err) => {
+            console.warn('Failed to load full wildcard content:', err);
+            setPromptText('');
+          });
+      } else {
+        setPromptText(activeDocument.content || '');
+      }
     }
-  }, [activeDocument, setPromptText]);
+  }, [activeDocument?.id, activeDocument?.type]);
 
   const handleEditorChange = (value: string | undefined) => {
     if (value !== undefined) {

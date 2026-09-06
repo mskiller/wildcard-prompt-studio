@@ -16,6 +16,21 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def backfill_unlinked_image_metadata():
+    """Background startup task to link Prompts and extract metadata for any images lacking prompts."""
+    try:
+        from app.models.image import Image
+        from app.api.routers.images import ensure_image_prompt_linked
+        db = SessionLocal()
+        try:
+            unlinked = db.query(Image).filter(Image.prompt_id.is_(None)).all()
+            for img in unlinked:
+                ensure_image_prompt_linked(img, db)
+        finally:
+            db.close()
+    except Exception as e:
+        logger.warning(f"Metadata auto-healing completed with note: {e}")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     os.makedirs(STATIC_IMAGES_DIR, exist_ok=True)
@@ -27,6 +42,10 @@ async def lifespan(app: FastAPI):
         logger.warning(f"RAG pre-seeding deferred during startup: {e}")
     finally:
         db.close()
+    try:
+        backfill_unlinked_image_metadata()
+    except Exception:
+        pass
     yield
     watchdog_service.stop()
     unified_rag_service.close()

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Folder, FileText, Settings, Sparkles, UploadCloud, Tag, Search, Wand2, Grid, Activity, Award, Database, Eye, Cpu, Plus, RefreshCw, Download, Trash2 } from 'lucide-react';
 import { useAppStore, ViewType } from '../../store/useAppStore';
 import { usePromptStore } from '../../store/usePromptStore';
-import { getPrompts, getWildcards, getTags, searchPrompts, createPrompt, createWildcard, deleteWildcard, deletePrompt } from '../../api';
+import { getPrompts, getWildcards, getWildcard, getTags, searchPrompts, createPrompt, createWildcard, deleteWildcard, deletePrompt } from '../../api';
 import { useDeviceDetect } from '../../store/useDeviceDetect';
 import { BottomSheet } from '../common/BottomSheet';
 import { exportAsTxtFile } from '../../utils/fileExporter';
@@ -100,12 +100,23 @@ export const Sidebar: React.FC = () => {
     setActiveView(view);
   };
 
-  const handleItemClick = (type: 'prompt' | 'wildcard', item: any) => {
+  const handleItemClick = async (type: 'prompt' | 'wildcard', item: any) => {
+    let content = item.content || '';
+    if (type === 'wildcard') {
+      try {
+        const fullWc = await getWildcard(item.id);
+        if (fullWc) {
+          content = fullWc.content || (Array.isArray(fullWc.entries) && fullWc.entries.length > 0 ? fullWc.entries.join('\n') : '');
+        }
+      } catch (err) {
+        console.warn('Could not fetch full wildcard content:', err);
+      }
+    }
     setActiveDocument({
       type,
       id: item.id,
       name: item.name || item.filename,
-      content: item.content || ''
+      content
     });
     if (isMobile) {
       setMobileMenuOpen(false);

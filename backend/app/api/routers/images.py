@@ -21,6 +21,7 @@ from app.dependencies import get_db, get_comfyui_connector
 from app.services.comfyui_connector import ComfyUIConnector
 from app.services.aesthetic_scorer import score_aesthetic_prompt
 from app.services.unified_rag import unified_rag_service
+from app.services.image_metadata import extract_metadata_from_png
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -36,8 +37,64 @@ class ImageCreateWithDownload(ImageCreate):
 STATIC_IMAGES_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "static", "images"))
 os.makedirs(STATIC_IMAGES_DIR, exist_ok=True)
 
-def _to_gallery_response(img: Image) -> GalleryItemResponse:
-    prompt_content = img.prompt.content if (img.prompt and img.prompt.content) else ""
+def ensure_image_prompt_linked(img: Image, db: Session) -> Optional[str]:
+    """Ensures image has its associated Prompt record linked, falling back to PNG metadata."""
+    if img.prompt and img.prompt.content:
+        return img.prompt.content
+
+    if img.prompt_id:
+        p = db.query(Prompt).filter(Prompt.id == img.prompt_id).first()
+        if p and p.content:
+            img.prompt = p
+            return p.content
+
+    # Extract metadata from disk if available
+    local_path = os.path.join(STATIC_IMAGES_DIR, img.filename)
+    if os.path.exists(local_path):
+        meta = extract_metadata_from_png(local_path)
+        prompt_text = meta.get("prompt_text")
+        if prompt_text:
+            p_record = db.query(Prompt).filter(Prompt.content == prompt_text).first()
+            if not p_record:
+                p_record = Prompt(name=prompt_text[:32].strip(), content=prompt_text)
+                db.add(p_record)
+                try:
+                    db.commit()
+                    db.refresh(p_record)
+                except Exception:
+                    db.rollback()
+                    p_record = db.query(Prompt).filter(Prompt.content == prompt_text).first()
+
+            if p_record:
+                img.prompt_id = p_record.id
+                img.prompt = p_record
+                if img.seed is None and meta.get("seed") is not None:
+                    img.seed = meta.get("seed")
+                if img.steps is None and meta.get("steps") is not None:
+                    img.steps = meta.get("steps")
+                if img.cfg_scale is None and meta.get("cfg") is not None:
+                    img.cfg_scale = meta.get("cfg")
+                if not img.sampler_name and meta.get("sampler_name"):
+                    img.sampler_name = meta.get("sampler_name")
+                if (not img.width or img.width == 1024) and meta.get("width"):
+                    img.width = meta.get("width")
+                if (not img.height or img.height == 1024) and meta.get("height"):
+                    img.height = meta.get("height")
+                try:
+                    db.commit()
+                    db.refresh(img)
+                except Exception:
+                    db.rollback()
+                return prompt_text
+    return None
+
+def _to_gallery_response(img: Image, db: Optional[Session] = None) -> GalleryItemResponse:
+    prompt_content = ""
+    if db:
+        prompt_content = ensure_image_prompt_linked(img, db) or ""
+    elif img.prompt and img.prompt.content:
+        prompt_content = img.prompt.content
+
     return GalleryItemResponse(
         id=img.id,
         filename=img.filename,
@@ -149,6 +206,55 @@ async def create_image(
             db.commit()
             db.refresh(existing_prompt)
         prompt_id = existing_prompt.id
+    elif not prompt_id and os.path.exists(local_path):
+        meta = extract_metadata_from_png(local_path)
+        extracted_p = meta.get("prompt_text")
+        if extracted_p:
+            existing_prompt = db.query(Prompt).filter(Prompt.content == extracted_p).first()
+            if not existing_prompt:
+                existing_prompt = Prompt(name=extracted_p[:32].strip(), content=extracted_p)
+                db.add(existing_prompt)
+                try:
+                    db.commit()
+                    db.refresh(existing_prompt)
+                except Exception:
+                    db.rollback()
+                    existing_prompt = db.query(Prompt).filter(Prompt.content == extracted_p).first()
+            if existing_prompt:
+                prompt_id = existing_prompt.id
+        if image.seed is None and meta.get("seed") is not None:
+            image.seed = meta.get("seed")
+        if image.steps is None and meta.get("steps") is not None:
+            image.steps = meta.get("steps")
+        if image.cfg_scale is None and meta.get("cfg") is not None:
+            image.cfg_scale = meta.get("cfg")
+        if not image.sampler_name and meta.get("sampler_name"):
+            image.sampler_name = meta.get("sampler_name")
+        if (not image.width or image.width == 1024) and meta.get("width"):
+            image.width = meta.get("width")
+        if (not image.height or image.height == 1024) and meta.get("height"):
+            image.height = meta.get("height")
+
+    # Upsert: if image already exists, update missing prompt_id and parameters
+    existing_img = db.query(Image).filter(Image.filename == image.filename).first()
+    if existing_img:
+        if prompt_id and not existing_img.prompt_id:
+            existing_img.prompt_id = prompt_id
+        if image.seed is not None and existing_img.seed is None:
+            existing_img.seed = image.seed
+        if image.steps is not None and existing_img.steps is None:
+            existing_img.steps = image.steps
+        if image.cfg_scale is not None and existing_img.cfg_scale is None:
+            existing_img.cfg_scale = image.cfg_scale
+        if image.sampler_name and not existing_img.sampler_name:
+            existing_img.sampler_name = image.sampler_name
+        if image.width and (not existing_img.width or existing_img.width == 1024):
+            existing_img.width = image.width
+        if image.height and (not existing_img.height or existing_img.height == 1024):
+            existing_img.height = image.height
+        db.commit()
+        db.refresh(existing_img)
+        return existing_img
 
     db_payload = image.model_dump(exclude={"comfyui_url", "prompt_content"})
     db_payload["prompt_id"] = prompt_id
@@ -159,6 +265,9 @@ async def create_image(
         db.refresh(db_image)
     except IntegrityError:
         db.rollback()
+        existing_img = db.query(Image).filter(Image.filename == image.filename).first()
+        if existing_img:
+            return existing_img
         raise HTTPException(status_code=400, detail="Related entity does not exist or integrity error")
     return db_image
 
@@ -232,6 +341,7 @@ def get_image(image_id: int, db: Session = Depends(get_db)):
     image = db.query(Image).filter(Image.id == image_id).first()
     if image is None:
         raise HTTPException(status_code=404, detail="Image not found")
+    ensure_image_prompt_linked(image, db)
     return image
 
 @router.patch("/{image_id}", response_model=ImageResponse)
@@ -267,7 +377,7 @@ def delete_image(image_id: int, db: Session = Depends(get_db)):
     return {"ok": True}
 
 @router.patch("/{image_id}/favorite", response_model=GalleryItemResponse)
-def toggle_favorite(image_id: int, db: Session = Depends(get_db)):
+def toggle_image_favorite(image_id: int, db: Session = Depends(get_db)):
     """Toggle the favorite status of an image."""
     img = db.query(Image).options(joinedload(Image.prompt)).filter(Image.id == image_id).first()
     if not img:
@@ -275,7 +385,7 @@ def toggle_favorite(image_id: int, db: Session = Depends(get_db)):
     img.is_favorite = not bool(img.is_favorite)
     db.commit()
     db.refresh(img)
-    return _to_gallery_response(img)
+    return _to_gallery_response(img, db)
 
 @router.patch("/{image_id}/rating", response_model=GalleryItemResponse)
 def update_image_rating(
@@ -290,7 +400,7 @@ def update_image_rating(
     img.rating = rating_update.rating
     db.commit()
     db.refresh(img)
-    return _to_gallery_response(img)
+    return _to_gallery_response(img, db)
 
 @router.post("/{image_id}/score-aesthetic", response_model=GalleryItemResponse)
 def score_image_aesthetic(image_id: int, db: Session = Depends(get_db)):
@@ -299,14 +409,14 @@ def score_image_aesthetic(image_id: int, db: Session = Depends(get_db)):
     if not img:
         raise HTTPException(status_code=404, detail="Image not found")
 
-    prompt_text = (img.prompt.content if (img.prompt and img.prompt.content) else "") or img.filename
+    prompt_text = (img.prompt.content if (img.prompt and img.prompt.content) else "") or ensure_image_prompt_linked(img, db) or img.filename
     width = img.width or 512
     height = img.height or 512
     score = score_aesthetic_prompt(prompt_text, width=width, height=height)
     img.aesthetic_score = round(float(score), 2)
     db.commit()
     db.refresh(img)
-    return _to_gallery_response(img)
+    return _to_gallery_response(img, db)
 
 @router.get("/{image_id}/similar", response_model=List[GalleryItemResponse])
 async def get_similar_images(
@@ -318,6 +428,8 @@ async def get_similar_images(
     img = db.query(Image).options(joinedload(Image.prompt)).filter(Image.id == image_id).first()
     if not img:
         raise HTTPException(status_code=404, detail="Image not found")
+
+    ensure_image_prompt_linked(img, db)
 
     if not img.prompt or not img.prompt.content:
         return []
@@ -339,7 +451,7 @@ async def get_similar_images(
         .join(Image, Image.prompt_id == Prompt.id)
         .filter(Image.id != image_id, Prompt.embedding.is_(None))
         .distinct()
-        .limit(25)
+        .limit(500)
         .all()
     )
     if unembedded_prompts:
