@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, BigInteger
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, BigInteger, Boolean
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -17,6 +17,10 @@ class Image(Base):
     width = Column(Integer, nullable=True)
     height = Column(Integer, nullable=True)
     comfy_workflow_id = Column(String, nullable=True)
+    
+    is_favorite = Column(Boolean, default=False, index=True)
+    rating = Column(Integer, default=0, index=True)
+    aesthetic_score = Column(Float, nullable=True, index=True)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
