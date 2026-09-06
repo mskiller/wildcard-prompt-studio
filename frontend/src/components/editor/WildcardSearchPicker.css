@@ -271,6 +271,8 @@
 .wildcard-picker-list {
   max-height: 240px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(192, 132, 252, 0.25) rgba(0, 0, 0, 0.15);
   padding: 4px;
   display: flex;
   flex-direction: column;

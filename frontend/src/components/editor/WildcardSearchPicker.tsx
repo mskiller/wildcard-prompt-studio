@@ -98,11 +98,11 @@ export const WildcardSearchPicker: React.FC<WildcardSearchPickerProps> = ({
 
   // Focus input and scroll highlighted into view when opened
   useEffect(() => {
-    if (isOpen) {
-      requestAnimationFrame(() => {
-        inputRef.current?.focus();
-      });
-    }
+    if (!isOpen) return;
+    const animId = requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
+    return () => cancelAnimationFrame(animId);
   }, [isOpen]);
 
   // Scroll active item into view
@@ -345,7 +345,10 @@ export const WildcardSearchPicker: React.FC<WildcardSearchPickerProps> = ({
               className="wildcard-picker-search-input"
               placeholder="Search wildcards..."
               value={query}
-              onChange={e => setQuery(e.target.value)}
+              onChange={e => {
+                setQuery(e.target.value);
+                setHighlightedIndex(0);
+              }}
               onKeyDown={handleKeyDown}
               onMouseDown={e => e.stopPropagation()}
               aria-label="Search wildcards"
@@ -359,6 +362,7 @@ export const WildcardSearchPicker: React.FC<WildcardSearchPickerProps> = ({
                 onClick={e => {
                   e.stopPropagation();
                   setQuery('');
+                  setHighlightedIndex(0);
                   inputRef.current?.focus();
                 }}
                 onMouseDown={e => e.stopPropagation()}
