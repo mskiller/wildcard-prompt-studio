@@ -74,13 +74,94 @@ export async function expandMatrixPrompt(prompt: string, maxLimit?: number, expa
   return data;
 }
 
-export async function executeMatrixSweep(prompt: string, limit?: number, expandWildcards: boolean = true): Promise<{ total_generated: number; prompts: string[]; status: string }> {
+export interface MatrixPermutationItem {
+  index: number;
+  prompt: string;
+}
+
+export interface MatrixSliceResponse {
+  total_count: number;
+  offset: number;
+  limit: number;
+  is_sample: boolean;
+  items: MatrixPermutationItem[];
+}
+
+export interface MatrixSliceParams {
+  prompt: string;
+  offset?: number;
+  limit?: number;
+  expandWildcards?: boolean;
+  sampleSize?: number;
+  seed?: number;
+  indices?: number[];
+}
+
+export async function fetchMatrixSlice(params: MatrixSliceParams): Promise<MatrixSliceResponse> {
+  const res = await fetch(`${API_BASE}/generate/matrix/slice`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      prompt: params.prompt,
+      offset: params.offset ?? 0,
+      limit: params.limit ?? 250,
+      expand_wildcards: params.expandWildcards ?? true,
+      sample_size: params.sampleSize ?? null,
+      seed: params.seed ?? null,
+      indices: params.indices ?? null,
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch matrix slice: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export interface ExecuteMatrixSweepOptions {
+  prompt: string;
+  mode?: 'view' | 'range' | 'sample' | 'indices' | 'all';
+  offset?: number;
+  limit?: number;
+  sampleSize?: number;
+  seed?: number;
+  indices?: number[];
+  prompts?: string[];
+  expandWildcards?: boolean;
+}
+
+export async function executeMatrixSweep(
+  promptOrOptions: string | ExecuteMatrixSweepOptions,
+  limit?: number,
+  expandWildcards: boolean = true
+): Promise<{ total_generated: number; prompts: string[]; status: string }> {
+  let body: any;
+  if (typeof promptOrOptions === 'string') {
+    body = {
+      prompt: promptOrOptions,
+      limit: limit ?? null,
+      expand_wildcards: expandWildcards,
+      mode: 'view',
+    };
+  } else {
+    body = {
+      prompt: promptOrOptions.prompt,
+      mode: promptOrOptions.mode ?? 'view',
+      offset: promptOrOptions.offset ?? 0,
+      limit: promptOrOptions.limit ?? limit ?? null,
+      sample_size: promptOrOptions.sampleSize ?? null,
+      seed: promptOrOptions.seed ?? null,
+      indices: promptOrOptions.indices ?? null,
+      prompts: promptOrOptions.prompts ?? null,
+      expand_wildcards: promptOrOptions.expandWildcards ?? true,
+    };
+  }
+
   const res = await fetch(`${API_BASE}/generate/matrix/execute`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ prompt, limit: limit ?? null, expand_wildcards: expandWildcards }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
