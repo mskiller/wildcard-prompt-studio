@@ -267,3 +267,17 @@
   align-items: center;
   gap: 6px;
 }
+
+.rag-active-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  background: rgba(236, 72, 153, 0.18);
+  color: #ec4899;
+  border: 1px solid rgba(236, 72, 153, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}

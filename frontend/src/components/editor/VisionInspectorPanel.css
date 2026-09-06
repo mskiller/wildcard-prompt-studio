@@ -120,3 +120,196 @@ pre {
   font-size: 0.8rem;
   overflow-x: auto;
 }
+
+.style-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.save-rag-open-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.save-rag-open-btn:hover {
+  background: rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
+}
+
+/* Modal Overlay & Card */
+.rag-save-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.rag-save-modal {
+  background: #181825;
+  border: 1px solid #313244;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  animation: modalScaleIn 0.2s ease-out;
+}
+
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.rag-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: #11111b;
+  border-bottom: 1px solid #313244;
+}
+
+.rag-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #cdd6f4;
+}
+
+.rag-modal-close {
+  background: transparent;
+  border: none;
+  color: #a6adc8;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rag-modal-close:hover {
+  color: #cdd6f4;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.rag-modal-body {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rag-modal-body .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rag-modal-body label {
+  font-size: 12px;
+  color: #a6adc8;
+  font-weight: 500;
+}
+
+.rag-modal-body input,
+.rag-modal-body select {
+  background: #11111b;
+  border: 1px solid #45475a;
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: #cdd6f4;
+  font-size: 13px;
+  outline: none;
+}
+
+.rag-modal-body input:focus,
+.rag-modal-body select:focus {
+  border-color: #89b4fa;
+}
+
+.rag-modal-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.rag-modal-status.success {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.rag-modal-status.error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.rag-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px;
+  background: #11111b;
+  border-top: 1px solid #313244;
+}
+
+.rag-modal-cancel {
+  background: #313244;
+  color: #cdd6f4;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.rag-modal-confirm {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rag-modal-confirm:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
+.rag-modal-confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

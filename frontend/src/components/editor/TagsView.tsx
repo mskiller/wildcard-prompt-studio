@@ -6,7 +6,8 @@ import {
 import { 
   getTags, getTagCategories, sanitizeTags, resyncWildcardTags, TagItem,
   getDanbooruTags, getDanbooruStats, getDanbooruCooccurrences, importDanbooruToTags,
-  DanbooruTagItem, DanbooruStats, DanbooruCooccurrence
+  DanbooruTagItem, DanbooruStats, DanbooruCooccurrence,
+  searchTagsSemantic, SemanticTagResult
 } from '../../api';
 import { usePromptStore } from '../../store/usePromptStore';
 import { useAppStore } from '../../store/useAppStore';
@@ -67,6 +68,12 @@ export const TagsView: React.FC = () => {
   const [insertedKey, setInsertedKey] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Semantic Tag Discovery State
+  const [semanticQuery, setSemanticQuery] = useState('');
+  const [semanticResults, setSemanticResults] = useState<SemanticTagResult[]>([]);
+  const [isSearchingSemantic, setIsSearchingSemantic] = useState(false);
+  const [semanticSearched, setSemanticSearched] = useState(false);
+
   const appendTag = usePromptStore(state => state.appendTag);
   const triggerRefresh = useAppStore(state => state.triggerRefresh);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -76,6 +83,28 @@ export const TagsView: React.FC = () => {
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
     setToastMessage(msg);
     toastTimeoutRef.current = setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const handleSemanticSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!semanticQuery.trim()) return;
+    setIsSearchingSemantic(true);
+    try {
+      const results = await searchTagsSemantic(semanticQuery.trim(), 24);
+      setSemanticResults(results);
+      setSemanticSearched(true);
+    } catch (err) {
+      console.error('Semantic tag search failed:', err);
+      showToast('⚠️ Semantic search failed');
+    } finally {
+      setIsSearchingSemantic(false);
+    }
+  };
+
+  const handleClearSemantic = () => {
+    setSemanticQuery('');
+    setSemanticResults([]);
+    setSemanticSearched(false);
   };
 
   const fetchCategories = async () => {
@@ -333,6 +362,84 @@ export const TagsView: React.FC = () => {
               </button>
             )}
           </div>
+        </div>
+
+        {/* Semantic Tag Discovery Banner */}
+        <div className="semantic-tag-discovery-card">
+          <div className="semantic-discovery-header">
+            <Sparkles size={16} className="semantic-icon" />
+            <span className="semantic-title">Discover Tags via Semantic Concept</span>
+            <span className="rag-active-pill">RAG Vectors</span>
+          </div>
+          <form className="semantic-search-form" onSubmit={handleSemanticSearch}>
+            <input
+              type="text"
+              className="semantic-search-input"
+              placeholder="Describe a scene, mood, or aesthetic (e.g. moody rain reflection, glowing neon cyber city, ethereal fantasy armor)..."
+              value={semanticQuery}
+              onChange={(e) => setSemanticQuery(e.target.value)}
+            />
+            <button
+              type="submit"
+              className="semantic-search-btn"
+              disabled={isSearchingSemantic || !semanticQuery.trim()}
+            >
+              {isSearchingSemantic ? (
+                <>
+                  <RefreshCw size={14} className="spinning" />
+                  <span>Searching...</span>
+                </>
+              ) : (
+                <>
+                  <Search size={14} />
+                  <span>Search RAG Vectors</span>
+                </>
+              )}
+            </button>
+            {semanticSearched && (
+              <button
+                type="button"
+                className="semantic-clear-btn"
+                onClick={handleClearSemantic}
+                title="Clear semantic search"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </form>
+
+          {semanticResults.length > 0 && (
+            <div className="semantic-results-section">
+              <div className="semantic-results-title">
+                <span>Recommended Concept Tags ({semanticResults.length})</span>
+              </div>
+              <div className="semantic-chips-grid">
+                {semanticResults.map((item, idx) => (
+                  <div key={`${item.tag}-${idx}`} className="semantic-tag-chip">
+                    <button
+                      className="semantic-tag-insert-btn"
+                      onClick={(e) => handleInsertTag(item.tag, `sem-${idx}`, e)}
+                      title={`Insert "${item.tag}" into active prompt`}
+                    >
+                      {insertedKey === `sem-${idx}` ? <Check size={12} color="#10b981" /> : <Plus size={12} />}
+                      <span className="semantic-tag-text">{item.tag}</span>
+                    </button>
+                    {item.reason && <span className="semantic-reason-pill">{item.reason}</span>}
+                    <button
+                      className="semantic-tag-copy-btn"
+                      onClick={(e) => handleCopyTag(item.tag, `sem-cp-${idx}`, e)}
+                      title="Copy tag"
+                    >
+                      {copiedKey === `sem-cp-${idx}` ? <Check size={11} color="#10b981" /> : <Copy size={11} />}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {semanticSearched && semanticResults.length === 0 && !isSearchingSemantic && (
+            <div className="semantic-empty-msg">No semantic tags found for this query. Try different concept descriptors.</div>
+          )}
         </div>
 
         {/* Search and Filters */}

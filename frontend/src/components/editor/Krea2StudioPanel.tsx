@@ -16,6 +16,7 @@ export const Krea2StudioPanel: React.FC = () => {
   const [variant, setVariant] = useState<'turbo' | 'medium' | 'large'>('turbo');
   const [provider, setProvider] = useState<'kobold' | 'ollama' | 'gemini'>('kobold');
   const [cleanBuzzwords, setCleanBuzzwords] = useState<boolean>(true);
+  const [useRAG, setUseRAG] = useState<boolean>(true);
   const [quoteTargetsInput, setQuoteTargetsInput] = useState<string>('');
   
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -44,6 +45,7 @@ export const Krea2StudioPanel: React.FC = () => {
         variant,
         provider,
         clean_buzzwords: cleanBuzzwords,
+        use_rag: useRAG,
         quote_targets: quoteTargets.length > 0 ? quoteTargets : undefined,
         max_tokens: enableThinkingTokenBoost ? maxOutputTokens : 512,
       };
@@ -230,16 +232,30 @@ export const Krea2StudioPanel: React.FC = () => {
             onChange={e => setOriginalPrompt(e.target.value)}
             placeholder="Type or paste your prompt here..."
           />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <input
-              type="checkbox"
-              id="clean-buzzwords-cb"
-              checked={cleanBuzzwords}
-              onChange={e => setCleanBuzzwords(e.target.checked)}
-            />
-            <label htmlFor="clean-buzzwords-cb" style={{ fontSize: '12px', cursor: 'pointer' }}>
-              Auto Clean Buzzwords (8k, masterpiece, hyperdetailed)
-            </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input
+                type="checkbox"
+                id="clean-buzzwords-cb"
+                checked={cleanBuzzwords}
+                onChange={e => setCleanBuzzwords(e.target.checked)}
+              />
+              <label htmlFor="clean-buzzwords-cb" style={{ fontSize: '12px', cursor: 'pointer' }}>
+                Auto Clean Buzzwords (8k, masterpiece, hyperdetailed)
+              </label>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input
+                type="checkbox"
+                id="krea2-use-rag-cb"
+                checked={useRAG}
+                onChange={e => setUseRAG(e.target.checked)}
+              />
+              <label htmlFor="krea2-use-rag-cb" style={{ fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                📚 Use RAG Optics & Guidelines
+                {useRAG && <span className="rag-active-pill">RAG Active</span>}
+              </label>
+            </div>
           </div>
         </div>
       </div>

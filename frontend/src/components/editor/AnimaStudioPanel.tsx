@@ -14,6 +14,7 @@ export const AnimaStudioPanel: React.FC = () => {
   const [variant, setVariant] = useState<'hybrid' | 'tag_focused' | 'natural_language'>('hybrid');
   const [addQualityTags, setAddQualityTags] = useState<boolean>(true);
   const [cleanWeights, setCleanWeights] = useState<boolean>(true);
+  const [useRAG, setUseRAG] = useState<boolean>(true);
   const [negativePrompt, setNegativePrompt] = useState<string>(
     'worst quality, low quality, score_1, score_2, score_3, artist name, blurry, bad anatomy, extra fingers'
   );
@@ -69,6 +70,7 @@ export const AnimaStudioPanel: React.FC = () => {
         add_quality_tags: addQualityTags,
         clean_weights: cleanWeights,
         negative_prompt: negativePrompt,
+        use_rag: useRAG,
       };
 
       const result = await animaImprovePrompt(options);
@@ -190,6 +192,16 @@ export const AnimaStudioPanel: React.FC = () => {
                 onChange={(e) => setCleanWeights(e.target.checked)}
               />
               Clean SD Weights (strip (tag:1.2) syntax)
+            </label>
+
+            <label className="toggle-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <input
+                type="checkbox"
+                checked={useRAG}
+                onChange={(e) => setUseRAG(e.target.checked)}
+              />
+              📚 Use RAG Anime Tag Rules
+              {useRAG && <span className="rag-active-pill">RAG Active</span>}
             </label>
           </div>
 
