@@ -540,7 +540,7 @@
   gap: 8px;
 }
 
-.gallery-header {
+.completed-gallery .gallery-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -561,7 +561,7 @@
   padding: 0;
 }
 
-.gallery-grid {
+.completed-gallery .gallery-grid {
   display: flex;
   gap: 8px;
   overflow-x: auto;
@@ -573,7 +573,7 @@
   flex-shrink: 0;
 }
 
-.gallery-thumb {
+.completed-gallery .gallery-thumb {
   width: 68px;
   height: 68px;
   object-fit: cover;
@@ -583,7 +583,7 @@
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
-.gallery-thumb:hover {
+.completed-gallery .gallery-thumb:hover {
   transform: scale(1.04);
   border-color: #fab387;
 }

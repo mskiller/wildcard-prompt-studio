@@ -470,7 +470,7 @@ export const GalleryView: React.FC = () => {
   };
 
   return (
-    <div className="gallery-container">
+    <div className="gallery-studio-container">
       {/* Toast Notification */}
       {toastMessage && (
         <div className={`gallery-toast toast-${toastMessage.type}`}>
@@ -701,7 +701,7 @@ export const GalleryView: React.FC = () => {
         </div>
       ) : (
         <div
-          className="gallery-grid"
+          className="gallery-studio-grid"
           style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${thumbnailSize}px, 1fr))` }}
         >
           {images.map((img) => {
@@ -709,7 +709,7 @@ export const GalleryView: React.FC = () => {
             return (
               <div
                 key={img.id}
-                className={`gallery-card glass-panel ${isSelected ? 'selected' : ''}`}
+                className={`gallery-studio-card glass-panel ${isSelected ? 'selected' : ''}`}
                 onClick={() => handleOpenLightbox(img)}
               >
                 {/* Selection Checkbox */}
@@ -727,7 +727,7 @@ export const GalleryView: React.FC = () => {
                 )}
 
                 {/* Top Action Floating Bar (Favorites & Rating) */}
-                <div className="card-top-bar" onClick={(e) => e.stopPropagation()}>
+                <div className="card-top-bar">
                   <button
                     className={`card-fav-btn ${img.is_favorite ? 'favorited' : ''}`}
                     onClick={(e) => handleToggleFavorite(img.id, e)}
@@ -750,7 +750,13 @@ export const GalleryView: React.FC = () => {
                 </div>
 
                 {/* Main Render Image */}
-                <div className="card-image-wrapper">
+                <div
+                  className="card-image-wrapper"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpenLightbox(img);
+                  }}
+                >
                   <img
                     src={getImgSrc(img)}
                     alt={img.filename || `Render #${img.id}`}
@@ -761,7 +767,7 @@ export const GalleryView: React.FC = () => {
                 </div>
 
                 {/* Bottom Overlay & Metadata */}
-                <div className="card-bottom-bar" onClick={(e) => e.stopPropagation()}>
+                <div className="card-bottom-bar" onClick={() => handleOpenLightbox(img)}>
                   {/* Quality Score & Parameter Badges */}
                   <div className="card-badges-row">
                     {renderAestheticBadge(img)}
