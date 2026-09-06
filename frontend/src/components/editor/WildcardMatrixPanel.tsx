@@ -39,6 +39,7 @@ import { CanvasChoiceNode } from './nodes/CanvasChoiceNode';
 import { CanvasWildcardNode } from './nodes/CanvasWildcardNode';
 import { CanvasTextNode } from './nodes/CanvasTextNode';
 import { CanvasVarNode } from './nodes/CanvasVarNode';
+import { WildcardSearchPicker } from './WildcardSearchPicker';
 import { useAppStore } from '../../store/useAppStore';
 import './WildcardMatrixPanel.css';
 
@@ -1530,25 +1531,17 @@ export const WildcardMatrixPanel: React.FC = () => {
                 <Plus size={13} /> Wildcard
               </button>
               {availableWildcards.length > 0 && (
-                <select
-                  className="toolbar-wildcard-quick-picker"
+                <WildcardSearchPicker
+                  variant="toolbar"
                   value=""
-                  onChange={(e) => {
-                    const picked = e.target.value;
+                  placeholder={`+ Pick existing (${availableWildcards.length})...`}
+                  availableWildcards={availableWildcards}
+                  onSelect={(picked) => {
                     if (picked) {
                       addNode('wildcard', picked);
                     }
                   }}
-                  title="Quick-insert existing wildcard"
-                  aria-label="Quick add existing wildcard"
-                >
-                  <option value="">+ Pick existing ({availableWildcards.length})...</option>
-                  {availableWildcards.map((w) => (
-                    <option key={w} value={w}>
-                      __{w}__
-                    </option>
-                  ))}
-                </select>
+                />
               )}
             </div>
             <button

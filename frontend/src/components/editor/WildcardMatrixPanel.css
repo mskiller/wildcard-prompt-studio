@@ -233,6 +233,9 @@
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid #313244;
   border-radius: 8px;
+  position: relative;
+  overflow: visible;
+  z-index: 20;
 }
 
 .toolbar-left-group {
@@ -260,7 +263,8 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 5px 9px;
+  height: 30px;
+  padding: 0 9px;
   background: #313244;
   border: 1px solid #45475a;
   color: #cdd6f4;
@@ -269,6 +273,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
+  box-sizing: border-box;
 }
 
 .toolbar-node-btn:hover {
@@ -282,31 +287,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-}
-
-.toolbar-wildcard-quick-picker {
-  padding: 4px 8px;
-  background: #1e1e2e;
-  border: 1px solid #45475a;
-  color: #cba6f7;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-family: var(--font-mono, monospace);
-  cursor: pointer;
-  outline: none;
-  max-width: 180px;
-  transition: all 0.15s ease;
-}
-
-.toolbar-wildcard-quick-picker:hover,
-.toolbar-wildcard-quick-picker:focus {
-  border-color: #cba6f7;
-  background: #313244;
-}
-
-.toolbar-wildcard-quick-picker option {
-  background: #1e1e2e;
-  color: #cdd6f4;
+  position: relative;
 }
 
 .permutation-count-badge {
