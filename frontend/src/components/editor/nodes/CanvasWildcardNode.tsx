@@ -1,4 +1,4 @@
-import React, { useId } from 'react';
+import React from 'react';
 import { ExternalLink } from 'lucide-react';
 import { WildcardSearchPicker } from '../WildcardSearchPicker';
 import './CanvasNodes.css';
@@ -20,7 +20,6 @@ export const CanvasWildcardNode: React.FC<CanvasWildcardNodeProps> = ({
   onInspect,
   readOnly = false
 }) => {
-  const datalistId = useId();
   const hasAvailable = availableWildcards && availableWildcards.length > 0;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,9 +41,7 @@ export const CanvasWildcardNode: React.FC<CanvasWildcardNodeProps> = ({
             value={name}
             availableWildcards={availableWildcards}
             placeholder="-- Search & choose wildcard --"
-            onSelect={(val) => {
-              if (val) onChange(val);
-            }}
+            onSelect={onChange}
             readOnly={readOnly}
           />
         </div>
@@ -58,20 +55,11 @@ export const CanvasWildcardNode: React.FC<CanvasWildcardNodeProps> = ({
             value={name}
             onChange={handleInputChange}
             placeholder="Wildcard file (e.g. colors/warm)..."
-            list={hasAvailable ? datalistId : undefined}
             disabled={readOnly}
             readOnly={readOnly}
             onMouseDown={e => e.stopPropagation()}
             aria-label="Wildcard name"
           />
-
-          {hasAvailable && (
-            <datalist id={datalistId}>
-              {availableWildcards.map(wildcard => (
-                <option key={wildcard} value={wildcard} />
-              ))}
-            </datalist>
-          )}
         </div>
 
         {onInspect && (
