@@ -23,18 +23,18 @@ def test_search_knowledge():
         db.query(KnowledgeDocument).delete()
         db.commit()
 
-        doc1 = KnowledgeDocument(title="Doc 1", content="Content 1", embedding=[1.0] + [0.0]*1535)
-        doc2 = KnowledgeDocument(title="Doc 2", content="Content 2", embedding=[0.0, 1.0] + [0.0]*1534)
+        doc1 = KnowledgeDocument(title="Doc 1", content="Content 1", embedding=[1.0] + [0.0]*383)
+        doc2 = KnowledgeDocument(title="Doc 2", content="Content 2", embedding=[0.0, 1.0] + [0.0]*382)
         db.add_all([doc1, doc2])
         db.commit()
 
         # search for [1.0, 0.0, ...]
-        results = search_knowledge(db, [1.0] + [0.0]*1535, limit=1)
+        results = search_knowledge(db, [1.0] + [0.0]*383, limit=1)
         assert len(results) == 1
         assert results[0].title == "Doc 1"
 
         # search for [0.0, 1.0, ...]
-        results2 = search_knowledge(db, [0.0, 1.0] + [0.0]*1534, limit=1)
+        results2 = search_knowledge(db, [0.0, 1.0] + [0.0]*382, limit=1)
         assert len(results2) == 1
         assert results2[0].title == "Doc 2"
     finally:
