@@ -44,7 +44,7 @@ import {
 
 export const GalleryView: React.FC = () => {
   // Store hooks
-  const { comfyUIUrl, setActiveView, setComfySettings } = useAppStore();
+  const { comfyUIUrl, setActiveView, setComfySettings, setActiveDocument } = useAppStore();
   const { setPromptText } = usePromptStore();
 
   // Primary image states
@@ -81,10 +81,12 @@ export const GalleryView: React.FC = () => {
 
   // Notification / Feedback banner state
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'info' | 'success' | 'error' } | null>(null);
+  const toastTimeoutRef = React.useRef<any>(null);
 
   const showToast = (text: string, type: 'info' | 'success' | 'error' = 'info') => {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
     setToastMessage({ text, type });
-    setTimeout(() => {
+    toastTimeoutRef.current = setTimeout(() => {
       setToastMessage(null);
     }, 3200);
   };
@@ -274,7 +276,12 @@ export const GalleryView: React.FC = () => {
   const handleNavigateLightbox = (direction: 'prev' | 'next') => {
     if (!lightboxImg || images.length === 0) return;
     const currentIndex = images.findIndex((img) => img.id === lightboxImg.id);
-    if (currentIndex === -1) return;
+    if (currentIndex === -1) {
+      setLightboxImg(images[0]);
+      setLightboxZoom(false);
+      setSimilarImages([]);
+      return;
+    }
 
     let nextIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
     if (nextIndex < 0) nextIndex = images.length - 1;
@@ -392,6 +399,12 @@ export const GalleryView: React.FC = () => {
   const handleDispatchToEditor = (prompt?: string | null) => {
     if (!prompt) return;
     setPromptText(prompt);
+    setActiveDocument({
+      type: 'prompt',
+      id: Date.now(),
+      name: 'Gallery Prompt',
+      content: prompt,
+    });
     setActiveView('explorer');
     showToast('Prompt loaded into Editor!', 'success');
   };
@@ -789,7 +802,13 @@ export const GalleryView: React.FC = () => {
       {/* Comprehensive Lightbox Modal */}
       {lightboxImg && (
         <div className="lightbox-overlay" onClick={() => setLightboxImg(null)}>
-          <div className="lightbox-modal glass-panel" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="lightbox-modal glass-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Image Details"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Modal Header */}
             <div className="lightbox-modal-header">
               <div className="lightbox-header-title">
@@ -1016,7 +1035,13 @@ export const GalleryView: React.FC = () => {
       {/* Side-by-Side (A/B) Compare Modal */}
       {isCompareOpen && comparePair && (
         <div className="lightbox-overlay compare-overlay" onClick={() => setIsCompareOpen(false)}>
-          <div className="compare-modal glass-panel" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="compare-modal glass-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Side-by-side Image Comparison"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="lightbox-modal-header">
               <div className="lightbox-header-title">
                 <Layers size={18} className="text-accent" />
