@@ -287,6 +287,26 @@ def test_sync_recent_outputs_with_subfolder_prefix():
                     ]
                 }
             }
+        },
+        "prompt-unrelated": {
+            "prompt": [
+                0,
+                "client-id-unrelated",
+                {
+                    "4": {
+                        "class_type": "CLIPTextEncode",
+                        "inputs": {"text": "unrelated prompt"}
+                    }
+                }
+            ],
+            "outputs": {
+                "9": {
+                    "images": [
+                        {"filename": "Unrelated_00001_.png", "subfolder": "OtherFolder", "type": "output"},
+                        {"filename": None, "subfolder": "OtherFolder", "type": "output"}
+                    ]
+                }
+            }
         }
     }
     with patch("app.api.routers.comfyui.connector.get_all_history", new_callable=AsyncMock) as mock_hist, \
@@ -314,4 +334,20 @@ def test_sync_recent_outputs_with_subfolder_prefix():
         res4 = client.post("/api/v1/comfyui/sync-recent-outputs", json={"prefix": "Prompting"})
         assert res4.status_code == 200
         assert res4.json()["imported_count"] == 1
+
+        # Case 5: Querying with trailing slash (forward slash) imports only 1 item (no universal match bug)
+        res5 = client.post("/api/v1/comfyui/sync-recent-outputs", json={"prefix": "Prompting/"})
+        assert res5.status_code == 200
+        assert res5.json()["imported_count"] == 1
+
+        # Case 6: Querying with trailing slash (backslash) imports only 1 item
+        res6 = client.post("/api/v1/comfyui/sync-recent-outputs", json={"prefix": "Prompting\\"})
+        assert res6.status_code == 200
+        assert res6.json()["imported_count"] == 1
+
+        # Case 7: Querying with NonExistentFolder imports 0 items
+        res7 = client.post("/api/v1/comfyui/sync-recent-outputs", json={"prefix": "NonExistentFolder"})
+        assert res7.status_code == 200
+        assert res7.json()["imported_count"] == 0
+
 

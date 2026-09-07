@@ -863,7 +863,7 @@ async def sync_recent_outputs(req: Optional[SyncOutputsRequest] = None, db: Sess
         logger.error(f"Failed to fetch ComfyUI history for sync: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch ComfyUI history: {str(e)}")
 
-    norm_prefix = (prefix or "").replace("\\", "/").strip().lower()
+    norm_prefix = (prefix or "").replace("\\", "/").strip().strip("/").lower()
     leaf_prefix = norm_prefix.split("/")[-1] if "/" in norm_prefix else norm_prefix
 
     all_saved = []
@@ -873,8 +873,10 @@ async def sync_recent_outputs(req: Optional[SyncOutputsRequest] = None, db: Sess
         for nid, out in outputs.items():
             if isinstance(out, dict) and "images" in out:
                 for im in out["images"]:
-                    fn = im.get("filename", "")
-                    subfolder = (im.get("subfolder") or "").replace("\\", "/").strip().lower()
+                    fn = im.get("filename") or ""
+                    if not fn:
+                        continue
+                    subfolder = (im.get("subfolder") or "").replace("\\", "/").strip().strip("/").lower()
                     norm_full = f"{subfolder}/{fn.lower()}" if subfolder else fn.lower()
 
                     if not norm_prefix:
@@ -883,8 +885,7 @@ async def sync_recent_outputs(req: Optional[SyncOutputsRequest] = None, db: Sess
 
                     if (
                         norm_prefix in norm_full
-                        or leaf_prefix in fn.lower()
-                        or (subfolder and norm_prefix in subfolder)
+                        or (leaf_prefix and leaf_prefix in fn.lower())
                         or (norm_prefix == "matrixsweep" and "matrixsweep" in fn.lower())
                     ):
                         has_match = True
