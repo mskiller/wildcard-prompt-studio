@@ -506,21 +506,22 @@ async def execute_sweep(req: SweepExecutionRequest, background_tasks: Background
                             inputs["sampler_name"] = req.sampler_name
                         if req.scheduler is not None:
                             inputs["scheduler"] = req.scheduler
-                # Update EmptyLatentImage width/height if present in custom workflow
-                if req.width is not None or req.height is not None:
-                    for n_id, n_data in wf_copy.items():
-                        if isinstance(n_data, dict) and n_data.get("class_type") == "EmptyLatentImage":
-                            if "inputs" in n_data and isinstance(n_data["inputs"], dict):
-                                if req.width is not None:
-                                    n_data["inputs"]["width"] = req.width
-                                if req.height is not None:
-                                    n_data["inputs"]["height"] = req.height
+                # Update EmptyLatentImage dimensions and SaveImage filename_prefix in custom workflow
                 for n_id, n_data in wf_copy.items():
                     if isinstance(n_data, dict):
-                        if n_data.get("class_type") in ("SaveImage", "SaveImageWebSocket", "Image Save") or "filename_prefix" in n_data.get("inputs", {}):
-                            if "inputs" not in n_data or not isinstance(n_data["inputs"], dict):
-                                n_data["inputs"] = {}
-                            n_data["inputs"]["filename_prefix"] = resolved_prefix
+                        inputs = n_data.get("inputs")
+                        if n_data.get("class_type") == "EmptyLatentImage" and isinstance(inputs, dict):
+                            if req.width is not None:
+                                inputs["width"] = req.width
+                            if req.height is not None:
+                                inputs["height"] = req.height
+                        is_save = n_data.get("class_type") in ("SaveImage", "SaveImageWebSocket", "Image Save")
+                        has_prefix = isinstance(inputs, dict) and "filename_prefix" in inputs
+                        if is_save or has_prefix:
+                            if not isinstance(inputs, dict):
+                                inputs = {}
+                                n_data["inputs"] = inputs
+                            inputs["filename_prefix"] = resolved_prefix
             else:
                 wf_copy = build_default_krea_sweep_workflow(
                     model_name=resolved_model,
