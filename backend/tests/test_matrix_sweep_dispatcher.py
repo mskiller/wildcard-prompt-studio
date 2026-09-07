@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
 from main import app
+from app.api.routers.comfyui import build_default_krea_sweep_workflow
 
 client = TestClient(app)
 
@@ -215,5 +216,43 @@ def test_execute_sweep_resolution_parameters():
         assert wf_custom["6"]["inputs"]["width"] == 1024
         assert wf_custom["6"]["inputs"]["height"] == 1024
 
+def test_build_default_krea_sweep_workflow_custom_prefix():
+    wf = build_default_krea_sweep_workflow(
+        model_name="test_model.safetensors",
+        clip_name="test_clip.safetensors",
+        vae_name="test_vae.safetensors",
+        sampler_name="er_sde",
+        scheduler="beta",
+        steps=10,
+        cfg=1.0,
+        seed=42,
+        prompt_str="a test prompt",
+        filename_prefix="Prompting\\MatrixSweep_Krea2"
+    )
+    assert "9" in wf
+    assert wf["9"]["class_type"] == "SaveImage"
+    assert wf["9"]["inputs"]["filename_prefix"] == "Prompting\\MatrixSweep_Krea2"
 
-
+def test_execute_sweep_with_custom_filename_prefix():
+    mock_workflow = {
+        "3": {"inputs": {"seed": 0, "steps": 20, "cfg": 8.0, "sampler_name": "euler"}, "class_type": "KSampler"},
+        "6": {"inputs": {"text": ""}, "class_type": "CLIPTextEncode"},
+        "9": {"inputs": {"filename_prefix": "OriginalPrefix"}, "class_type": "SaveImage"}
+    }
+    with patch("app.api.routers.comfyui.connector.queue_prompt", new_callable=AsyncMock) as mock_queue:
+        mock_queue.return_value = {"prompt_id": "test-sweep", "number": 1}
+        payload = {
+            "workflow": mock_workflow,
+            "target_node_id": "6",
+            "seed_node_id": "3",
+            "prompts": ["cyberpunk landscape"],
+            "filename_prefix": "MySubfolder/MyPrefix",
+            "steps": 15,
+            "cfg": 2.0
+        }
+        response = client.post("/api/v1/comfyui/execute-sweep", json=payload)
+        assert response.status_code == 200
+        assert response.json()["queued_count"] == 1
+        assert mock_queue.called
+        wf_passed = mock_queue.call_args[0][0]
+        assert wf_passed["9"]["inputs"]["filename_prefix"] == "MySubfolder/MyPrefix"

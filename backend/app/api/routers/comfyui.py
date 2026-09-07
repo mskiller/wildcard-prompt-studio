@@ -329,7 +329,8 @@ def build_default_krea_sweep_workflow(
     prompt_str: str,
     is_unet: bool = True,
     width: int = 896,
-    height: int = 1152
+    height: int = 1152,
+    filename_prefix: str = "MatrixSweep_Krea2"
 ) -> Dict[str, Any]:
     wf: Dict[str, Any] = {}
     if is_unet:
@@ -409,7 +410,7 @@ def build_default_krea_sweep_workflow(
     wf["9"] = {
         "class_type": "SaveImage",
         "inputs": {
-            "filename_prefix": "MatrixSweep_Krea2",
+            "filename_prefix": filename_prefix or "MatrixSweep_Krea2",
             "images": ["8", 0]
         }
     }
@@ -433,6 +434,7 @@ class SweepExecutionRequest(BaseModel):
     vae: Optional[str] = "qwen_image_vae.safetensors"
     width: Optional[int] = 896
     height: Optional[int] = 1152
+    filename_prefix: Optional[str] = "MatrixSweep_Krea2"
     send_to_discord: Optional[bool] = False
     discord_webhook_url: Optional[str] = None
 
@@ -440,6 +442,9 @@ class SweepExecutionRequest(BaseModel):
 async def execute_sweep(req: SweepExecutionRequest, background_tasks: BackgroundTasks):
     try:
         results = []
+        clean_prefix = (req.filename_prefix or "").strip()
+        resolved_prefix = clean_prefix if clean_prefix else "MatrixSweep_Krea2"
+
         has_custom_workflow = bool(
             req.workflow and
             req.target_node_id and
@@ -510,6 +515,12 @@ async def execute_sweep(req: SweepExecutionRequest, background_tasks: Background
                                     n_data["inputs"]["width"] = req.width
                                 if req.height is not None:
                                     n_data["inputs"]["height"] = req.height
+                for n_id, n_data in wf_copy.items():
+                    if isinstance(n_data, dict):
+                        if n_data.get("class_type") in ("SaveImage", "SaveImageWebSocket", "Image Save") or "filename_prefix" in n_data.get("inputs", {}):
+                            if "inputs" not in n_data or not isinstance(n_data["inputs"], dict):
+                                n_data["inputs"] = {}
+                            n_data["inputs"]["filename_prefix"] = resolved_prefix
             else:
                 wf_copy = build_default_krea_sweep_workflow(
                     model_name=resolved_model,
@@ -523,7 +534,8 @@ async def execute_sweep(req: SweepExecutionRequest, background_tasks: Background
                     prompt_str=str(prompt_str),
                     is_unet=is_unet,
                     width=req.width if req.width is not None else 896,
-                    height=req.height if req.height is not None else 1152
+                    height=req.height if req.height is not None else 1152,
+                    filename_prefix=resolved_prefix
                 )
 
             res = await connector.queue_prompt(wf_copy, base_url=req.base_url, client_id=req.client_id)
