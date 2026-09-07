@@ -993,6 +993,7 @@ export interface SweepExecuteOptions {
   vae?: string;
   width?: number;
   height?: number;
+  filenamePrefix?: string;
   sendToDiscord?: boolean;
   discordWebhookUrl?: string;
 }
@@ -1014,6 +1015,7 @@ export async function executeComfyUISweep(options: SweepExecuteOptions): Promise
     vae: options.vae ?? 'qwen_image_vae.safetensors',
     width: options.width ?? 896,
     height: options.height ?? 1152,
+    filename_prefix: options.filenamePrefix || 'MatrixSweep_Krea2',
     send_to_discord: options.sendToDiscord ?? false,
     discord_webhook_url: options.discordWebhookUrl ?? '',
   };
