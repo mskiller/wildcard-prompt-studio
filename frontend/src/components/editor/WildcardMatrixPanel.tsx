@@ -168,10 +168,19 @@ export const WildcardMatrixPanel: React.FC = () => {
   const [isSyncingSweep, setIsSyncingSweep] = useState<boolean>(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
+  const [filenamePrefix, setFilenamePrefix] = useState<string>(
+    () => localStorage.getItem('wps_matrix_comfy_filename_prefix') || 'MatrixSweep_Krea2'
+  );
+
+  const handleFilenamePrefixChange = (val: string) => {
+    setFilenamePrefix(val);
+    localStorage.setItem('wps_matrix_comfy_filename_prefix', val);
+  };
+
   const handleSyncSweepOutputs = useCallback(async (manual: boolean = false) => {
     setIsSyncingSweep(true);
     try {
-      const res = await syncRecentComfyOutputs('MatrixSweep', 50);
+      const res = await syncRecentComfyOutputs(filenamePrefix.trim() || 'MatrixSweep', 50);
       if (res && Array.isArray(res.items)) {
         setSweepResults(res.items);
         if (manual) {
@@ -183,12 +192,13 @@ export const WildcardMatrixPanel: React.FC = () => {
     } finally {
       setIsSyncingSweep(false);
     }
-  }, []);
+  }, [filenamePrefix]);
 
   // Initial load of past sweep images from ComfyUI / DB
   useEffect(() => {
     handleSyncSweepOutputs(false);
-  }, [handleSyncSweepOutputs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Keyboard navigation for enlarged lightbox
   useEffect(() => {
@@ -734,6 +744,7 @@ export const WildcardMatrixPanel: React.FC = () => {
         height,
         sendToDiscord,
         discordWebhookUrl: sendToDiscord ? discordWebhookUrl : undefined,
+        filenamePrefix: filenamePrefix.trim() || 'MatrixSweep_Krea2',
       });
       const discordMsg = sendToDiscord ? ' (with live Discord delivery)' : '';
       setStatus(`Successfully queued ${res.queued_count} batch sweep jobs in ComfyUI (${width}x${height})${discordMsg}! Generating...`);
@@ -744,7 +755,7 @@ export const WildcardMatrixPanel: React.FC = () => {
       sweepPollRef.current = setInterval(async () => {
         pollCount++;
         try {
-          const syncRes = await syncRecentComfyOutputs('MatrixSweep', 50);
+          const syncRes = await syncRecentComfyOutputs(filenamePrefix.trim() || 'MatrixSweep', 50);
           if (syncRes && Array.isArray(syncRes.items)) {
             setSweepResults(syncRes.items);
           }
@@ -1084,6 +1095,20 @@ export const WildcardMatrixPanel: React.FC = () => {
             className="batch-input"
             value={baseSeed}
             onChange={(e) => setBaseSeed(parseInt(e.target.value, 10) || 0)}
+          />
+        </div>
+
+        {/* Output Filename Prefix / Subfolder */}
+        <div className="batch-field">
+          <label>Filename / Prefix</label>
+          <input
+            type="text"
+            className="batch-input batch-input-text"
+            value={filenamePrefix}
+            onChange={(e) => handleFilenamePrefixChange(e.target.value)}
+            placeholder="e.g. Prompting\MatrixSweep_Krea2"
+            title="Choose output filename and optional subfolder (e.g. Prompting\MatrixSweep_Krea2)"
+            aria-label="Output filename and subfolder"
           />
         </div>
 
