@@ -4,6 +4,34 @@ All notable changes to Wildcard Prompt Studio V2 are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-09-07
+
+### Added
+
+#### Matrix Sweep Custom Save Filenames & Subfolder Routing
+- **ComfyUI Batch Parameters Bar Integration**:
+  - Added dedicated `Filename / Prefix` input in `WildcardMatrixPanel` allowing custom output names and subfolders (e.g. `Prompting\MatrixSweep_Krea2` or `MyFolder/MyRun`).
+  - Automatically persists user preference to `localStorage` (`matrix_comfy_filename_prefix`) with resilient fallback to `"MatrixSweep_Krea2"`.
+- **Backend Prefix & Workflow Dynamic Configuration**:
+  - `POST /api/v1/comfyui/execute-sweep` accepts optional `filename_prefix` parameter.
+  - Automatically configures the `SaveImage` node in standard Krea 2 workflows and custom uploaded workflows (supporting `SaveImage`, `SaveImageWebSocket`, and `Image Save` node classes).
+  - Consolidated node traversal with defensive null-checking against unpopulated input dictionaries.
+- **Subfolder-Aware ComfyUI History Matching**:
+  - `POST /api/v1/comfyui/sync-recent-outputs` normalizes path separators across both forward slashes (`/`) and backslashes (`\`).
+  - Matches generations using both full prefix paths (`Prompting/MatrixSweep_Krea2`) and leaf prefixes (`MatrixSweep_Krea2`), properly hardened against trailing slashes and null filenames.
+  - Fully compatible with live background polling, gallery synchronization, and Discord webhook delivery.
+
+#### Stepped Permutation Range Slicing
+- **Step Field in Range Slice Mode**:
+  - Added configurable `Step` parameter to Range Slice mode in both the UI modal and backend API (`range_step` in `POST /api/v1/generate/matrix/execute`).
+  - Enables stepped generation (e.g., generating every 5th or 10th permutation) across massive combinatorial spaces without calculating intermediate combinations.
+
+#### Wildcard Ecosystem & Scene Updates
+- **Synchronized Wildcard Library**:
+  - Updated `workspace/wildcards/Zig-Anima-Krea24-scene.txt` with multi-character interactions, dynamic angles, and high-detail scene presets.
+
+---
+
 ## [2.3.0] - 2026-09-06
 
 ### Added

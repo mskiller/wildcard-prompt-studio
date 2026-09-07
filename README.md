@@ -68,6 +68,7 @@ Built for power users who need:
 - **Astronomical Space Support** — handles massive spaces (hundreds of millions or billions of combinations) with zero OOM risk or Cartesian freezing.
 - **O(1) Direct Index Mapping** — instant $O(1)$ lookup (`get_permutation_at_index(n)`) that fetches any arbitrary combination without computing prior combinations.
 - **Matrix Slice & Random Sample APIs** — `POST /api/v1/generate/matrix/slice` and `/api/v1/generate/matrix/sample` for sub-millisecond pagination and uniform random sampling.
+- **Stepped Permutation Slicing** — configurable `Step` parameter in Range Slice mode (`range_step`) to render or inspect every $N$-th combination across extensive permutation sets without generating unused steps.
 - **Interactive Slice Navigator UI** — responsive pagination (50, 100, 250, 500 per page), direct index jump, random sample picker with reproducible seed, and combination count badges.
 - **Flexible Matrix Batch Queue** — queue specific index slices (e.g. 100–250) or random sample subsets directly to ComfyUI workflows.
 
@@ -116,6 +117,8 @@ Built for power users who need:
 ### 🔌 Real-Time ComfyUI Integration & Discord Sweeps
 - **Live WebSocket Bridge** — real-time job status, queue progress, and node execution tracking
 - **Batch Dispatch** — send matrix-generated prompt lists directly to ComfyUI workflows
+- **Custom Save Filename & Subfolder Routing** — configure custom output prefixes and subfolders (`Subfolder\Prefix`) with `localStorage` persistence, dynamically modifying `SaveImage` nodes in both standard and custom workflows.
+- **Subfolder-Aware History Sync** — retroactively scans ComfyUI outputs across arbitrary folders, downloading completed renders, updating gallery records, and triggering Discord notifications.
 - **Generation Simulator** — debug complex multi-node workflows before submitting heavy render batches
 - **Automated Discord Webhooks** — automatically dispatch downloaded sweep images and prompt text to Discord channels upon completion with multi-source config resolution (ComfyUI config file, environment variable, or settings) and exponential backoff retries
 

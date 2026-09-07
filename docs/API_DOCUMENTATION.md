@@ -257,6 +257,49 @@ Draws a uniform random sample of permutations across arbitrary large combinatori
 
 ---
 
+### `POST /api/v1/generate/matrix/execute`
+Executes or prepares a matrix combination sweep supporting multiple targeted slicing and dispatch modes (`range`, `sample`, `indices`, `prompts`, or full sweep).
+
+#### Request Body
+```json
+{
+  "prompt": "A {cyberpunk|steampunk|fantasy} {warrior|mage} with a {dragon|phoenix} pet",
+  "mode": "range",
+  "offset": 0,
+  "limit": 50,
+  "step": 2,
+  "expand_wildcards": true
+}
+```
+- `prompt` (string): Matrix template prompt with wildcards and choices.
+- `mode` (string, optional, default: `"view"`): Slicing / execution strategy:
+  - `"range"`: Slices combinations between `offset` and `offset + limit`, stepping by `step`.
+  - `"sample"`: Draws `sample_size` uniform pseudo-random combinations using `seed`.
+  - `"indices"`: Evaluates exact combination indices specified in `indices: [int]`.
+  - `"prompts"`: Directly dispatches explicit prompt strings in `prompts: [string]`.
+  - `"view"`: Generates prompt strings for UI preview.
+- `offset` (int, default: 0): Starting permutation index for range slicing.
+- `limit` (int, optional): Number of combinations to generate.
+- `step` (int, optional, default: 1): Step stride for stepped range slicing (e.g., `step: 5` samples every 5th permutation).
+- `sample_size` (int, optional): Number of random permutations to sample when `mode="sample"`.
+- `seed` (int, optional): Deterministic seed for random sampling.
+- `indices` (list of int, optional): Explicit combination indices to materialize.
+- `prompts` (list of string, optional): Explicit pre-materialized prompt strings.
+
+#### Response `200 OK`
+```json
+{
+  "total_generated": 25,
+  "prompts": [
+    "A cyberpunk warrior with a dragon pet",
+    "A steampunk warrior with a dragon pet"
+  ],
+  "status": "queued"
+}
+```
+
+---
+
 ## 4. Prompts Management (`/api/v1/prompts`)
 
 ### `GET /api/v1/prompts`
@@ -299,7 +342,7 @@ Check WebSocket connectivity to target ComfyUI backend server (`ws://localhost:8
 Queue a batch list of expanded prompts into a ComfyUI text node workflow.
 
 ### `POST /api/v1/comfyui/execute-sweep`
-Dispatches a matrix sweep generation job across ComfyUI with modern resolution controls and optional Discord webhook forwarding.
+Dispatches a matrix sweep generation job across ComfyUI with modern resolution controls, customizable save filename/subfolder routing, and optional Discord webhook forwarding.
 
 #### Request Body
 ```json
@@ -316,20 +359,56 @@ Dispatches a matrix sweep generation job across ComfyUI with modern resolution c
   "height": 1152,
   "base_seed": 42,
   "seed_strategy": "increment",
+  "filename_prefix": "Prompting\\MatrixSweep_Krea2",
   "send_to_discord": true,
   "discord_webhook_url": "https://discord.com/api/webhooks/..."
 }
 ```
+- `filename_prefix` (string, optional, default: `"MatrixSweep_Krea2"`): Output filename prefix and subfolder path (e.g. `Prompting\MatrixSweep_Krea2` or `Sweeps/Run1`). Dynamically injected into ComfyUI `SaveImage` nodes in default or custom workflows.
 - `width` (int, default: 896): Target generation width (defaults to modern SDXL/Kea2 standard).
 - `height` (int, default: 1152): Target generation height (defaults to modern 896×1152 aspect ratio).
 - `seed_strategy` (string): `"increment"` (seed + index), `"fixed"` (same seed for all), or `"random"` (new random seed per prompt).
-- `workflow` (dict, optional): Custom ComfyUI JSON graph. Automatically updates `EmptyLatentImage` dimensions to match requested width/height.
+- `workflow` (dict, optional): Custom ComfyUI JSON graph. Automatically updates `EmptyLatentImage` dimensions and `SaveImage` prefix to match requested parameters.
 
 #### Response `200 OK`
 ```json
 {
   "queued_count": 2,
   "job_results": [{"prompt_id": "comfy-task-uuid-1"}, {"prompt_id": "comfy-task-uuid-2"}]
+}
+```
+
+---
+
+### `POST /api/v1/comfyui/sync-recent-outputs`
+Retroactively scans ComfyUI generation history, matches rendered outputs using subfolder-aware path resolution, downloads newly finished images into `/static/images`, and registers image records in the database.
+
+#### Request Body
+```json
+{
+  "prefix": "Prompting\\MatrixSweep_Krea2",
+  "limit": 50
+}
+```
+- `prefix` (string, optional, default: `"MatrixSweep"`): Filename prefix or subfolder to match against. Supports both forward slashes and backslashes (`Subfolder\Prefix` or `Subfolder/Prefix`).
+- `limit` (int, optional, default: 50): Maximum number of recent ComfyUI history entries to inspect.
+
+#### Response `200 OK`
+```json
+{
+  "imported_count": 2,
+  "items": [
+    {
+      "id": 105,
+      "filename": "MatrixSweep_Krea2_00001_.png",
+      "prompt_content": "a cyberpunk cat in neon city",
+      "seed": 42,
+      "steps": 10,
+      "cfg_scale": 1.0,
+      "sampler_name": "er_sde",
+      "url": "/static/images/MatrixSweep_Krea2_00001_.png"
+    }
+  ]
 }
 ```
 

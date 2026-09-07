@@ -35,6 +35,7 @@ Welcome to the **Wildcard Prompt Studio V2 User Guide**. This document provides 
 18. [Unlimited Matrix Permutations & Slice Navigator](#18-unlimited-matrix-permutations--slice-navigator)
 19. [ComfyUI Matrix Batch Queue Slicing](#19-comfyui-matrix-batch-queue-slicing)
 20. [Automated Discord Sweep Webhook Delivery](#20-automated-discord-sweep-webhook-delivery)
+21. [ComfyUI Custom Save Filename & Subfolder Routing](#21-comfyui-custom-save-filename--subfolder-routing)
 
 ---
 
@@ -373,7 +374,7 @@ When dispatching large prompt matrices to ComfyUI, you can selectively render su
 
 ### Dispatch Modes
 - **All Permutations**: Dispatches the entire generated combination set (subject to configured queue safety caps).
-- **Range Slice**: Specify a `Start Index` and `Count` (e.g., render indices `200` to `250`).
+- **Range Slice**: Specify a `Start Index`, `Count`, and optional `Step` (e.g., render every 2nd or 5th combination between indices `200` and `500`).
 - **Random Sample**: Dispatches $N$ uniformly sampled combinations using a reproducible random seed.
 - **Selected Permutations**: Manually select individual combinations via preview checkboxes.
 
@@ -393,4 +394,27 @@ The backend automatically resolves the target Discord webhook URL using the foll
 - **Full-Resolution Image**: Transmitted as `multipart/form-data` directly from ComfyUI disk output.
 - **Rich Prompt Embed / Message**: Includes the full prompt text, seed, steps, CFG scale, sampler, scheduler, dimensions, and model checkpoint.
 - **Fault-Tolerant Delivery**: Built-in exponential backoff retries handling Discord rate limits (HTTP 429) and network blips.
+
+---
+
+## 21. ComfyUI Custom Save Filename & Subfolder Routing
+
+Wildcard Prompt Studio allows you to organize rendered sweep outputs into custom directory structures and distinct file prefixes directly from the Matrix Studio workspace.
+
+### Configuration in Batch Parameters Bar
+- Located in the **ComfyUI Batch Parameters** bar inside the Matrix Generator panel.
+- Enter your desired prefix or subfolder path in the `Filename / Prefix` text input (e.g., `Prompting\MatrixSweep_Krea2` or `Collections/Cyberpunk_Run1`).
+- Supports both forward slashes (`/`) and backslashes (`\`) for folder demarcation.
+- **Persistent Storage**: The configured prefix is saved to browser `localStorage` and automatically restored across sessions.
+
+### Dynamic Workflow & SaveImage Node Integration
+- **Default Workflows**: The prefix is passed directly to the `SaveImage` node (`node 9`) in the built-in Krea 2 workflow pipeline.
+- **Custom Workflows**: Automatically traverses and updates any `SaveImage`, `SaveImageWebSocket`, or `Image Save` nodes in custom uploaded workflows.
+- **Safe Subfolder Fallbacks**: If cleared, safely defaults to `"MatrixSweep_Krea2"`.
+
+### Subfolder-Aware History Sync & Gallery Import
+- Background output polling and the manual sync endpoint (`POST /api/v1/comfyui/sync-recent-outputs`) normalize and match paths across subfolders.
+- Rendered images are retrieved from ComfyUI, downloaded locally to `/static/images`, recorded in PostgreSQL, and made immediately visible in the **Gallery** tab.
+- When Discord webhooks are enabled, images and generation metadata from custom subfolders are automatically delivered to your Discord channel.
+
 
