@@ -256,3 +256,62 @@ def test_execute_sweep_with_custom_filename_prefix():
         assert mock_queue.called
         wf_passed = mock_queue.call_args[0][0]
         assert wf_passed["9"]["inputs"]["filename_prefix"] == "MySubfolder/MyPrefix"
+
+
+def test_sync_recent_outputs_with_subfolder_prefix():
+    history_with_subfolder = {
+        "prompt-sub-1": {
+            "prompt": [
+                0,
+                "client-id-sub",
+                {
+                    "4": {
+                        "class_type": "CLIPTextEncode",
+                        "inputs": {"text": "prompt inside prompting subfolder"}
+                    },
+                    "7": {
+                        "class_type": "KSampler",
+                        "inputs": {
+                            "seed": 111,
+                            "steps": 10,
+                            "cfg": 1.0,
+                            "sampler_name": "er_sde"
+                        }
+                    }
+                }
+            ],
+            "outputs": {
+                "9": {
+                    "images": [
+                        {"filename": "MatrixSweep_Krea2_00001_.png", "subfolder": "Prompting", "type": "output"}
+                    ]
+                }
+            }
+        }
+    }
+    with patch("app.api.routers.comfyui.connector.get_all_history", new_callable=AsyncMock) as mock_hist, \
+         patch("app.api.routers.comfyui.connector.get_image", new_callable=AsyncMock) as mock_get_img:
+        mock_hist.return_value = history_with_subfolder
+        mock_get_img.return_value = b"FAKE_SUBFOLDER_IMAGE_BYTES"
+
+        # Case 1: Match by full prefix with backslash
+        res1 = client.post("/api/v1/comfyui/sync-recent-outputs", json={"prefix": "Prompting\\MatrixSweep_Krea2"})
+        assert res1.status_code == 200
+        assert res1.json()["imported_count"] == 1
+        assert res1.json()["items"][0]["filename"] == "MatrixSweep_Krea2_00001_.png"
+
+        # Case 2: Match by full prefix with forward slash
+        res2 = client.post("/api/v1/comfyui/sync-recent-outputs", json={"prefix": "Prompting/MatrixSweep_Krea2"})
+        assert res2.status_code == 200
+        assert res2.json()["imported_count"] == 1
+
+        # Case 3: Match by default "MatrixSweep"
+        res3 = client.post("/api/v1/comfyui/sync-recent-outputs", json={"prefix": "MatrixSweep"})
+        assert res3.status_code == 200
+        assert res3.json()["imported_count"] == 1
+
+        # Case 4: Match by subfolder alone
+        res4 = client.post("/api/v1/comfyui/sync-recent-outputs", json={"prefix": "Prompting"})
+        assert res4.status_code == 200
+        assert res4.json()["imported_count"] == 1
+
