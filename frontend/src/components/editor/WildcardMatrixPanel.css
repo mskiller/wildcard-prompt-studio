@@ -628,6 +628,11 @@
   width: 75px;
 }
 
+.batch-input.batch-input-text {
+  width: 220px;
+  min-width: 180px;
+}
+
 .batch-select {
   min-width: 105px;
   max-width: 150px;

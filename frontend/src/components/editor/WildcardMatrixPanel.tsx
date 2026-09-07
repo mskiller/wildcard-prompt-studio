@@ -174,13 +174,17 @@ export const WildcardMatrixPanel: React.FC = () => {
 
   const handleFilenamePrefixChange = (val: string) => {
     setFilenamePrefix(val);
-    localStorage.setItem('wps_matrix_comfy_filename_prefix', val);
+    try {
+      localStorage.setItem('wps_matrix_comfy_filename_prefix', val);
+    } catch {
+      // ignore storage quota errors
+    }
   };
 
   const handleSyncSweepOutputs = useCallback(async (manual: boolean = false) => {
     setIsSyncingSweep(true);
     try {
-      const res = await syncRecentComfyOutputs(filenamePrefix.trim() || 'MatrixSweep', 50);
+      const res = await syncRecentComfyOutputs(filenamePrefix.trim() || 'MatrixSweep_Krea2', 50);
       if (res && Array.isArray(res.items)) {
         setSweepResults(res.items);
         if (manual) {
@@ -755,7 +759,7 @@ export const WildcardMatrixPanel: React.FC = () => {
       sweepPollRef.current = setInterval(async () => {
         pollCount++;
         try {
-          const syncRes = await syncRecentComfyOutputs(filenamePrefix.trim() || 'MatrixSweep', 50);
+          const syncRes = await syncRecentComfyOutputs(filenamePrefix.trim() || 'MatrixSweep_Krea2', 50);
           if (syncRes && Array.isArray(syncRes.items)) {
             setSweepResults(syncRes.items);
           }
